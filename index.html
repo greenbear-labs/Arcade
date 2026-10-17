@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Green Bear Arcade</title>
+  <meta name="description" content="Free browser games made by Green Bear Labs. Step into the Bear's Den, pick a cabinet and play.">
+  <meta name="theme-color" content="#0b0d0a">
+  <meta property="og:title" content="Green Bear Arcade">
+  <meta property="og:description" content="Free browser games made by Green Bear Labs. Step into the Bear's Den and play.">
+  <meta property="og:image" content="https://arcade.greenbearlabs.com/assets/og.jpg">
+  <meta property="og:url" content="https://arcade.greenbearlabs.com/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/theme.css">
+  <link rel="stylesheet" href="hub.css">
+</head>
+<body>
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>★ GREEN BEAR ARCADE ★ NOW OPEN ★ FREE PLAY ★ NEW CABINETS ON THE WAY ★ BEAT YOUR BEST ★</span>
+      <span>★ GREEN BEAR ARCADE ★ NOW OPEN ★ FREE PLAY ★ NEW CABINETS ON THE WAY ★ BEAT YOUR BEST ★</span>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="hero-logo">
+      <img src="assets/logo.webp" width="640" height="640" alt="Green Bear Arcade logo: a muscly green bear in a red headband bursting out of an arcade cabinet">
+    </div>
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="dot"></span> Free play · No sign up</p>
+      <h1>Welcome to <span>the Den.</span></h1>
+      <p class="lede">Games made by Green Bear Labs. Pick a cabinet, drop a token and try to beat your best score.</p>
+      <div class="hero-actions">
+        <a class="btn" href="#floor">Pick a cabinet</a>
+        <button class="btn ghost" id="random" type="button">🎲 Surprise me</button>
+      </div>
+      <p class="tokens" id="tokens" hidden></p>
+    </div>
+  </header>
+
+  <main id="floor" class="floor" aria-labelledby="floor-title">
+    <div class="floor-head">
+      <h2 id="floor-title">The Floor</h2>
+      <p>Every cabinet plays right in your browser, on a computer or a phone.</p>
+    </div>
+    <div class="cabinets" id="cabinets"></div>
+  </main>
+
+  <footer class="footer">
+    <p>Built by <a href="https://greenbearlabs.com/">Green Bear Labs</a>. High scores are saved on this device.</p>
+  </footer>
+
+  <script src="shared/arcade.js"></script>
+  <script src="shared/games.js"></script>
+  <script src="hub.js"></script>
+</body>
+</html>

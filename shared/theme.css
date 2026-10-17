@@ -1,0 +1,61 @@
+/* Green Bear Arcade palette, pulled from the logo. Shared by the hub and every game. */
+:root {
+  --bg: #0b0d0a;
+  --bg-2: #12160f;
+  --panel: #191e15;
+  --line: #2b3324;
+  --green: #6cc63a;
+  --green-hi: #a4ec6a;
+  --green-dk: #2f6a1c;
+  --amber: #f7b52c;
+  --orange: #ff7a1a;
+  --red: #e63b2e;
+  --cream: #f6e7c8;
+  --brown: #4a2e1f;
+  --text: #eef3e6;
+  --muted: #9aa58e;
+  --display: "Bungee", "Impact", system-ui, sans-serif;
+  --pixel: "Press Start 2P", ui-monospace, monospace;
+  --body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  line-height: 1.5;
+}
+
+a { color: var(--green-hi); }
+
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: .5em;
+  font-family: var(--display); font-size: 1rem; letter-spacing: .02em;
+  color: var(--bg); background: var(--amber);
+  border: 0; border-radius: 10px; padding: .6em 1.1em;
+  box-shadow: 0 4px 0 #a86f06;
+  cursor: pointer; text-decoration: none;
+  transition: transform .08s, box-shadow .08s;
+}
+.btn:hover { background: #ffc54d; }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #a86f06; }
+.btn.ghost { background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px var(--line); }
+.btn.ghost:hover { box-shadow: inset 0 0 0 2px var(--green); color: var(--green-hi); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
