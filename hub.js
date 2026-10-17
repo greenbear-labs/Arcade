@@ -17,7 +17,7 @@
     const soon = !game;
     const a = el(soon ? "div" : "a", soon ? "cab soon" : "cab");
     if (!soon) {
-      a.href = `games/${game.slug}/`;
+      a.href = `games/${game.slug}/index.html`;
       a.style.setProperty("--c", game.color);
       a.setAttribute("aria-label", `Play ${game.title}. ${game.tagline}`);
     } else {
