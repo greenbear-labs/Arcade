@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Berry Snake · Green Bear Arcade</title>
+  <meta name="description" content="Eat berries, grow long, don't bite your own tail. Classic snake from Green Bear Arcade.">
+  <meta name="theme-color" content="#0b0d0a">
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/theme.css">
+  <link rel="stylesheet" href="../../shared/game.css">
+</head>
+<body class="game">
+  <header class="game-bar">
+    <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
+    <h1>Berry Snake</h1>
+    <div class="stats">
+      <span>SCORE <b id="score">0</b></span>
+      <span>BEST <b id="best">0</b></span>
+      <button class="icon-btn" id="mute" type="button"></button>
+    </div>
+  </header>
+
+  <main class="stage" style="--screen-max: 600px">
+    <div class="screen">
+      <canvas id="game" aria-label="Berry Snake game screen"></canvas>
+      <div class="overlay" id="overlay" role="status" aria-live="polite"></div>
+    </div>
+    <div class="touch-pad dpad" aria-label="Direction pad">
+      <button type="button" data-dir="up" aria-label="Up">▲</button>
+      <button type="button" data-dir="left" aria-label="Left">◀</button>
+      <button type="button" data-dir="right" aria-label="Right">▶</button>
+      <button type="button" data-dir="down" aria-label="Down">▼</button>
+    </div>
+    <p class="howto">
+      <span class="keys-only">Steer with the <kbd>ARROW</kbd> keys or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>. <kbd>P</kbd> pauses.</span>
+      <span class="touch-only">Swipe on the screen or use the pad to steer.</span>
+      Every berry makes you longer and faster. Golden honey is worth extra, but it won't wait around.
+    </p>
+  </main>
+
+  <script src="../../shared/arcade.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

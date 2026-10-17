@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Honey Dash · Green Bear Arcade</title>
+  <meta name="description" content="Jump the hives, grab the honey, don't stop running. A one-button runner from Green Bear Arcade.">
+  <meta name="theme-color" content="#0b0d0a">
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/theme.css">
+  <link rel="stylesheet" href="../../shared/game.css">
+</head>
+<body class="game">
+  <header class="game-bar">
+    <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
+    <h1>Honey Dash</h1>
+    <div class="stats">
+      <span>SCORE <b id="score">0</b></span>
+      <span>BEST <b id="best">0</b></span>
+      <button class="icon-btn" id="mute" type="button"></button>
+    </div>
+  </header>
+
+  <main class="stage" style="--screen-max: 900px">
+    <div class="screen">
+      <canvas id="game" aria-label="Honey Dash game screen"></canvas>
+      <div class="overlay" id="overlay" role="status" aria-live="polite"></div>
+    </div>
+    <p class="howto">
+      <span class="keys-only">Press <kbd>SPACE</kbd> or <kbd>↑</kbd> to jump. Hold it to jump higher.</span>
+      <span class="touch-only">Tap the screen to jump. Hold to jump higher.</span>
+      Hop over the hives, scoop up honey jars for bonus points, and stay low when the bees buzz by.
+    </p>
+  </main>
+
+  <script src="../../shared/arcade.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
