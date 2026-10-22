@@ -17,7 +17,7 @@
     const soon = !game;
     const a = el(soon ? "div" : "a", soon ? "cab soon" : "cab");
     if (!soon) {
-      a.href = `games/${game.slug}/index.html`;
+      a.href = game.url || `games/${game.slug}/index.html`;
       a.style.setProperty("--c", game.color);
       a.setAttribute("aria-label", `Play ${game.title}. ${game.tagline}`);
     } else {
@@ -44,8 +44,13 @@
     door.append(el("span", "slot"), el("span", "slot"));
     const meta = el("div", "meta");
     if (!soon) {
-      meta.innerHTML = `${game.controls.toUpperCase()}<br>BEST <b></b>`;
-      meta.querySelector("b").textContent = Arcade.best(game.slug);
+      if (game.meta) {
+        meta.innerHTML = `${game.controls.toUpperCase()}<br><b></b>`;
+        meta.querySelector("b").textContent = game.meta;
+      } else {
+        meta.innerHTML = `${game.controls.toUpperCase()}<br>BEST <b></b>`;
+        meta.querySelector("b").textContent = Arcade.best(game.slug);
+      }
     } else {
       meta.textContent = "OUT OF ORDER";
     }
@@ -129,6 +134,23 @@
       ctx.fillStyle = "#e63b2e"; ctx.fillRect(hx * cell + 1, hy * cell + 2, cell - 2, 3);
       for (const [bx, by] of [[9, 7], [13, 9], [6, 9]]) drawBerry(ctx, bx * cell + cell / 2, by * cell + cell / 2, 5);
     },
+    "mythica-sanctuary"(ctx, t) {
+      // Slow pan over the game's title art, with drifting fireflies.
+      ctx.fillStyle = "#14202c"; ctx.fillRect(0, 0, W, H);
+      if (sanctuaryArt.complete && sanctuaryArt.naturalWidth) {
+        const iw = sanctuaryArt.naturalWidth, ih = sanctuaryArt.naturalHeight;
+        const scale = W / iw * 1.12;
+        const pan = (Math.sin(t * 0.25) + 1) / 2;
+        ctx.drawImage(sanctuaryArt, -(iw * scale - W) * pan, -(ih * scale - H) * (1 - pan), iw * scale, ih * scale);
+      }
+      for (let i = 0; i < 9; i++) {
+        const x = (i * 53 + Math.sin(t * 0.7 + i) * 14 + 400) % W;
+        const y = 40 + ((i * 37) % 120) + Math.cos(t * 0.9 + i * 2) * 8;
+        const a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2 + i * 1.7));
+        ctx.fillStyle = `rgba(255, 236, 140, ${a})`;
+        ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill();
+      }
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
@@ -136,6 +158,10 @@
       ctx.putImageData(img, 0, 0);
     },
   };
+
+  const sanctuaryArt = new Image();
+  sanctuaryArt.onload = () => { const c = cabs.find((x) => x.slug === "mythica-sanctuary"); if (c && c.ctx) attract[c.slug](c.ctx, 1.3); };
+  sanctuaryArt.src = "assets/sanctuary.jpg";
 
   // Sprites shared with the games live in each game; these are small preview versions.
   function drawHive(ctx, x, ground, s) {
