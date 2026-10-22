@@ -22,6 +22,10 @@ Starter games:
 - **Whack-a-Raccoon**: punch raccoons out of trash cans, chase the gold one, spare the cubs.
 - **Berry Snake**: classic snake with berries and a timed golden honey bonus.
 
+Also on the floor:
+
+- **Mythica Sanctuary**: a cozy creature-rescue game hosted on the Mythica site ([mythica.greenbearlabs.com/sanctuary](https://mythica.greenbearlabs.com/sanctuary/)). Its cabinet links out using the `url` field in `shared/games.js`.
+
 Everything is plain HTML, CSS and JavaScript with no build step and no dependencies. Best scores live in the player's browser.
 
 ## Run it locally
