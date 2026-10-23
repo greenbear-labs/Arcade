@@ -23,6 +23,15 @@ window.ARCADE_GAMES = [
     color: "#6cc63a",
   },
   {
+    slug: "chow-pow",
+    title: "Chow Pow",
+    tagline: "Spicy Punch vs Haunted Noodle Row. Smash, dodge, take down Madam Pirogi.",
+    controls: "Keys or touch",
+    color: "#ff5a1f",
+    // Built in Unity (WebGL); it doesn't report scores to the Den.
+    meta: "STAGE 1",
+  },
+  {
     slug: "mythica-sanctuary",
     title: "Mythica Sanctuary",
     tagline: "Rescue hurt creatures, heal them and earn their trust.",
