@@ -32,6 +32,15 @@ window.ARCADE_GAMES = [
     meta: "STAGE 1",
   },
   {
+    slug: "chow-pow-rock",
+    title: "Battle of the Bands",
+    tagline: "Sour Bomb Sandy shreds five stages. Hit the notes, win the crowd.",
+    controls: "Keys or tap",
+    color: "#ff3fa4",
+    // Unity (WebGL) rhythm game; progress and stars save in the player's browser, not in the Den.
+    meta: "5 STAGES",
+  },
+  {
     slug: "mythica-sanctuary",
     title: "Mythica Sanctuary",
     tagline: "Rescue hurt creatures, heal them and earn their trust.",

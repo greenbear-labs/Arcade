@@ -165,6 +165,45 @@
         ctx.fillStyle = "#ffd23f"; ctx.fillText("POW!", 150, 52);
       }
     },
+    "chow-pow-rock"(ctx, t) {
+      // A four-lane note highway under stage lights; notes land on the strike line in time with the beat.
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, "#2a0f3d"); bg.addColorStop(1, "#5a1650");
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      const beat = t * 2, pulse = 1 - (beat % 1);
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = `rgba(255, 220, 255, ${0.06 + 0.08 * pulse})`;
+        ctx.beginPath(); ctx.moveTo(30 + i * 60, 0); ctx.lineTo(10 + i * 60, H); ctx.lineTo(50 + i * 60, H); ctx.fill();
+      }
+      const top = 18, strike = 150, cx = W / 2;
+      const proj = (lane, u) => { const s = 1 / (1 + 2.3 * u); return [cx + (lane - 1.5) * 34 * s, strike - (strike - top) * (1 - s) / (1 - 1 / 3.3)]; };
+      ctx.fillStyle = "#16101e"; ctx.strokeStyle = "#ff3fa4"; ctx.lineWidth = 2;
+      const [l0x] = proj(-0.5, 1), [r0x] = proj(3.5, 1), [l1x] = proj(-0.5, 0), [r1x] = proj(3.5, 0);
+      ctx.beginPath(); ctx.moveTo(l0x, top); ctx.lineTo(r0x, top); ctx.lineTo(r1x + 6, H); ctx.lineTo(l1x - 6, H); ctx.closePath(); ctx.fill(); ctx.stroke();
+      const colors = ["#7bd93a", "#e8263f", "#ffd23f", "#3cc3ee"];
+      const pattern = [0, 2, 1, 3, 2, 0, 3, 1];
+      for (let n = 0; n < 8; n++) {
+        const due = n - (beat % 1);
+        const u = due / 4;
+        if (u < -0.05 || u > 1) continue;
+        const lane = pattern[(Math.floor(beat) + n) % 8];
+        const [x, y] = proj(lane, u), s = 1 / (1 + 2.3 * u);
+        ctx.fillStyle = colors[lane]; ctx.strokeStyle = "#0b0d0a";
+        ctx.beginPath(); ctx.ellipse(x, y, 13 * s, 8 * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+      for (let lane = 0; lane < 4; lane++) {
+        const [x, y] = proj(lane, 0);
+        const hit = pattern[Math.floor(beat) % 8] === lane && beat % 1 < 0.25;
+        ctx.strokeStyle = colors[lane]; ctx.lineWidth = hit ? 5 : 3;
+        ctx.beginPath(); ctx.ellipse(x, y, 14, 9, 0, 0, Math.PI * 2); ctx.stroke();
+        if (hit) { ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.fill(); }
+      }
+      if (Math.floor(beat) % 4 === 3) {
+        ctx.font = "15px Bungee, sans-serif"; ctx.textAlign = "center";
+        ctx.fillStyle = "#e8263f"; ctx.fillText("PERFECT!", cx + 2, 52);
+        ctx.fillStyle = "#ffd23f"; ctx.fillText("PERFECT!", cx, 50);
+      }
+    },
     "mythica-sanctuary"(ctx, t) {
       // Slow pan over the game's title art, with drifting fireflies.
       ctx.fillStyle = "#14202c"; ctx.fillRect(0, 0, W, H);

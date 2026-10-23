@@ -26,6 +26,8 @@ Also on the floor:
 
 - **Chow Pow: Street Brawl**: Spicy Punch fights down Haunted Noodle Row and takes on Madam Pirogi. It's a Unity WebGL build in `games/chow-pow/Build`; rebuild it in the Unity project with **Chow Pow > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here.
 
+- **Chow Pow: Battle of the Bands**: a rhythm game where Sour Bomb Sandy and the Hard-core Candies rock five stages against rival bands. It's a Unity WebGL build in `games/chow-pow-rock/Build`; rebuild it in the CandyRockGame Unity project with **Chow Pow > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here. All its music is original, written for the game.
+
 - **Mythica Sanctuary**: a cozy creature-rescue game hosted on the Mythica site ([mythica.greenbearlabs.com/sanctuary](https://mythica.greenbearlabs.com/sanctuary/)). Its cabinet links out using the `url` field in `shared/games.js`.
 
 Everything is plain HTML, CSS and JavaScript with no build step and no dependencies. Best scores live in the player's browser.
