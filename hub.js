@@ -183,7 +183,7 @@
       const colors = ["#7bd93a", "#e8263f", "#ffd23f", "#3cc3ee"];
       const pattern = [0, 2, 1, 3, 2, 0, 3, 1];
       for (let n = 0; n < 8; n++) {
-        const due = Math.floor(beat) + n - (beat % 1);
+        const due = n - (beat % 1);
         const u = due / 4;
         if (u < -0.05 || u > 1) continue;
         const lane = pattern[(Math.floor(beat) + n) % 8];

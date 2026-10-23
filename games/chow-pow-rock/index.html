@@ -45,6 +45,8 @@
     }
     .exit-full:hover, .exit-full:focus-visible { opacity: 1; }
     .screen.full .exit-full { display: block; }
+    /* The game has its own BACK button in the top-left corner; sit just below it, clear of the note lanes. */
+    .exit-full { top: calc(max(10px, env(safe-area-inset-top)) + 54px); width: 32px; height: 32px; font-size: .9rem; }
     .rotate { display: none; }
     @media (orientation: portrait) and (pointer: coarse) {
       .screen.full .rotate {
