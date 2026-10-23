@@ -52,16 +52,16 @@
       const overlay = document.getElementById("overlay");
       const bar = document.getElementById("bar");
       const status = document.getElementById("status");
-      const build = "Build/__BUILD_NAME__";
+      const build = "Build/WebGL";
       let instance = null;
 
       const loader = document.createElement("script");
       loader.src = build + ".loader.js";
       loader.onload = () => {
         createUnityInstance(canvas, {
-          dataUrl: build + ".data__EXT__",
-          frameworkUrl: build + ".framework.js__EXT__",
-          codeUrl: build + ".wasm__EXT__",
+          dataUrl: build + ".data.unityweb",
+          frameworkUrl: build + ".framework.js.unityweb",
+          codeUrl: build + ".wasm.unityweb",
           companyName: "Green Bear Labs",
           productName: "Chow Pow Street Brawl",
           productVersion: "0.1",
