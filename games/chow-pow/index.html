@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Chow Pow: Street Brawl · Green Bear Arcade</title>
   <meta name="description" content="Spicy Punch brawls down Haunted Noodle Row and takes on Madam Pirogi. A Chow Pow street fighter from Green Bear Arcade.">
   <meta name="theme-color" content="#0b0d0a">
   <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <!-- Saved to a phone's home screen, the game opens with no browser bars at all (the only true full screen on iPhone). -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Chow Pow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
@@ -15,10 +22,41 @@
   <style>
     /* Unity draws into this canvas; it keeps a 16:9 shape and the build matches its size. */
     #unity-canvas { aspect-ratio: 16 / 9; }
+    /* In the window, the screen is as big as the viewport allows (header and a little margin aside). */
+    body.game .stage { padding: 10px 10px 24px; gap: 14px; }
+    .screen#screen:not(.full) { max-width: min(100%, calc((100vh - 96px) * 16 / 9)); max-width: min(100%, calc((100dvh - 96px) * 16 / 9)); }
     .loading { width: min(320px, 70%); height: 14px; border: 2px solid var(--amber); border-radius: 8px; overflow: hidden; }
     .loading i { display: block; height: 100%; width: 0; background: var(--amber); transition: width .2s; }
-    .screen:fullscreen, .screen:-webkit-full-screen { max-width: none; padding: 0; border-radius: 0; background: #000; display: flex; align-items: center; }
-    .screen:fullscreen #unity-canvas { max-height: 100vh; border-radius: 0; }
+    /* Full screen: the cabinet screen covers the whole viewport and the game fills it edge to edge
+       (it frames itself for anything from 4:3 to 21:9). Works without the Fullscreen API too, for iPhone. */
+    body.is-full { overflow: hidden; }
+    .screen.full {
+      position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; height: 100dvh; max-width: none;
+      padding: 0; border-radius: 0; background: #000; box-shadow: none;
+    }
+    .screen.full::after { display: none; }
+    .screen.full #unity-canvas { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+    .exit-full {
+      display: none; position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left));
+      width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5);
+      background: rgba(0, 0, 0, .45); color: #fff; font-size: 1.1rem; cursor: pointer; opacity: .6;
+    }
+    .exit-full:hover, .exit-full:focus-visible { opacity: 1; }
+    .screen.full .exit-full { display: block; }
+    .rotate { display: none; }
+    @media (orientation: portrait) and (pointer: coarse) {
+      .screen.full .rotate {
+        display: flex; position: absolute; inset: 0; z-index: 4; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        background: rgba(8, 10, 7, .92); color: var(--cream); font-family: var(--display); text-align: center; padding: 24px;
+      }
+      .rotate b { font-size: 3rem; display: inline-block; animation: tilt 1.6s ease-in-out infinite; }
+    }
+    @keyframes tilt { 50% { transform: rotate(-90deg); } }
+    .play-full {
+      font-family: var(--display); font-size: 1.1rem; padding: 12px 22px; border-radius: 12px; cursor: pointer;
+      border: 2px solid #000; background: var(--amber); color: #1a100a; box-shadow: 0 4px 0 #000;
+    }
+    .overlay .alt { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; }
   </style>
 </head>
 <body class="game">
@@ -30,9 +68,11 @@
     </div>
   </header>
 
-  <main class="stage" style="--screen-max: 1100px">
+  <main class="stage">
     <div class="screen" id="screen">
       <canvas id="unity-canvas" tabindex="-1" aria-label="Chow Pow: Street Brawl game screen"></canvas>
+      <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕</button>
+      <div class="rotate" aria-hidden="true"><b>📱</b>Turn your phone sideways</div>
       <div class="overlay" id="overlay" role="status" aria-live="polite">
         <h2>Chow Pow</h2>
         <p id="status">Loading the taco truck…</p>
@@ -67,18 +107,48 @@
           productVersion: "0.1",
           devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         }, (p) => { bar.style.width = Math.round(p * 100) + "%"; })
-          .then((u) => { instance = u; overlay.hidden = true; canvas.focus(); })
+          .then((u) => {
+            instance = u;
+            // Offer full screen before the first punch; "play in window" keeps the page as it is.
+            overlay.innerHTML = '<h2>Chow Pow</h2><button class="play-full" type="button">Play full screen</button><button class="alt" type="button">play in window</button>';
+            overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; enterFull(); });
+            overlay.querySelector(".alt").addEventListener("click", () => { overlay.hidden = true; canvas.focus(); });
+            overlay.querySelector(".play-full").focus();
+          })
           .catch((err) => { status.textContent = "The game couldn't start in this browser. " + err; });
       };
       loader.onerror = () => { status.textContent = "The game files didn't load. Try refreshing."; };
       document.body.append(loader);
 
-      // Full screen on the whole cabinet screen, so it keeps working on iOS where canvas fullscreen doesn't.
       const screen = document.getElementById("screen");
-      document.getElementById("full").addEventListener("click", () => {
+      const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+      function enterFull() {
+        screen.classList.add("full");
+        document.body.classList.add("is-full");
         const req = screen.requestFullscreen || screen.webkitRequestFullscreen;
-        if (req) req.call(screen); else if (instance) instance.SetFullscreen(1);
-      });
+        if (req) {
+          const done = req.call(screen, { navigationUI: "hide" });
+          // Phones: lock to landscape once we're really full screen (ignored where unsupported).
+          if (done && done.then) done.then(() => { const o = window.screen.orientation; if (o && o.lock) o.lock("landscape").catch(() => {}); }, () => {});
+        }
+        canvas.focus();
+      }
+      function leaveFull() {
+        screen.classList.remove("full");
+        document.body.classList.remove("is-full");
+      }
+      function exitFull() {
+        if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        leaveFull();
+      }
+      // Esc (or the system back gesture) leaves real full screen; drop our layout with it.
+      const onChange = () => { if (!fsElement()) leaveFull(); };
+      document.addEventListener("fullscreenchange", onChange);
+      document.addEventListener("webkitfullscreenchange", onChange);
+
+      document.getElementById("full").addEventListener("click", () => (screen.classList.contains("full") ? exitFull() : enterFull()));
+      document.getElementById("exit-full").addEventListener("click", exitFull);
     })();
   </script>
 </body>

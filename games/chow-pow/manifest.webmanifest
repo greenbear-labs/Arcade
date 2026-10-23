@@ -1,0 +1,11 @@
+{
+  "name": "Chow Pow: Street Brawl",
+  "short_name": "Chow Pow",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [{ "src": "../../assets/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }]
+}
