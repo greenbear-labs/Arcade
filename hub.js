@@ -134,6 +134,37 @@
       ctx.fillStyle = "#e63b2e"; ctx.fillRect(hx * cell + 1, hy * cell + 2, cell - 2, 3);
       for (const [bx, by] of [[9, 7], [13, 9], [6, 9]]) drawBerry(ctx, bx * cell + cell / 2, by * cell + cell / 2, 5);
     },
+    "chow-pow"(ctx, t) {
+      // Spicy Punch jabs a Ravioli ghost down a night street; every third punch knocks it back.
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#1b1030"); sky.addColorStop(1, "#4a1d3f");
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(196, 30, 13, 0, Math.PI * 2); ctx.fill();
+      const pan = (t * 18) % 60;
+      ctx.fillStyle = "#24163a";
+      for (let i = -1; i < 6; i++) ctx.fillRect(i * 60 - pan, 62 + (i * 29 % 3) * 10, 50, 90);
+      ctx.fillStyle = "#3a2a20"; ctx.fillRect(0, 138, W, 42);
+      ctx.fillStyle = "#5a4030"; ctx.fillRect(0, 138, W, 4);
+      for (let i = 0; i < 6; i++) ctx.fillRect(i * 48 - (t * 30 % 48), 158, 24, 3);
+
+      const beat = t * 1.8, k = beat % 1, hit = Math.floor(beat) % 3 === 2;
+      const jab = Math.max(0, Math.sin(Math.min(k / .35, 1) * Math.PI));
+      const knock = hit && k > .15 ? Math.min((k - .15) * 4, 1) : 0;
+      drawTaco(ctx, 64 + jab * 6, 112 + Math.sin(t * 6) * 1.5, 30, jab);
+      drawRavioli(ctx, 168 + knock * 26, 92 + Math.sin(t * 3) * 5 - knock * 10, 22, knock);
+      if (jab > .7) {
+        ctx.save(); ctx.translate(138, 106); ctx.rotate(t * 4);
+        ctx.fillStyle = hit ? "#ffd23f" : "#fff";
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) { const r = i % 2 ? 4 : 10; ctx.lineTo(Math.cos(i * Math.PI / 5) * r, Math.sin(i * Math.PI / 5) * r); }
+        ctx.fill(); ctx.restore();
+      }
+      if (hit && k > .2 && k < .8) {
+        ctx.font = "16px Bungee, sans-serif"; ctx.textAlign = "center";
+        ctx.fillStyle = "#e63b2e"; ctx.fillText("POW!", 152, 54);
+        ctx.fillStyle = "#ffd23f"; ctx.fillText("POW!", 150, 52);
+      }
+    },
     "mythica-sanctuary"(ctx, t) {
       // Slow pan over the game's title art, with drifting fireflies.
       ctx.fillStyle = "#14202c"; ctx.fillRect(0, 0, W, H);
@@ -198,6 +229,33 @@
     ctx.fillStyle = "#5d6656"; ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(x, y, s * 1.1, s * .35, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#000"; ctx.beginPath(); ctx.ellipse(x, y, s * .85, s * .22, 0, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function drawTaco(ctx, x, y, s, jab) {
+    ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 2;
+    // filling peeking out of the shell
+    ctx.fillStyle = "#6cc63a"; ctx.beginPath(); ctx.ellipse(x, y - s * .55, s * .95, s * .3, 0, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = "#e63b2e"; for (const dx of [-.5, 0, .5]) { ctx.beginPath(); ctx.arc(x + dx * s, y - s * .62, s * .14, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = "#f2c14e"; ctx.beginPath(); ctx.ellipse(x, y - s * .5, s, s * .9, 0, 0, Math.PI); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#e63b2e"; ctx.fillRect(x - s * .9, y - s * .3, s * 1.8, s * .16); // bandana
+    ctx.fillStyle = "#fff"; for (const dx of [-.25, .2]) { ctx.beginPath(); ctx.arc(x + dx * s, y - s * .02, s * .13, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = "#000"; for (const dx of [-.2, .25]) { ctx.beginPath(); ctx.arc(x + dx * s, y, s * .06, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = "#c81e1e"; // boxing gloves
+    ctx.beginPath(); ctx.arc(x + s * (1.1 + jab * 1.3), y - s * .1, s * .3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x + s * .9, y + s * .3, s * .28, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  function drawRavioli(ctx, x, y, s, knock) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(knock * .5);
+    ctx.globalAlpha = .9;
+    ctx.fillStyle = "#f6a6c8"; ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-s, -s); ctx.lineTo(s, -s); ctx.lineTo(s, s * .6);
+    for (let i = 4; i >= 0; i--) ctx.quadraticCurveTo(-s + (i + .5) * s * .4, s * (i % 2 ? .6 : 1.1), -s + i * s * .4, s * .6);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.fillStyle = "#1b1030";
+    if (knock > .2) { ctx.font = `${s * .6}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("x  x", 0, -s * .1); }
+    else for (const dx of [-.4, .4]) { ctx.beginPath(); ctx.ellipse(dx * s, -s * .25, s * .14, s * .22, 0, 0, Math.PI * 2); ctx.fill(); }
+    ctx.beginPath(); ctx.ellipse(0, s * .25, s * .2, s * (.12 + knock * .1), 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
   }
 
   // ---- build the floor ----

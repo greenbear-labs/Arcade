@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chow Pow: Street Brawl · Green Bear Arcade</title>
+  <meta name="description" content="Spicy Punch brawls down Haunted Noodle Row and takes on Madam Pirogi. A Chow Pow street fighter from Green Bear Arcade.">
+  <meta name="theme-color" content="#0b0d0a">
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/theme.css">
+  <link rel="stylesheet" href="../../shared/game.css">
+  <style>
+    /* Unity draws into this canvas; it keeps a 16:9 shape and the build matches its size. */
+    #unity-canvas { aspect-ratio: 16 / 9; }
+    .loading { width: min(320px, 70%); height: 14px; border: 2px solid var(--amber); border-radius: 8px; overflow: hidden; }
+    .loading i { display: block; height: 100%; width: 0; background: var(--amber); transition: width .2s; }
+    .screen:fullscreen, .screen:-webkit-full-screen { max-width: none; padding: 0; border-radius: 0; background: #000; display: flex; align-items: center; }
+    .screen:fullscreen #unity-canvas { max-height: 100vh; border-radius: 0; }
+  </style>
+</head>
+<body class="game">
+  <header class="game-bar">
+    <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
+    <h1>Chow Pow: Street Brawl</h1>
+    <div class="stats">
+      <button class="icon-btn" id="full" type="button" aria-label="Full screen" title="Full screen">⛶</button>
+    </div>
+  </header>
+
+  <main class="stage" style="--screen-max: 1100px">
+    <div class="screen" id="screen">
+      <canvas id="unity-canvas" tabindex="-1" aria-label="Chow Pow: Street Brawl game screen"></canvas>
+      <div class="overlay" id="overlay" role="status" aria-live="polite">
+        <h2>Chow Pow</h2>
+        <p id="status">Loading the taco truck…</p>
+        <div class="loading"><i id="bar"></i></div>
+      </div>
+    </div>
+    <p class="howto">
+      <span class="keys-only">Move <kbd>WASD</kbd> · Punch <kbd>J</kbd> · Jump <kbd>K</kbd> · Block <kbd>SHIFT</kbd> · Spice special <kbd>L</kbd>. In the boss fight, tap <kbd>A</kbd>/<kbd>D</kbd> to dodge and hold <kbd>S</kbd> to duck.</span>
+      <span class="touch-only">Turn your phone sideways. Drag on the left to move, and use the buttons on the right to punch, jump, block and throw your Spice special.</span>
+      Smash crates for tacos and chilis, clear Haunted Noodle Row, then read Madam Pirogi's glowing tells and punch back when she's dizzy.
+    </p>
+  </main>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById("unity-canvas");
+      const overlay = document.getElementById("overlay");
+      const bar = document.getElementById("bar");
+      const status = document.getElementById("status");
+      const build = "Build/WebGL";
+      let instance = null;
+
+      const loader = document.createElement("script");
+      loader.src = build + ".loader.js";
+      loader.onload = () => {
+        createUnityInstance(canvas, {
+          dataUrl: build + ".data.unityweb",
+          frameworkUrl: build + ".framework.js.unityweb",
+          codeUrl: build + ".wasm.unityweb",
+          companyName: "Green Bear Labs",
+          productName: "Chow Pow Street Brawl",
+          productVersion: "0.1",
+          devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        }, (p) => { bar.style.width = Math.round(p * 100) + "%"; })
+          .then((u) => { instance = u; overlay.hidden = true; canvas.focus(); })
+          .catch((err) => { status.textContent = "The game couldn't start in this browser. " + err; });
+      };
+      loader.onerror = () => { status.textContent = "The game files didn't load. Try refreshing."; };
+      document.body.append(loader);
+
+      // Full screen on the whole cabinet screen, so it keeps working on iOS where canvas fullscreen doesn't.
+      const screen = document.getElementById("screen");
+      document.getElementById("full").addEventListener("click", () => {
+        const req = screen.requestFullscreen || screen.webkitRequestFullscreen;
+        if (req) req.call(screen); else if (instance) instance.SetFullscreen(1);
+      });
+    })();
+  </script>
+</body>
+</html>
