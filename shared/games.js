@@ -41,6 +41,15 @@ window.ARCADE_GAMES = [
     meta: "5 STAGES",
   },
   {
+    slug: "chow-pow-pirates",
+    title: "Pizza Pirates",
+    tagline: "The Burgers are firing their lunch at you. Swipe the cutlass, slash it all.",
+    controls: "Swipe or mouse",
+    color: "#ffcf4a",
+    // Unity (WebGL) slicing game; best plunder saves in the player's browser, not in the Den.
+    meta: "FOOD FIGHT",
+  },
+  {
     slug: "mythica-sanctuary",
     title: "Mythica Sanctuary",
     tagline: "Rescue hurt creatures, heal them and earn their trust.",
