@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Chow Pow: Battle of the Bands · Green Bear Arcade</title>
-  <meta name="description" content="Sour Bomb Sandy and the Hard-core Candies rock five stages to win the Battle of the Bands. A Chow Pow rhythm game from Green Bear Arcade.">
+  <meta name="description" content="Sour Bomb Sandy and the Hard-core Candies take on a band from every Chow Pow faction to win the Battle of the Bands. A Chow Pow rhythm game from Green Bear Arcade.">
   <meta name="theme-color" content="#0b0d0a">
   <link rel="icon" type="image/png" href="../../assets/favicon.png">
   <!-- Saved to a phone's home screen, the game opens with no browser bars at all (the only true full screen on iPhone). -->
@@ -20,8 +20,12 @@
   <link rel="stylesheet" href="../../shared/theme.css">
   <link rel="stylesheet" href="../../shared/game.css">
   <style>
-    /* Unity draws into this canvas; it keeps a 16:9 shape and the build matches its size. */
+    /* Unity draws into this canvas; it keeps a 16:9 shape (9:16 on an upright phone) and the build matches its size. */
     #unity-canvas { aspect-ratio: 16 / 9; }
+    @media (orientation: portrait) and (pointer: coarse) {
+      #unity-canvas { aspect-ratio: 9 / 16; }
+      .screen#screen:not(.full) { max-width: min(100%, calc((100vh - 96px) * 9 / 16)); max-width: min(100%, calc((100dvh - 96px) * 9 / 16)); }
+    }
     /* Every tap is a note: no double-tap zoom, scrolling or text selection over the game. */
     #unity-canvas, .screen { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     /* In the window, the screen is as big as the viewport allows (header and a little margin aside). */
@@ -47,15 +51,6 @@
     .screen.full .exit-full { display: block; }
     /* The game has its own BACK button in the top-left corner; sit just below it, clear of the note lanes. */
     .exit-full { top: calc(max(10px, env(safe-area-inset-top)) + 54px); width: 32px; height: 32px; font-size: .9rem; }
-    .rotate { display: none; }
-    @media (orientation: portrait) and (pointer: coarse) {
-      .screen.full .rotate {
-        display: flex; position: absolute; inset: 0; z-index: 4; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-        background: rgba(8, 10, 7, .92); color: var(--cream); font-family: var(--display); text-align: center; padding: 24px;
-      }
-      .rotate b { font-size: 3rem; display: inline-block; animation: tilt 1.6s ease-in-out infinite; }
-    }
-    @keyframes tilt { 50% { transform: rotate(-90deg); } }
     .play-full {
       font-family: var(--display); font-size: 1.1rem; padding: 12px 22px; border-radius: 12px; cursor: pointer;
       border: 2px solid #000; background: var(--amber); color: #1a100a; box-shadow: 0 4px 0 #000;
@@ -76,7 +71,6 @@
     <div class="screen" id="screen">
       <canvas id="unity-canvas" tabindex="-1" aria-label="Chow Pow: Battle of the Bands game screen"></canvas>
       <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕</button>
-      <div class="rotate" aria-hidden="true"><b>📱</b>Turn your phone sideways</div>
       <div class="overlay" id="overlay" role="status" aria-live="polite">
         <h2>Chow Pow</h2>
         <p id="status">Tuning the guitars…</p>
@@ -85,8 +79,8 @@
     </div>
     <p class="howto">
       <span class="keys-only">Hit the notes as they cross the line with <kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> (or the arrow keys). Hold long notes, and press <kbd>SPACE</kbd> to fire Sugar Rush.</span>
-      <span class="touch-only">Turn your phone sideways. Tap the four colored lanes as notes cross the line, keep your finger down on long notes, and tap RUSH when Sugar Rush is ready.</span>
-      Play as Sour Bomb Sandy and beat five rival bands, from the Gummy Worms to Beef Erickson, to win the Battle of the Bands. Turn your sound on!
+      <span class="touch-only">Play sideways with your thumbs on the colored pads, or upright by tapping the lanes. Keep your finger down on long notes, and tap RUSH when Sugar Rush is ready.</span>
+      Play as Sour Bomb Sandy and beat nine rival bands, one from every Chow Pow faction, to win the Battle of the Bands. Turn your sound on!
     </p>
   </main>
 
@@ -133,8 +127,8 @@
         const req = screen.requestFullscreen || screen.webkitRequestFullscreen;
         if (req) {
           const done = req.call(screen, { navigationUI: "hide" });
-          // Phones: lock to landscape once we're really full screen (ignored where unsupported).
-          if (done && done.then) done.then(() => { const o = window.screen.orientation; if (o && o.lock) o.lock("landscape").catch(() => {}); }, () => {});
+          // The game plays sideways or upright, so the phone's orientation is left free.
+          if (done && done.catch) done.catch(() => {});
         }
         canvas.focus();
       }

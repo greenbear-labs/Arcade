@@ -26,7 +26,7 @@ Also on the floor:
 
 - **Chow Pow: Street Brawl**: Spicy Punch fights down Haunted Noodle Row and takes on Madam Pirogi. It's a Unity WebGL build in `games/chow-pow/Build`; rebuild it in the Unity project with **Chow Pow > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here.
 
-- **Chow Pow: Battle of the Bands**: a rhythm game where Sour Bomb Sandy and the Hard-core Candies rock five stages against rival bands. It's a Unity WebGL build in `games/chow-pow-rock/Build`; rebuild it in the CandyRockGame Unity project with **Chow Pow > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here. All its music is original, written for the game.
+- **Chow Pow: Battle of the Bands**: a rhythm game where Sour Bomb Sandy and the Hard-core Candies take on a rival band from every Chow Pow faction across nine stages, sideways or upright. It's a Unity WebGL build in `games/chow-pow-rock/Build`; rebuild it in the CandyRockGame Unity project with **Chow Pow > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here. All its music is original, written for the game.
 
 - **Chow Pow: Pizza Pirates**: a food-slicing game where Captain Crust swipes his cutlass through everything the Barbaric Burgers fire at his deck. It's a Unity WebGL build in `games/chow-pow-pirates/Build`; rebuild it in the PizzaPirateGame Unity project with **Chow Pow > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here. Its art, music and sound are all original, made for the game.
 

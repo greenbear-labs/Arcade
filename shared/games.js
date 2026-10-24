@@ -34,11 +34,11 @@ window.ARCADE_GAMES = [
   {
     slug: "chow-pow-rock",
     title: "Battle of the Bands",
-    tagline: "Sour Bomb Sandy shreds five stages. Hit the notes, win the crowd.",
+    tagline: "Sour Bomb Sandy battles a band from every faction. Hit the notes, win the crowd.",
     controls: "Keys or tap",
     color: "#ff3fa4",
     // Unity (WebGL) rhythm game; progress and stars save in the player's browser, not in the Den.
-    meta: "5 STAGES",
+    meta: "9 STAGES",
   },
   {
     slug: "chow-pow-pirates",
