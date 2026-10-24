@@ -204,6 +204,83 @@
         ctx.fillStyle = "#ffd23f"; ctx.fillText("PERFECT!", cx, 50);
       }
     },
+    "chow-pow-pirates"(ctx, t) {
+      // Burgers fly in from the Burger ship; the cutlass sweeps through and cuts one in half.
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#2f6fd0"); sky.addColorStop(1, "#ffd9a0");
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(44, 34, 12, 0, Math.PI * 2); ctx.fill();
+      const sea = ctx.createLinearGradient(0, 108, 0, H);
+      sea.addColorStop(0, "#3fa6d8"); sea.addColorStop(1, "#0b3a6a");
+      ctx.fillStyle = sea; ctx.fillRect(0, 108, W, H - 108);
+      ctx.fillStyle = "rgba(255,255,255,.35)";
+      for (let i = 0; i < 7; i++) ctx.fillRect((i * 38 + Math.sin(t + i) * 8 + W) % W, 118 + (i % 3) * 9, 16, 2);
+
+      // the Burger longship on the horizon, with its striped sail
+      const rock = Math.sin(t * .9) * .05;
+      ctx.save(); ctx.translate(196, 112); ctx.rotate(rock);
+      ctx.fillStyle = "#f4e4c4"; ctx.fillRect(-20, -52, 40, 32);
+      ctx.fillStyle = "#e8302a"; ctx.fillRect(-20, -52, 13, 32);
+      ctx.fillStyle = "#f2c21a"; ctx.fillRect(7, -52, 13, 32);
+      ctx.fillStyle = "#5e3a1e"; ctx.fillRect(-2, -56, 3, 56);
+      ctx.fillStyle = "#8a5a32"; ctx.beginPath(); ctx.ellipse(0, -4, 34, 11, 0, 0, Math.PI); ctx.fill();
+      ctx.restore();
+
+      // food on an arc toward your deck, cut at the midpoint of each cycle
+      const cycle = (t * .8) % 1;
+      const fx = 196 - cycle * 190, fy = 74 - Math.sin(cycle * Math.PI) * 44 + cycle * cycle * 30;
+      const cut = cycle > .52;
+      const drawBurger = (x, y, half, spin) => {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(spin);
+        ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 1.5;
+        if (half !== "bottom") {
+          ctx.fillStyle = "#e0a050"; ctx.beginPath(); ctx.ellipse(0, -4, 11, 7, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#5fd65f"; ctx.fillRect(-12, -1, 24, 3);
+        }
+        if (half !== "top") {
+          ctx.fillStyle = "#6b3a1e"; Arcade.roundRect(ctx, -11, 2, 22, 5, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#e0a050"; ctx.beginPath(); ctx.ellipse(0, 8, 10, 5, 0, 0, Math.PI); ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+      };
+      if (!cut) drawBurger(fx, fy, "whole", cycle * 6);
+      else {
+        const k = (cycle - .52) * 3;
+        drawBurger(fx - k * 14, fy - k * 10 + k * k * 26, "top", 1 + k * 3);
+        drawBurger(fx + k * 12, fy + k * 4 + k * k * 30, "bottom", -1 - k * 3);
+        ctx.fillStyle = "#d8241c";
+        for (let i = 0; i < 6; i++) {
+          const a = i * 1.1 + 1;
+          ctx.beginPath(); ctx.arc(fx + Math.cos(a) * k * 34, fy + Math.sin(a) * k * 30 + k * k * 20, 2.2, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      // the cutlass stroke, a bright arc that fades right after the cut
+      const swipe = Math.max(0, 1 - Math.abs(cycle - .52) * 7);
+      if (swipe > 0) {
+        ctx.strokeStyle = `rgba(255,255,255,${swipe})`; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(fx - 46, fy + 26); ctx.quadraticCurveTo(fx, fy - 6, fx + 42, fy - 30); ctx.stroke();
+        ctx.strokeStyle = `rgba(150,215,255,${swipe * .5})`; ctx.lineWidth = 8;
+        ctx.stroke();
+      }
+
+      // your deck and the pizza cannon in the foreground
+      ctx.fillStyle = "#8a5a32"; ctx.fillRect(0, 150, W, 30);
+      ctx.fillStyle = "#b07a48"; ctx.fillRect(0, 148, W, 4);
+      ctx.fillStyle = "#5e3a1e"; for (let i = 0; i < 5; i++) ctx.fillRect(0, 158 + i * 5, W, 1);
+      ctx.save(); ctx.translate(34, 146); ctx.rotate(-.35);
+      ctx.fillStyle = "#2b2b33"; Arcade.roundRect(ctx, 0, -5, 30, 10, 4); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = "#c47a32"; ctx.beginPath(); ctx.arc(20, 158, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffcf4a"; ctx.beginPath(); ctx.arc(20, 158, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#d63a2a";
+      for (const [px, py] of [[17, 156], [23, 159], [20, 161]]) { ctx.beginPath(); ctx.arc(px, py, 1.6, 0, Math.PI * 2); ctx.fill(); }
+      if (cut && cycle < .72) {
+        ctx.font = "15px Bungee, sans-serif"; ctx.textAlign = "center";
+        ctx.fillStyle = "#0b3a6a"; ctx.fillText("SLASH!", 122, 44);
+        ctx.fillStyle = "#ffcf4a"; ctx.fillText("SLASH!", 120, 42);
+      }
+    },
     "mythica-sanctuary"(ctx, t) {
       // Slow pan over the game's title art, with drifting fireflies.
       ctx.fillStyle = "#14202c"; ctx.fillRect(0, 0, W, H);
