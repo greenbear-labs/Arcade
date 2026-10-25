@@ -50,6 +50,15 @@ window.ARCADE_GAMES = [
     meta: "FOOD FIGHT",
   },
   {
+    slug: "chow-pow-cereal",
+    title: "Breakfast Conquest",
+    tagline: "Soggy Mastermind vs the Citrus Cyborgs. Drag your cereal armies across the map and take every city.",
+    controls: "Drag or mouse",
+    color: "#f2b632",
+    // Unity (WebGL) strategy game; stars and best times save in the player's browser, not in the Den.
+    meta: "3 MAPS",
+  },
+  {
     slug: "mythica-sanctuary",
     title: "Mythica Sanctuary",
     tagline: "Rescue hurt creatures, heal them and earn their trust.",
