@@ -56,7 +56,7 @@ window.ARCADE_GAMES = [
     controls: "Drag or mouse",
     color: "#f2b632",
     // Unity (WebGL) strategy game; stars and best times save in the player's browser, not in the Den.
-    meta: "3 MAPS",
+    meta: "6 MAPS",
   },
   {
     slug: "chow-pow-castle",
