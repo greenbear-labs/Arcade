@@ -24,7 +24,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow",
-    title: "Chow Pow",
+    title: "Chow Pow - Street Brawl",
     tagline: "Spicy Punch vs Haunted Noodle Row. Smash, dodge, take down Madam Pirogi.",
     controls: "Keys or touch",
     color: "#ff5a1f",
@@ -33,7 +33,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-rock",
-    title: "Battle of the Bands",
+    title: "Chow Pow - Battle of the Bands",
     tagline: "Sour Bomb Sandy battles a band from every faction. Hit the notes, win the crowd.",
     controls: "Keys or tap",
     color: "#ff3fa4",
@@ -42,7 +42,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-pirates",
-    title: "Pizza Pirates",
+    title: "Chow Pow - Pizza Pirates",
     tagline: "The Burgers are firing their lunch at you. Swipe the cutlass, slash it all.",
     controls: "Swipe or mouse",
     color: "#ffcf4a",
@@ -51,7 +51,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-cereal",
-    title: "Breakfast Conquest",
+    title: "Chow Pow - Breakfast Conquest",
     tagline: "Soggy Mastermind vs the Citrus Cyborgs. Drag your cereal armies across the map and take every city.",
     controls: "Drag or mouse",
     color: "#f2b632",
@@ -60,7 +60,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-castle",
-    title: "Brain Freeze Fortress",
+    title: "Chow Pow - Brain Freeze Fortress",
     tagline: "Madame Mint Chip vs the Barbaric Burgers. Pull back, let fly, and hold the ice cream castle's gate.",
     controls: "Drag or mouse",
     color: "#8fe3c8",
