@@ -281,6 +281,70 @@
         ctx.fillStyle = "#ffcf4a"; ctx.fillText("SLASH!", 120, 42);
       }
     },
+    "chow-pow-cereal"(ctx, t) {
+      // A war-table map: a column of cereal troops marches from the bowl and takes the gray town.
+      ctx.fillStyle = "#13303a"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#efe0bb"; Arcade.roundRect(ctx, 10, 12, W - 20, H - 24, 6); ctx.fill();
+      ctx.strokeStyle = "rgba(115,80,45,.15)"; ctx.lineWidth = 1;
+      for (let x = 30; x < W - 10; x += 30) { ctx.beginPath(); ctx.moveTo(x, 12); ctx.lineTo(x, H - 12); ctx.stroke(); }
+      for (let y = 32; y < H - 12; y += 30) { ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(W - 10, y); ctx.stroke(); }
+
+      const cycle = (t * .28) % 1;            // one attack per cycle
+      const taken = cycle > .62;
+      const bowl = [52, 108], town = [124, 84], dome = [196, 64];
+      const glow = (x, y, c) => { const g = ctx.createRadialGradient(x, y, 2, x, y, 34); g.addColorStop(0, c); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = g; ctx.fillRect(x - 34, y - 34, 68, 68); };
+      glow(...bowl, "rgba(242,182,50,.55)"); glow(...dome, "rgba(255,122,31,.55)");
+      glow(...town, taken ? "rgba(242,182,50,.55)" : "rgba(120,120,130,.3)");
+
+      // the cereal bowl HQ
+      ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 1.5;
+      ctx.fillStyle = "#c9d3d8"; ctx.fillRect(bowl[0] + 4, bowl[1] - 28, 3, 22);
+      ctx.fillStyle = "#fff6e4"; ctx.beginPath(); ctx.ellipse(bowl[0], bowl[1] - 4, 17, 13, 0, 0, Math.PI); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#1f6f6a"; ctx.fillRect(bowl[0] - 14, bowl[1] + 2, 28, 3);
+      ctx.fillStyle = "#f4f1ea"; ctx.beginPath(); ctx.ellipse(bowl[0], bowl[1] - 4, 17, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#f2b632"; ctx.lineWidth = 2;
+      for (const dx of [-9, -2, 6]) { ctx.beginPath(); ctx.arc(bowl[0] + dx, bowl[1] - 6, 2.6, 0, Math.PI * 2); ctx.stroke(); }
+
+      // the Citrus Cyborg dome
+      ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 1.5;
+      ctx.fillStyle = "#ff7a1f"; ctx.beginPath(); ctx.ellipse(dome[0], dome[1], 17, 15, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ffb35c"; ctx.beginPath(); ctx.ellipse(dome[0], dome[1], 12, 10, 0, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = "#5d6aa8"; Arcade.roundRect(ctx, dome[0] - 19, dome[1], 38, 6, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = Math.sin(t * 6) > 0 ? "#ff3355" : "#7a1020"; ctx.beginPath(); ctx.arc(dome[0], dome[1] - 22, 3, 0, Math.PI * 2); ctx.fill();
+
+      // the town in the middle: gray, then gold once taken
+      const pop = taken ? 1 + Math.max(0, .12 - (cycle - .62)) * 2 : 1;
+      ctx.save(); ctx.translate(...town); ctx.scale(pop, pop);
+      ctx.fillStyle = taken ? "#f2b632" : "#a9a9b2"; Arcade.roundRect(ctx, -12, -8, 24, 14, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = taken ? "#1f6f6a" : "#5e5e6a"; ctx.beginPath(); ctx.ellipse(0, -8, 14, 8, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.restore();
+
+      // the marching column of cereal loops
+      const march = Math.min(1, cycle / .62);
+      if (!taken) {
+        ctx.strokeStyle = "#f2b632"; ctx.lineWidth = 2;
+        for (let i = 0; i < 6; i++) {
+          const k = march - i * .08;
+          if (k <= 0 || k >= 1) continue;
+          const x = bowl[0] + (town[0] - bowl[0]) * k, y = bowl[1] - 6 + (town[1] - bowl[1] + 6) * k - Math.abs(Math.sin(t * 12 + i)) * 2;
+          ctx.beginPath(); ctx.arc(x, y, 2.4, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+
+      // troop badges
+      const badge = (x, y, n, c) => {
+        ctx.fillStyle = c; Arcade.roundRect(ctx, x - 11, y, 22, 13, 4); ctx.fill();
+        ctx.font = "10px Bungee, sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = "#fff"; ctx.fillText(String(n), x, y + 10.5);
+      };
+      badge(bowl[0], bowl[1] + 8, Math.round(30 - 15 * Math.min(1, cycle * 6) + cycle * 10), "#d39a1a");
+      badge(town[0], town[1] + 9, taken ? Math.round(3 + (cycle - .62) * 12) : Math.max(1, 12 - Math.round(Math.max(0, march - .75) * 40)), taken ? "#d39a1a" : "#5e5e6a");
+      badge(dome[0], dome[1] + 9, 24 + Math.round(cycle * 6), "#e0661a");
+      if (taken && cycle < .85) {
+        ctx.font = "15px Bungee, sans-serif"; ctx.textAlign = "center";
+        ctx.fillStyle = "#13303a"; ctx.fillText("TAKEN!", town[0] + 2, town[1] - 26);
+        ctx.fillStyle = "#f2b632"; ctx.fillText("TAKEN!", town[0], town[1] - 28);
+      }
+    },
     "mythica-sanctuary"(ctx, t) {
       // Slow pan over the game's title art, with drifting fireflies.
       ctx.fillStyle = "#14202c"; ctx.fillRect(0, 0, W, H);

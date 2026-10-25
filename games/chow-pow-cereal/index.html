@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chow Pow: Breakfast Conquest · Green Bear Arcade</title>
+  <meta name="description" content="Soggy Mastermind sends his cereal armies to conquer the Citrus Cyborgs, city by city. A Chow Pow strategy game from Green Bear Arcade.">
+  <meta name="theme-color" content="#0b0d0a">
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <!-- Saved to a phone's home screen, the game opens with no browser bars at all (the only true full screen on iPhone). -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Breakfast Conquest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/theme.css">
+  <link rel="stylesheet" href="../../shared/game.css">
+  <style>
+    /* Unity draws into this canvas; it keeps a 16:9 shape (9:16 on an upright phone) and the build matches its size. */
+    #unity-canvas { aspect-ratio: 16 / 9; }
+    @media (orientation: portrait) and (pointer: coarse) {
+      #unity-canvas { aspect-ratio: 9 / 16; }
+      .screen#screen:not(.full) { max-width: min(100%, calc((100vh - 96px) * 9 / 16)); max-width: min(100%, calc((100dvh - 96px) * 9 / 16)); }
+    }
+    /* Every swipe is a sword stroke: no double-tap zoom, scrolling or text selection over the game. */
+    #unity-canvas, .screen { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    /* In the window, the screen is as big as the viewport allows (header and a little margin aside). */
+    body.game .stage { padding: 10px 10px 24px; gap: 14px; }
+    .screen#screen:not(.full) { max-width: min(100%, calc((100vh - 96px) * 16 / 9)); max-width: min(100%, calc((100dvh - 96px) * 16 / 9)); }
+    .loading { width: min(320px, 70%); height: 14px; border: 2px solid var(--amber); border-radius: 8px; overflow: hidden; }
+    .loading i { display: block; height: 100%; width: 0; background: var(--amber); transition: width .2s; }
+    /* Full screen: the cabinet screen covers the whole viewport and the game fills it edge to edge
+       (it frames itself for anything from 4:3 to 21:9). Works without the Fullscreen API too, for iPhone. */
+    body.is-full { overflow: hidden; }
+    .screen.full {
+      position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; height: 100dvh; max-width: none;
+      padding: 0; border-radius: 0; background: #000; box-shadow: none;
+    }
+    .screen.full::after { display: none; }
+    .screen.full #unity-canvas { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+    .exit-full {
+      display: none; position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left));
+      width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5);
+      background: rgba(0, 0, 0, .45); color: #fff; font-size: 1.1rem; cursor: pointer; opacity: .6;
+    }
+    .exit-full:hover, .exit-full:focus-visible { opacity: 1; }
+    .screen.full .exit-full { display: block; }
+    /* The game draws its score in the top-left corner; sit below it, clear of the swipe area. */
+    .exit-full { top: calc(max(10px, env(safe-area-inset-top)) + 54px); width: 32px; height: 32px; font-size: .9rem; }
+    .play-full {
+      font-family: var(--display); font-size: 1.1rem; padding: 12px 22px; border-radius: 12px; cursor: pointer;
+      border: 2px solid #000; background: var(--amber); color: #1a100a; box-shadow: 0 4px 0 #000;
+    }
+    /* Launched from the home screen: no page around the game, it is the whole app. */
+    body.app .game-bar, body.app .howto, body.app .exit-full { display: none !important; }
+    /* Install button, and the how-to card for iPhone (Safari has no install prompt to show). */
+    #install[hidden] { display: none; }
+    .install-tip {
+      position: fixed; z-index: 60; top: 64px; right: 12px; width: min(300px, calc(100vw - 24px));
+      padding: 14px 16px; border-radius: 12px; border: 2px solid #000; background: var(--panel); color: var(--text);
+      box-shadow: 0 6px 0 #000, 0 12px 40px rgba(0, 0, 0, .6); font-size: .95rem; line-height: 1.45;
+    }
+    .install-tip[hidden] { display: none; }
+    .install-tip b { color: var(--amber); }
+    .install-tip button { float: right; margin: -6px -8px 0 8px; background: none; border: 0; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+    .overlay .alt { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; }
+  </style>
+</head>
+<body class="game">
+  <header class="game-bar">
+    <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
+    <h1>Chow Pow: Breakfast Conquest</h1>
+    <div class="stats">
+      <button class="icon-btn" id="install" type="button" aria-label="Install on this device" title="Add to home screen" hidden>⤓</button>
+      <button class="icon-btn" id="full" type="button" aria-label="Full screen" title="Full screen">⛶</button>
+    </div>
+  </header>
+
+  <div class="install-tip" id="install-tip" role="dialog" aria-label="Add to home screen" hidden>
+    <button type="button" aria-label="Close">✕</button>
+    Play it like an app, full screen and offline: tap <b>Share</b> <span aria-hidden="true">(the square with the arrow)</span>, then <b>Add to Home Screen</b>.
+  </div>
+
+  <main class="stage">
+    <div class="screen" id="screen">
+      <canvas id="unity-canvas" tabindex="-1" aria-label="Chow Pow: Breakfast Conquest game screen"></canvas>
+      <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕</button>
+      <div class="overlay" id="overlay" role="status" aria-live="polite">
+        <h2>Chow Pow</h2>
+        <p id="status">Pouring the milk…</p>
+        <div class="loading"><i id="bar"></i></div>
+      </div>
+    </div>
+    <p class="howto">
+      <span class="keys-only">Drag from your city to another to send troops. <kbd>1</kbd>-<kbd>4</kbd> change how many go, <kbd>A</kbd> picks all your cities, <kbd>ESC</kbd> pauses.</span>
+      <span class="touch-only">Hold your phone either way up. Drag from your city to another to send troops; sweep across several of your cities for a bigger attack.</span>
+      Play as Soggy Mastermind: your cities grow troops, gray cities are up for grabs, and the Citrus Cyborgs want the breakfast table too. Take every Cyborg city to win. Turn your sound on!
+    </p>
+  </main>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById("unity-canvas");
+      const overlay = document.getElementById("overlay");
+      const bar = document.getElementById("bar");
+      const status = document.getElementById("status");
+      const build = "Build/WebGL";
+      let instance = null;
+      // Opened from the home screen icon: the game is the whole app, already full screen.
+      const app = ["fullscreen", "standalone"].some((m) => matchMedia("(display-mode: " + m + ")").matches)
+        || navigator.standalone === true || new URLSearchParams(location.search).has("app");
+      if (app) {
+        document.body.classList.add("app", "is-full");
+        document.getElementById("screen").classList.add("full");
+      }
+
+      const loader = document.createElement("script");
+      loader.src = build + ".loader.js";
+      loader.onload = () => {
+        createUnityInstance(canvas, {
+          dataUrl: build + ".data.unityweb",
+          frameworkUrl: build + ".framework.js.unityweb",
+          codeUrl: build + ".wasm.unityweb",
+          companyName: "Green Bear Labs",
+          productName: "Chow Pow Breakfast Conquest",
+          productVersion: "0.1",
+          devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        }, (p) => { bar.style.width = Math.round(p * 100) + "%"; })
+          .then((u) => {
+            instance = u;
+            if (app) {
+              // One tap is still needed before the browser lets the game make sound.
+              overlay.innerHTML = '<h2>Chow Pow</h2><button class="play-full" type="button">Tap to set sail</button>';
+              overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; canvas.focus(); });
+              return;
+            }
+            // Offer full screen before the first note; "play in window" keeps the page as it is.
+            overlay.innerHTML = '<h2>Chow Pow</h2><button class="play-full" type="button">Play full screen</button><button class="alt" type="button">play in window</button>';
+            overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; enterFull(); });
+            overlay.querySelector(".alt").addEventListener("click", () => { overlay.hidden = true; canvas.focus(); });
+            overlay.querySelector(".play-full").focus();
+          })
+          .catch((err) => { status.textContent = "The game couldn't start in this browser. " + err; });
+      };
+      loader.onerror = () => { status.textContent = "The game files didn't load. Try refreshing."; };
+      document.body.append(loader);
+
+      const screen = document.getElementById("screen");
+      const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+      function enterFull() {
+        screen.classList.add("full");
+        document.body.classList.add("is-full");
+        const req = screen.requestFullscreen || screen.webkitRequestFullscreen;
+        if (req) {
+          const done = req.call(screen, { navigationUI: "hide" });
+          // The game plays sideways or upright, so the phone's orientation is left free.
+          if (done && done.catch) done.catch(() => {});
+        }
+        canvas.focus();
+      }
+      function leaveFull() {
+        screen.classList.remove("full");
+        document.body.classList.remove("is-full");
+      }
+      function exitFull() {
+        if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        leaveFull();
+      }
+      // Esc (or the system back gesture) leaves real full screen; drop our layout with it.
+      const onChange = () => { if (!fsElement()) leaveFull(); };
+      document.addEventListener("fullscreenchange", onChange);
+      document.addEventListener("webkitfullscreenchange", onChange);
+
+      document.getElementById("full").addEventListener("click", () => (screen.classList.contains("full") ? exitFull() : enterFull()));
+      document.getElementById("exit-full").addEventListener("click", exitFull);
+
+      // Offline play and fast restarts (see sw.js).
+      if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+
+      // Install: Android and desktop Chrome hand us a prompt to show; on iPhone and iPad we explain the Share menu.
+      const install = document.getElementById("install");
+      const tip = document.getElementById("install-tip");
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      let deferred = null;
+      if (!app && ios) install.hidden = false;
+      addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; if (!app) install.hidden = false; });
+      addEventListener("appinstalled", () => { install.hidden = true; deferred = null; });
+      install.addEventListener("click", () => {
+        if (deferred) { deferred.prompt(); deferred.userChoice.finally(() => { deferred = null; install.hidden = true; }); }
+        else { tip.style.top = install.getBoundingClientRect().bottom + 10 + "px"; tip.hidden = !tip.hidden; }
+      });
+      tip.querySelector("button").addEventListener("click", () => { tip.hidden = true; });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Chow Pow: Breakfast Conquest",
+  "short_name": "Breakfast Conquest",
+  "description": "Soggy Mastermind conquers the Citrus Cyborgs city by city. A Chow Pow strategy game.",
+  "start_url": "./index.html?app=1",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
