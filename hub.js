@@ -345,6 +345,55 @@
         ctx.fillStyle = "#f2b632"; ctx.fillText("TAKEN!", town[0], town[1] - 28);
       }
     },
+    "chow-pow-castle"(ctx, t) {
+      // The ice cream castle on the left; an arrow arcs over the snow and pops a burger marching on the gate.
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#9fd8f0"); sky.addColorStop(1, "#ffe3f0");
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+      const gy = 140;
+      ctx.fillStyle = "#f2fbff"; ctx.fillRect(0, gy, 120, H - gy);
+      ctx.fillStyle = "#8a5a32"; ctx.fillRect(120, gy, W - 120, H - gy);
+      ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 1.5;
+      // tower, wall and gate
+      ctx.fillStyle = "#ffb3cf"; ctx.fillRect(14, 62, 30, gy - 62); ctx.strokeRect(14, 62, 30, gy - 62);
+      ctx.fillStyle = "#fff1d0"; ctx.beginPath(); ctx.ellipse(29, 62, 18, 8, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#fff1d0"; ctx.fillRect(44, 100, 46, gy - 100); ctx.strokeRect(44, 100, 46, gy - 100);
+      ctx.fillStyle = "#5a3220"; Arcade.roundRect(ctx, 70, 114, 18, gy - 114, 4); ctx.fill(); ctx.stroke();
+      // Madame Mint Chip on top, and her flag
+      ctx.fillStyle = "#8fe3c8"; ctx.beginPath(); ctx.arc(29, 44, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#e0a454"; ctx.beginPath(); ctx.moveTo(23, 40); ctx.lineTo(35, 40); ctx.lineTo(29, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ff9fbf"; ctx.fillRect(25, 51, 9, 11);
+
+      const cycle = (t * .45) % 1;
+      // a burger marching on the gate
+      const bx = 220 - cycle * 70, hit = cycle > .7;
+      if (!hit || cycle < .78) {
+        const by = gy - 12 - (hit ? 0 : Math.abs(Math.sin(t * 9)) * 2);
+        ctx.fillStyle = "#d99a4e"; ctx.beginPath(); ctx.ellipse(bx, by - 4, 11, 7, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#6b3a1e"; ctx.fillRect(bx - 11, by - 4, 22, 5);
+        ctx.fillStyle = "#d99a4e"; ctx.fillRect(bx - 10, by + 1, 20, 5); ctx.strokeRect(bx - 10, by + 1, 20, 5);
+        ctx.fillStyle = "#c9d2e0"; ctx.beginPath(); ctx.moveTo(bx - 8, by - 9); ctx.lineTo(bx - 13, by - 17); ctx.lineTo(bx - 4, by - 10); ctx.fill();
+      }
+      // the arrow's arc from the bow to the burger
+      const k = Math.min(1, cycle / .7);
+      if (!hit) {
+        const sx = 36, sy = 40, ex = 220 - .7 * 70, ey = gy - 16;
+        const x = sx + (ex - sx) * k, y = sy + (ey - sy) * k - Math.sin(k * Math.PI) * 50;
+        const nx = sx + (ex - sx) * (k + .02), ny = sy + (ey - sy) * (k + .02) - Math.sin((k + .02) * Math.PI) * 50;
+        const a = Math.atan2(ny - y, nx - x);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+        ctx.strokeStyle = "#f0d8a8"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(6, 0); ctx.stroke();
+        ctx.fillStyle = "#8fe3c8"; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(4, -3); ctx.lineTo(4, 3); ctx.fill();
+        ctx.restore();
+      } else if (cycle < .9) {
+        ctx.font = "14px Bungee, sans-serif"; ctx.textAlign = "center";
+        ctx.fillStyle = "#13303a"; ctx.fillText("BRAIN FREEZE!", 150, 72);
+        ctx.fillStyle = "#8fe3c8"; ctx.fillText("BRAIN FREEZE!", 149, 70);
+      }
+      // snow
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      for (let i = 0; i < 14; i++) ctx.fillRect((i * 37 + Math.sin(t + i) * 6) % W, (i * 23 + t * 22) % gy, 2, 2);
+    },
     "mythica-sanctuary"(ctx, t) {
       // Slow pan over the game's title art, with drifting fireflies.
       ctx.fillStyle = "#14202c"; ctx.fillRect(0, 0, W, H);
