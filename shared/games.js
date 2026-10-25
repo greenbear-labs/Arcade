@@ -59,6 +59,15 @@ window.ARCADE_GAMES = [
     meta: "3 MAPS",
   },
   {
+    slug: "chow-pow-castle",
+    title: "Brain Freeze Fortress",
+    tagline: "Madame Mint Chip vs the Barbaric Burgers. Pull back, let fly, and hold the ice cream castle's gate.",
+    controls: "Drag or mouse",
+    color: "#8fe3c8",
+    // Unity (WebGL) castle-defense game; stars and best scores save in the player's browser, not in the Den.
+    meta: "10 WAVES",
+  },
+  {
     slug: "mythica-sanctuary",
     title: "Mythica Sanctuary",
     tagline: "Rescue hurt creatures, heal them and earn their trust.",
