@@ -36,12 +36,21 @@
     }
     .screen.full::after { display: none; }
     .screen.full #unity-canvas { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+    #unity-canvas:focus { outline: none; }
+    /* Leaving full screen: a small tab on the top edge, off the game's own buttons. After 3 seconds it fades
+       to a faint handle; tap the handle to bring the tab back, then tap the tab to leave. */
     .exit-full {
-      display: none; position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left));
-      width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5);
-      background: rgba(0, 0, 0, .45); color: #fff; font-size: 1.1rem; cursor: pointer; opacity: .6;
+      display: none; position: absolute; z-index: 3; top: 0; left: 50%; transform: translateX(-50%);
+      min-width: 76px; padding: calc(env(safe-area-inset-top) + 5px) 14px 7px; border: 0; border-radius: 0 0 12px 12px;
+      background: rgba(0, 0, 0, .6); color: #fff; font: 500 .8rem/1 var(--body); white-space: nowrap; cursor: pointer;
+      transition: background .5s, color .5s;
     }
-    .exit-full:hover, .exit-full:focus-visible { opacity: 1; }
+    .exit-full::after {
+      content: ""; position: absolute; left: 50%; bottom: 7px; width: 34px; height: 4px; margin-left: -17px;
+      border-radius: 2px; background: rgba(255, 255, 255, .4); opacity: 0; transition: opacity .5s;
+    }
+    .exit-full.rest { background: transparent; color: transparent; }
+    .exit-full.rest::after { opacity: 1; }
     .screen.full .exit-full { display: block; }
     .rotate { display: none; }
     @media (orientation: portrait) and (pointer: coarse) {
@@ -55,6 +64,18 @@
     .play-full {
       font-family: var(--display); font-size: 1.1rem; padding: 12px 22px; border-radius: 12px; cursor: pointer;
       border: 2px solid #000; background: var(--amber); color: #1a100a; box-shadow: 0 4px 0 #000;
+    }
+    /* Upright phone: a slim one-line header so the game starts near the top, and "Play full screen" is the one big action. */
+    @media (orientation: portrait) and (max-width: 600px) {
+      .game-bar { flex-wrap: nowrap; gap: 8px; padding: max(6px, env(safe-area-inset-top)) 10px 6px; }
+      .game-bar .back { flex: none; gap: 4px; font-size: 0; }
+      .game-bar .back::before { content: "←"; font-size: 1rem; }
+      .game-bar .back img { width: 28px; height: 28px; }
+      .game-bar h1 { min-width: 0; margin: 0 auto 0 2px; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .game-bar h1 .brand { display: none; }
+      .stats { gap: 6px; }
+      .icon-btn { width: 30px; height: 30px; font-size: .85rem; }
+      body.game .stage { padding: 8px 8px 20px; gap: 12px; }
     }
     /* Launched from the home screen: no page around the game, it is the whole app. */
     body.app .game-bar, body.app .howto, body.app .exit-full { display: none !important; }
@@ -74,7 +95,7 @@
 <body class="game">
   <header class="game-bar">
     <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
-    <h1>Chow Pow - Street Brawl</h1>
+    <h1><span class="brand">Chow Pow - </span>Street Brawl</h1>
     <div class="stats">
       <button class="icon-btn" id="install" type="button" aria-label="Install on this device" title="Add to home screen" hidden>⤓</button>
       <button class="icon-btn" id="full" type="button" aria-label="Full screen" title="Full screen">⛶</button>
@@ -89,7 +110,7 @@
   <main class="stage">
     <div class="screen" id="screen">
       <canvas id="unity-canvas" tabindex="-1" aria-label="Chow Pow - Street Brawl game screen"></canvas>
-      <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕</button>
+      <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕ Exit</button>
       <div class="rotate" aria-hidden="true"><b>📱</b>Turn your phone sideways</div>
       <div class="overlay" id="overlay" role="status" aria-live="polite">
         <h2>Chow Pow</h2>
@@ -168,6 +189,7 @@
           // Phones: lock to landscape once we're really full screen (ignored where unsupported).
           if (done && done.then) done.then(() => { const o = window.screen.orientation; if (o && o.lock) o.lock("landscape").catch(() => {}); }, () => {});
         }
+        wakeExit();
         canvas.focus();
       }
       function leaveFull() {
@@ -184,7 +206,17 @@
       document.addEventListener("webkitfullscreenchange", onChange);
 
       document.getElementById("full").addEventListener("click", () => (screen.classList.contains("full") ? exitFull() : enterFull()));
-      document.getElementById("exit-full").addEventListener("click", exitFull);
+      // The exit tab rests as a faint handle after 3 seconds; the first tap on the handle only wakes it.
+      const exitTab = document.getElementById("exit-full");
+      let restTimer = 0;
+      function wakeExit() {
+        exitTab.classList.remove("rest");
+        clearTimeout(restTimer);
+        restTimer = setTimeout(() => exitTab.classList.add("rest"), 3000);
+      }
+      exitTab.addEventListener("click", () => (exitTab.classList.contains("rest") ? wakeExit() : exitFull()));
+      // With a mouse, nearing the top edge brings it back too.
+      screen.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" && screen.classList.contains("full") && e.clientY < 60) wakeExit(); });
 
       // Offline play and fast restarts (see sw.js).
       if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
