@@ -439,6 +439,27 @@
         ctx.fillText(i % 2 ? "♪" : "♫", W / 2 - 90 + i * 45 + Math.sin(t * 2 + i) * 8, 100 - k * 80);
       }
     },
+    "claude-farmer"(ctx, t) {
+      // The farm from the game: the farmer strolls the path while the crops sway.
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = "#5fae47"; ctx.fillRect(0, 0, W, H);
+      if (farmArt.complete && farmArt.naturalWidth) ctx.drawImage(farmArt, 0, 0, W, H);
+      if (farmerArt.complete && farmerArt.naturalWidth) {
+        const speed = 34, span = W + 40;
+        const walk = (t * speed) % (span * 2);
+        const right = walk < span;                       // there and back again
+        const x = right ? walk - 20 : span * 2 - walk - 20;
+        const frame = Math.floor(t * 8) % 4, row = right ? 3 : 2;
+        ctx.drawImage(farmerArt, frame * 16, row * 24, 16, 24, Math.round(x - 16), 82, 32, 48);
+      }
+      // A coin hopping out of the field now and then.
+      const k = (t * 0.6) % 1;
+      if (k < 0.5) {
+        const y = 40 - Math.sin(k * 2 * Math.PI) * 18;
+        ctx.fillStyle = "#ffd84a"; ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(150, y, 5 * Math.abs(Math.cos(t * 8)) + 1, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
@@ -450,6 +471,11 @@
   const sanctuaryArt = new Image();
   sanctuaryArt.onload = () => { const c = cabs.find((x) => x.slug === "mythica-sanctuary"); if (c && c.ctx) attract[c.slug](c.ctx, 1.3); };
   sanctuaryArt.src = "assets/sanctuary.jpg";
+  const farmArt = new Image(), farmerArt = new Image();
+  const redrawFarm = () => { const c = cabs.find((x) => x.slug === "claude-farmer"); if (c && c.ctx) attract[c.slug](c.ctx, 1.3); };
+  farmArt.onload = farmerArt.onload = redrawFarm;
+  farmArt.src = "assets/claude-farmer.png";
+  farmerArt.src = "assets/claude-farmer-farmer.png";
 
   // Sprites shared with the games live in each game; these are small preview versions.
   function drawHive(ctx, x, ground, s) {
