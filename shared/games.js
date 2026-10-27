@@ -77,4 +77,13 @@ window.ARCADE_GAMES = [
     url: "https://mythica.greenbearlabs.com/sanctuary/",
     meta: "SAVES PROGRESS",
   },
+  {
+    slug: "singing-mythica",
+    title: "Singing Mythica",
+    tagline: "Hatch Mythica's creatures on a singing island. Each one sings its part; breed them to find every magic.",
+    controls: "Tap or mouse",
+    color: "#7fd1e6",
+    // Unity (WebGL) creature-music game; the island saves in the player's browser, not in the Den.
+    meta: "120 TO FIND",
+  },
 ];

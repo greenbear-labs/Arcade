@@ -30,6 +30,8 @@ Also on the floor:
 
 - **Chow Pow - Pizza Pirates**: a food-slicing game where Captain Crust swipes his cutlass through everything the Barbaric Burgers fire at his deck. It's a Unity WebGL build in `games/chow-pow-pirates/Build`; rebuild it in the PizzaPirateGame Unity project with **Chow Pow > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here. Its art, music and sound are all original, made for the game.
 
+- **Singing Mythica**: hatch the creatures of Mythica on an island where each one sings its own part, and breed them to find all six magic types for every creature. It's a Unity WebGL build in `games/singing-mythica/Build`, made from the [SingingMythica](https://github.com/greenbear-labs/SingingMythica) Unity project; rebuild it there with **Mythica > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here.
+
 - **Mythica Sanctuary**: a cozy creature-rescue game hosted on the Mythica site ([mythica.greenbearlabs.com/sanctuary](https://mythica.greenbearlabs.com/sanctuary/)). Its cabinet links out using the `url` field in `shared/games.js`.
 
 Everything is plain HTML, CSS and JavaScript with no build step and no dependencies. Best scores live in the player's browser.

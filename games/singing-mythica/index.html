@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Singing Mythica · Green Bear Arcade</title>
+  <meta name="description" content="Raise the creatures of Mythica on a singing island. Every creature sings its own part of the song. From Green Bear Arcade.">
+  <meta name="theme-color" content="#0b0d0a">
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/theme.css">
+  <link rel="stylesheet" href="../../shared/game.css">
+  <style>
+    /* Unity draws into this canvas; it keeps a 16:9 shape and the game's UI scales to fit. */
+    #unity-canvas { aspect-ratio: 16 / 9; }
+    /* Taps are for the island: no double-tap zoom, scrolling or text selection over the game. */
+    #unity-canvas, .screen { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    /* In the window, the screen is as big as the viewport allows (header and a little margin aside). */
+    body.game .stage { padding: 10px 10px 24px; gap: 14px; }
+    .screen#screen:not(.full) { max-width: min(100%, calc((100vh - 96px) * 16 / 9)); max-width: min(100%, calc((100dvh - 96px) * 16 / 9)); }
+    .loading { width: min(320px, 70%); height: 14px; border: 2px solid var(--amber); border-radius: 8px; overflow: hidden; }
+    .loading i { display: block; height: 100%; width: 0; background: var(--amber); transition: width .2s; }
+    /* Full screen: the cabinet screen covers the whole viewport and the game fills it edge to edge
+       (the island and UI scale to any shape). Works without the Fullscreen API too, for iPhone. */
+    body.is-full { overflow: hidden; }
+    .screen.full {
+      position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; height: 100dvh; max-width: none;
+      padding: 0; border-radius: 0; background: #000; box-shadow: none;
+    }
+    .screen.full::after { display: none; }
+    .screen.full #unity-canvas { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+    #unity-canvas:focus { outline: none; }
+    /* Leaving full screen: a small tab on the top edge, off the game's own buttons. After 3 seconds it fades
+       to a faint handle; tap the handle to bring the tab back, then tap the tab to leave. */
+    .exit-full {
+      display: none; position: absolute; z-index: 3; top: 0; left: 50%; transform: translateX(-50%);
+      min-width: 76px; padding: calc(env(safe-area-inset-top) + 5px) 14px 7px; border: 0; border-radius: 0 0 12px 12px;
+      background: rgba(0, 0, 0, .6); color: #fff; font: 500 .8rem/1 var(--body); white-space: nowrap; cursor: pointer;
+      transition: background .5s, color .5s;
+    }
+    .exit-full::after {
+      content: ""; position: absolute; left: 50%; bottom: 7px; width: 34px; height: 4px; margin-left: -17px;
+      border-radius: 2px; background: rgba(255, 255, 255, .4); opacity: 0; transition: opacity .5s;
+    }
+    .exit-full.rest { background: transparent; color: transparent; }
+    .exit-full.rest::after { opacity: 1; }
+    .screen.full .exit-full { display: block; }
+    .play-full {
+      font-family: var(--display); font-size: 1.1rem; padding: 12px 22px; border-radius: 12px; cursor: pointer;
+      border: 2px solid #000; background: var(--amber); color: #1a100a; box-shadow: 0 4px 0 #000;
+    }
+    /* Upright phone: a slim one-line header so the game starts near the top, and "Play full screen" is the one big action. */
+    @media (orientation: portrait) and (max-width: 600px) {
+      .game-bar { flex-wrap: nowrap; gap: 8px; padding: max(6px, env(safe-area-inset-top)) 10px 6px; }
+      .game-bar .back { flex: none; gap: 4px; font-size: 0; }
+      .game-bar .back::before { content: "←"; font-size: 1rem; }
+      .game-bar .back img { width: 28px; height: 28px; }
+      .game-bar h1 { min-width: 0; margin: 0 auto 0 2px; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .game-bar h1 .brand { display: none; }
+      .stats { gap: 6px; }
+      .icon-btn { width: 30px; height: 30px; font-size: .85rem; }
+      body.game .stage { padding: 8px 8px 20px; gap: 12px; }
+    }
+    .overlay .alt { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; }
+  </style>
+</head>
+<body class="game">
+  <header class="game-bar">
+    <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
+    <h1>Singing Mythica</h1>
+    <div class="stats">
+      <button class="icon-btn" id="full" type="button" aria-label="Full screen" title="Full screen">⛶</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="screen" id="screen">
+      <canvas id="unity-canvas" tabindex="-1" aria-label="Singing Mythica game screen"></canvas>
+      <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕ Exit</button>
+      <div class="overlay" id="overlay" role="status" aria-live="polite">
+        <h2>Singing Mythica</h2>
+        <p id="status">Tuning the island…</p>
+        <div class="loading"><i id="bar"></i></div>
+      </div>
+    </div>
+    <p class="howto">
+      <span class="keys-only">Click to buy, place and select creatures. The mouse wheel zooms, <kbd>ESC</kbd> cancels.</span>
+      <span class="touch-only">Tap to buy, place and select creatures. Turn your phone sideways for the best view.</span>
+      Every creature from Mythica sings its own part, and its magic changes its voice. Hatch eggs, fill the island, and breed creatures to discover all six magics for each one. Turn your sound on!
+    </p>
+  </main>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById("unity-canvas");
+      const overlay = document.getElementById("overlay");
+      const bar = document.getElementById("bar");
+      const status = document.getElementById("status");
+      const build = "Build/WebGL";
+      let instance = null;
+
+      const loader = document.createElement("script");
+      loader.src = build + ".loader.js";
+      loader.onload = () => {
+        createUnityInstance(canvas, {
+          dataUrl: build + ".data.unityweb",
+          frameworkUrl: build + ".framework.js.unityweb",
+          codeUrl: build + ".wasm.unityweb",
+          companyName: "Green Bear Labs",
+          productName: "Singing Mythica",
+          productVersion: "0.1",
+          devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        }, (p) => { bar.style.width = Math.round(p * 100) + "%"; })
+          .then((u) => {
+            instance = u;
+            // Offer full screen first; "play in window" keeps the page as it is.
+            overlay.innerHTML = '<h2>Singing Mythica</h2><button class="play-full" type="button">Play full screen</button><button class="alt" type="button">play in window</button>';
+            overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; enterFull(); });
+            overlay.querySelector(".alt").addEventListener("click", () => { overlay.hidden = true; canvas.focus(); });
+            overlay.querySelector(".play-full").focus();
+          })
+          .catch((err) => { status.textContent = "The game couldn't start in this browser. " + err; });
+      };
+      loader.onerror = () => { status.textContent = "The game files didn't load. Try refreshing."; };
+      document.body.append(loader);
+
+      const screen = document.getElementById("screen");
+      const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+      function enterFull() {
+        screen.classList.add("full");
+        document.body.classList.add("is-full");
+        const req = screen.requestFullscreen || screen.webkitRequestFullscreen;
+        if (req) {
+          const done = req.call(screen, { navigationUI: "hide" });
+          if (done && done.catch) done.catch(() => {});
+        }
+        wakeExit();
+        canvas.focus();
+      }
+      function leaveFull() {
+        screen.classList.remove("full");
+        document.body.classList.remove("is-full");
+      }
+      function exitFull() {
+        if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        leaveFull();
+      }
+      // Esc (or the system back gesture) leaves real full screen; drop our layout with it.
+      const onChange = () => { if (!fsElement()) leaveFull(); };
+      document.addEventListener("fullscreenchange", onChange);
+      document.addEventListener("webkitfullscreenchange", onChange);
+
+      document.getElementById("full").addEventListener("click", () => (screen.classList.contains("full") ? exitFull() : enterFull()));
+      // The exit tab rests as a faint handle after 3 seconds; the first tap on the handle only wakes it.
+      const exitTab = document.getElementById("exit-full");
+      let restTimer = 0;
+      function wakeExit() {
+        exitTab.classList.remove("rest");
+        clearTimeout(restTimer);
+        restTimer = setTimeout(() => exitTab.classList.add("rest"), 3000);
+      }
+      exitTab.addEventListener("click", () => (exitTab.classList.contains("rest") ? wakeExit() : exitFull()));
+      // With a mouse, nearing the top edge brings it back too.
+      screen.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" && screen.classList.contains("full") && e.clientY < 60) wakeExit(); });
+    })();
+  </script>
+</body>
+</html>

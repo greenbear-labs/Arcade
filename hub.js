@@ -411,6 +411,34 @@
         ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill();
       }
     },
+    "singing-mythica"(ctx, t) {
+      // A little island chorus: creatures in the six magic colours bounce on the beat.
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#1b2c4a"); sky.addColorStop(1, "#4f86b8");
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#2d5f8c"; ctx.fillRect(0, 128, W, H - 128);
+      ctx.fillStyle = "#e9d79c"; ctx.beginPath(); ctx.ellipse(W / 2, 140, 114, 28, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#5fa043"; ctx.beginPath(); ctx.ellipse(W / 2, 136, 104, 23, 0, 0, Math.PI * 2); ctx.fill();
+      const colors = ["#f25a26", "#3380f2", "#73b340", "#8cd9f2", "#ffed8c", "#6a4a8c"];
+      const beat = t * 100 / 60;   // the game's tempo
+      colors.forEach((c, i) => {
+        const x = W / 2 - 85 + i * 34, base = 134 + (i % 2) * 6;
+        const hit = (Math.floor(beat * 2) + i) % 3 === 0 ? 1 - (beat * 2 % 1) : 0;
+        const h = 22 + hit * 7, w = 22 - hit * 3;
+        ctx.fillStyle = c; ctx.strokeStyle = "#0b0d0a"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(x, base - h / 2, w / 2, h / 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#0b0d0a";
+        ctx.fillRect(x - 5, base - h + 7, 3, 3); ctx.fillRect(x + 2, base - h + 7, 3, 3);
+        ctx.beginPath(); ctx.ellipse(x, base - h + 14, 3, 1 + hit * 3, 0, 0, Math.PI * 2); ctx.fill();
+      });
+      // Notes drifting up from the island.
+      ctx.font = "16px Rubik, sans-serif"; ctx.textAlign = "center";
+      for (let i = 0; i < 5; i++) {
+        const k = (t * 0.35 + i / 5) % 1;
+        ctx.fillStyle = `rgba(255, 245, 200, ${1 - k})`;
+        ctx.fillText(i % 2 ? "♪" : "♫", W / 2 - 90 + i * 45 + Math.sin(t * 2 + i) * 8, 100 - k * 80);
+      }
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
