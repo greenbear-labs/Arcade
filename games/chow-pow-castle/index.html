@@ -20,12 +20,9 @@
   <link rel="stylesheet" href="../../shared/theme.css">
   <link rel="stylesheet" href="../../shared/game.css">
   <style>
-    /* Unity draws into this canvas; it keeps a 16:9 shape (9:16 on an upright phone) and the build matches its size. */
+    /* Unity draws into this canvas; it keeps a 16:9 shape and the build matches its size.
+       The fortress is landscape only: the canvas never turns upright, so the game always lays out sideways. */
     #unity-canvas { aspect-ratio: 16 / 9; }
-    @media (orientation: portrait) and (pointer: coarse) {
-      #unity-canvas { aspect-ratio: 9 / 16; }
-      .screen#screen:not(.full) { max-width: min(100%, calc((100vh - 96px) * 9 / 16)); max-width: min(100%, calc((100dvh - 96px) * 9 / 16)); }
-    }
     /* Every pull is a bowshot: no double-tap zoom, scrolling or text selection over the game. */
     #unity-canvas, .screen { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     /* In the window, the screen is as big as the viewport allows (header and a little margin aside). */
@@ -42,18 +39,43 @@
     }
     .screen.full::after { display: none; }
     .screen.full #unity-canvas { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
-    .exit-full {
-      display: none; position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left));
-      width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5);
-      background: rgba(0, 0, 0, .45); color: #fff; font-size: 1.1rem; cursor: pointer; opacity: .6;
+    #unity-canvas:focus { outline: none; }
+    /* Full screen on an upright phone (where the browser can't lock the rotation): keep the sideways
+       game, centered with black above and below, until the phone is turned. No rotate prompt. */
+    @media (orientation: portrait) {
+      .screen.full { display: flex; align-items: center; }
+      .screen.full #unity-canvas { height: auto; aspect-ratio: 16 / 9; }
     }
-    .exit-full:hover, .exit-full:focus-visible { opacity: 1; }
+    /* Leaving full screen: a small tab on the top edge, off the game's own buttons. After 3 seconds it fades
+       to a faint handle; tap the handle to bring the tab back, then tap the tab to leave. */
+    .exit-full {
+      display: none; position: absolute; z-index: 3; top: 0; left: 50%; transform: translateX(-50%);
+      min-width: 76px; padding: calc(env(safe-area-inset-top) + 5px) 14px 7px; border: 0; border-radius: 0 0 12px 12px;
+      background: rgba(0, 0, 0, .6); color: #fff; font: 500 .8rem/1 var(--body); white-space: nowrap; cursor: pointer;
+      transition: background .5s, color .5s;
+    }
+    .exit-full::after {
+      content: ""; position: absolute; left: 50%; bottom: 7px; width: 34px; height: 4px; margin-left: -17px;
+      border-radius: 2px; background: rgba(255, 255, 255, .4); opacity: 0; transition: opacity .5s;
+    }
+    .exit-full.rest { background: transparent; color: transparent; }
+    .exit-full.rest::after { opacity: 1; }
     .screen.full .exit-full { display: block; }
-    /* The game draws the gate bar in the top-left corner; sit below it, clear of the aiming area. */
-    .exit-full { top: calc(max(10px, env(safe-area-inset-top)) + 54px); width: 32px; height: 32px; font-size: .9rem; }
     .play-full {
       font-family: var(--display); font-size: 1.1rem; padding: 12px 22px; border-radius: 12px; cursor: pointer;
       border: 2px solid #000; background: var(--amber); color: #1a100a; box-shadow: 0 4px 0 #000;
+    }
+    /* Upright phone: a slim one-line header so the game starts near the top, and "Play full screen" is the one big action. */
+    @media (orientation: portrait) and (max-width: 600px) {
+      .game-bar { flex-wrap: nowrap; gap: 8px; padding: max(6px, env(safe-area-inset-top)) 10px 6px; }
+      .game-bar .back { flex: none; gap: 4px; font-size: 0; }
+      .game-bar .back::before { content: "←"; font-size: 1rem; }
+      .game-bar .back img { width: 28px; height: 28px; }
+      .game-bar h1 { min-width: 0; margin: 0 auto 0 2px; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .game-bar h1 .brand { display: none; }
+      .stats { gap: 6px; }
+      .icon-btn { width: 30px; height: 30px; font-size: .85rem; }
+      body.game .stage { padding: 8px 8px 20px; gap: 12px; }
     }
     /* Launched from the home screen: no page around the game, it is the whole app. */
     body.app .game-bar, body.app .howto, body.app .exit-full { display: none !important; }
@@ -73,7 +95,7 @@
 <body class="game">
   <header class="game-bar">
     <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
-    <h1>Chow Pow - Brain Freeze Fortress</h1>
+    <h1><span class="brand">Chow Pow - </span>Brain Freeze Fortress</h1>
     <div class="stats">
       <button class="icon-btn" id="install" type="button" aria-label="Install on this device" title="Add to home screen" hidden>⤓</button>
       <button class="icon-btn" id="full" type="button" aria-label="Full screen" title="Full screen">⛶</button>
@@ -88,7 +110,7 @@
   <main class="stage">
     <div class="screen" id="screen">
       <canvas id="unity-canvas" tabindex="-1" aria-label="Chow Pow - Brain Freeze Fortress game screen"></canvas>
-      <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕</button>
+      <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕ Exit</button>
       <div class="overlay" id="overlay" role="status" aria-live="polite">
         <h2>Chow Pow</h2>
         <p id="status">Scooping the castle…</p>
@@ -97,7 +119,7 @@
     </div>
     <p class="howto">
       <span class="keys-only">Hold the mouse, pull back away from where you want to shoot, and let go. <kbd>1</kbd>-<kbd>4</kbd> fire hero power-ups, <kbd>Q</kbd> switches arrows, <kbd>ESC</kbd> pauses.</span>
-      <span class="touch-only">Hold your phone either way up. Press anywhere, pull back, and let go to shoot; tap a glowing hero to fire a power-up.</span>
+      <span class="touch-only">Best played with your phone sideways. Press anywhere, pull back, and let go to shoot; tap a glowing hero to fire a power-up.</span>
       Play as Madame Mint Chip on the tower of the ice cream castle. Ten waves of Barbaric Burgers march on the gate, ending with Beef Erickson himself. Spend coins between waves on sharper arrows and Dairy heroes for the wall. Turn your sound on!
     </p>
   </main>
@@ -135,7 +157,7 @@
             if (app) {
               // One tap is still needed before the browser lets the game make sound.
               overlay.innerHTML = '<h2>Chow Pow</h2><button class="play-full" type="button">Tap to defend</button>';
-              overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; canvas.focus(); });
+              overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; lockLandscape(); canvas.focus(); });
               return;
             }
             // Offer full screen before the first note; "play in window" keeps the page as it is.
@@ -152,15 +174,20 @@
       const screen = document.getElementById("screen");
       const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
 
+      function lockLandscape() {
+        const o = window.screen.orientation;
+        if (o && o.lock) o.lock("landscape").catch(() => {});
+      }
       function enterFull() {
         screen.classList.add("full");
         document.body.classList.add("is-full");
         const req = screen.requestFullscreen || screen.webkitRequestFullscreen;
         if (req) {
           const done = req.call(screen, { navigationUI: "hide" });
-          // The game plays sideways or upright, so the phone's orientation is left free.
-          if (done && done.catch) done.catch(() => {});
+          // Phones: hold landscape once we're really full screen (ignored where unsupported, e.g. iPhone).
+          if (done && done.then) done.then(lockLandscape, () => {});
         }
+        wakeExit();
         canvas.focus();
       }
       function leaveFull() {
@@ -177,7 +204,17 @@
       document.addEventListener("webkitfullscreenchange", onChange);
 
       document.getElementById("full").addEventListener("click", () => (screen.classList.contains("full") ? exitFull() : enterFull()));
-      document.getElementById("exit-full").addEventListener("click", exitFull);
+      // The exit tab rests as a faint handle after 3 seconds; the first tap on the handle only wakes it.
+      const exitTab = document.getElementById("exit-full");
+      let restTimer = 0;
+      function wakeExit() {
+        exitTab.classList.remove("rest");
+        clearTimeout(restTimer);
+        restTimer = setTimeout(() => exitTab.classList.add("rest"), 3000);
+      }
+      exitTab.addEventListener("click", () => (exitTab.classList.contains("rest") ? wakeExit() : exitFull()));
+      // With a mouse, nearing the top edge brings it back too.
+      screen.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" && screen.classList.contains("full") && e.clientY < 60) wakeExit(); });
 
       // Offline play and fast restarts (see sw.js).
       if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
