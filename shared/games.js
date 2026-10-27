@@ -86,4 +86,13 @@ window.ARCADE_GAMES = [
     // Unity (WebGL) creature-music game; the island saves in the player's browser, not in the Den.
     meta: "120 TO FIND",
   },
+  {
+    slug: "claude-farmer",
+    title: "Claude Farmer",
+    tagline: "Dig, plant and water your field, fish the pond, bonk slimes, and sell it all to Mabel.",
+    controls: "Keys or touch",
+    color: "#7cc95a",
+    // Unity (WebGL) farming game; a fresh farm each time you open it, nothing saves yet.
+    meta: "DAY 1",
+  },
 ];
