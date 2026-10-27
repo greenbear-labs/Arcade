@@ -6,7 +6,7 @@
 // and ask the server "still this one?", which costs a few bytes when nothing is new.
 // So a new Unity build copied into Build/ reaches players on their next launch, no version bump needed.
 
-const CACHE = "breakfast-conquest-v2";
+const CACHE = "breakfast-conquest-v4";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
