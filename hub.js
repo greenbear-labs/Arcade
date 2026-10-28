@@ -439,7 +439,7 @@
         ctx.fillText(i % 2 ? "♪" : "♫", W / 2 - 90 + i * 45 + Math.sin(t * 2 + i) * 8, 100 - k * 80);
       }
     },
-    "claude-farmer"(ctx, t) {
+    "mythica-farmer"(ctx, t) {
       // The farm from the game: the farmer strolls the path while the crops sway.
       ctx.imageSmoothingEnabled = false;
       ctx.fillStyle = "#5fae47"; ctx.fillRect(0, 0, W, H);
@@ -472,10 +472,10 @@
   sanctuaryArt.onload = () => { const c = cabs.find((x) => x.slug === "mythica-sanctuary"); if (c && c.ctx) attract[c.slug](c.ctx, 1.3); };
   sanctuaryArt.src = "assets/sanctuary.jpg";
   const farmArt = new Image(), farmerArt = new Image();
-  const redrawFarm = () => { const c = cabs.find((x) => x.slug === "claude-farmer"); if (c && c.ctx) attract[c.slug](c.ctx, 1.3); };
+  const redrawFarm = () => { const c = cabs.find((x) => x.slug === "mythica-farmer"); if (c && c.ctx) attract[c.slug](c.ctx, 1.3); };
   farmArt.onload = farmerArt.onload = redrawFarm;
-  farmArt.src = "assets/claude-farmer.png";
-  farmerArt.src = "assets/claude-farmer-farmer.png";
+  farmArt.src = "assets/mythica-farmer.png";
+  farmerArt.src = "assets/mythica-farmer-farmer.png";
 
   // Sprites shared with the games live in each game; these are small preview versions.
   function drawHive(ctx, x, ground, s) {
