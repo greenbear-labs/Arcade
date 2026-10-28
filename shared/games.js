@@ -87,8 +87,8 @@ window.ARCADE_GAMES = [
     meta: "120 TO FIND",
   },
   {
-    slug: "claude-farmer",
-    title: "Claude Farmer",
+    slug: "mythica-farmer",
+    title: "Mythica Farmer",
     tagline: "Dig, plant and water your field, fish the pond, bonk slimes, and sell it all to Mabel.",
     controls: "Keys or touch",
     color: "#7cc95a",

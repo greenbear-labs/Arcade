@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mythica Farmer · Green Bear Arcade</title>
+  <meta name="description" content="A cozy pixel farm: grow turnips and strawberries, fish the pond, smash pots, bonk slimes and sell it all to Mabel. From Green Bear Arcade.">
+  <meta name="theme-color" content="#0b0d0a">
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <!-- Saved to a phone's home screen, the game opens with no browser bars at all (the only true full screen on iPhone). -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mythica Farmer">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/theme.css">
+  <link rel="stylesheet" href="../../shared/game.css">
+  <style>
+    /* Unity draws into this canvas; it keeps a 16:9 shape and the game's UI scales to fit. */
+    #unity-canvas { aspect-ratio: 16 / 9; }
+    /* Taps are for the farm: no double-tap zoom, scrolling or text selection over the game. */
+    #unity-canvas, .screen { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    /* In the window, the screen is as big as the viewport allows (header and a little margin aside). */
+    body.game .stage { padding: 10px 10px 24px; gap: 14px; }
+    .screen#screen:not(.full) { max-width: min(100%, calc((100vh - 96px) * 16 / 9)); max-width: min(100%, calc((100dvh - 96px) * 16 / 9)); }
+    .loading { width: min(320px, 70%); height: 14px; border: 2px solid var(--amber); border-radius: 8px; overflow: hidden; }
+    .loading i { display: block; height: 100%; width: 0; background: var(--amber); transition: width .2s; }
+    /* Full screen: the cabinet screen covers the whole viewport and the game fills it edge to edge
+       (the farm and HUD scale to any shape). Works without the Fullscreen API too, for iPhone. */
+    body.is-full { overflow: hidden; }
+    .screen.full {
+      position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; height: 100dvh; max-width: none;
+      padding: 0; border-radius: 0; background: #000; box-shadow: none;
+    }
+    .screen.full::after { display: none; }
+    /* A phone held upright in full screen: the game turns a quarter clockwise so it still plays sideways,
+       even with the phone's rotation lock on (iPhone has no way for a page to lock it). See turnSideways().
+       (The turn is on an inner layer: browsers won't transform a real full screen element itself.) */
+    .turn { display: contents; }
+    .screen.full.sideways .turn { display: block; position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+    .screen.full #unity-canvas { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+    #unity-canvas:focus { outline: none; }
+    /* Leaving full screen: a small tab on the top edge, off the game's own buttons. After 3 seconds it fades
+       to a faint handle; tap the handle to bring the tab back, then tap the tab to leave. */
+    .exit-full {
+      display: none; position: absolute; z-index: 3; top: 0; left: 50%; transform: translateX(-50%);
+      min-width: 76px; padding: calc(env(safe-area-inset-top) + 5px) 14px 7px; border: 0; border-radius: 0 0 12px 12px;
+      background: rgba(0, 0, 0, .6); color: #fff; font: 500 .8rem/1 var(--body); white-space: nowrap; cursor: pointer;
+      transition: background .5s, color .5s;
+    }
+    .exit-full::after {
+      content: ""; position: absolute; left: 50%; bottom: 7px; width: 34px; height: 4px; margin-left: -17px;
+      border-radius: 2px; background: rgba(255, 255, 255, .4); opacity: 0; transition: opacity .5s;
+    }
+    .exit-full.rest { background: transparent; color: transparent; }
+    .exit-full.rest::after { opacity: 1; }
+    .screen.full .exit-full { display: block; }
+    .play-full {
+      font-family: var(--display); font-size: 1.1rem; padding: 12px 22px; border-radius: 12px; cursor: pointer;
+      border: 2px solid #000; background: var(--amber); color: #1a100a; box-shadow: 0 4px 0 #000;
+    }
+    /* Upright phone: a slim one-line header so the game starts near the top, and "Play full screen" is the one big action. */
+    @media (orientation: portrait) and (max-width: 600px) {
+      .game-bar { flex-wrap: nowrap; gap: 8px; padding: max(6px, env(safe-area-inset-top)) 10px 6px; }
+      .game-bar .back { flex: none; gap: 4px; font-size: 0; }
+      .game-bar .back::before { content: "←"; font-size: 1rem; }
+      .game-bar .back img { width: 28px; height: 28px; }
+      .game-bar h1 { min-width: 0; margin: 0 auto 0 2px; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .game-bar h1 .brand { display: none; }
+      .stats { gap: 6px; }
+      .icon-btn { width: 30px; height: 30px; font-size: .85rem; }
+      body.game .stage { padding: 8px 8px 20px; gap: 12px; }
+    }
+    /* Launched from the home screen: no page around the game, it is the whole app. */
+    body.app .game-bar, body.app .howto, body.app .exit-full { display: none !important; }
+    /* Install button, and the how-to card for iPhone (Safari has no install prompt to show). */
+    #install[hidden] { display: none; }
+    .install-tip {
+      position: fixed; z-index: 60; top: 64px; right: 12px; width: min(300px, calc(100vw - 24px));
+      padding: 14px 16px; border-radius: 12px; border: 2px solid #000; background: var(--panel); color: var(--text);
+      box-shadow: 0 6px 0 #000, 0 12px 40px rgba(0, 0, 0, .6); font-size: .95rem; line-height: 1.45;
+    }
+    .install-tip[hidden] { display: none; }
+    .install-tip b { color: var(--amber); }
+    .install-tip button { float: right; margin: -6px -8px 0 8px; background: none; border: 0; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+    .overlay .alt { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; }
+  </style>
+</head>
+<body class="game">
+  <header class="game-bar">
+    <a class="back" href="../../index.html"><img src="../../assets/favicon.png" alt="">← The Den</a>
+    <h1>Mythica Farmer</h1>
+    <div class="stats">
+      <button class="icon-btn" id="install" type="button" aria-label="Install on this device" title="Add to home screen" hidden>⤓</button>
+      <button class="icon-btn" id="full" type="button" aria-label="Full screen" title="Full screen">⛶</button>
+    </div>
+  </header>
+
+  <div class="install-tip" id="install-tip" role="dialog" aria-label="Add to home screen" hidden>
+    <button type="button" aria-label="Close">✕</button>
+    Play it like an app, full screen and offline: tap <b>Share</b> <span aria-hidden="true">(the square with the arrow)</span>, then <b>Add to Home Screen</b>.
+  </div>
+
+  <main class="stage">
+    <div class="screen" id="screen">
+      <div class="turn" id="turn">
+        <canvas id="unity-canvas" tabindex="-1" aria-label="Mythica Farmer game screen"></canvas>
+        <button class="exit-full" id="exit-full" type="button" aria-label="Exit full screen" title="Exit full screen (Esc)">✕ Exit</button>
+        <div class="overlay" id="overlay" role="status" aria-live="polite">
+          <h2>Mythica Farmer</h2>
+          <p id="status">Tilling the field…</p>
+          <div class="loading"><i id="bar"></i></div>
+        </div>
+      </div>
+    </div>
+    <p class="howto">
+      <span class="keys-only"><kbd>WASD</kbd> walk, <kbd>Shift</kbd> run, <kbd>Space</kbd> swing, <kbd>E</kbd> talk or open doors, <kbd>F</kbd> use the item you picked, <kbd>1</kbd>–<kbd>8</kbd> pick an item, <kbd>I</kbd> bag, <kbd>N</kbd> sleep.</span>
+      <span class="touch-only">Drag on the left to walk (push all the way to run). Tap USE, HIT and TALK on the right, and tap the item bar to pick an item. Full screen always plays sideways.</span>
+      Talk to Grandpa Turnip for seeds, dig and water your field, catch fish with Old Gil's rod, and sell your haul to Mabel. Crops grow overnight, but only if you watered them.
+    </p>
+  </main>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById("unity-canvas");
+      const overlay = document.getElementById("overlay");
+      const bar = document.getElementById("bar");
+      const status = document.getElementById("status");
+      const build = "Build/WebGL";
+      let instance = null;
+      // Opened from the home screen icon: the game is the whole app, already full screen.
+      const app = ["fullscreen", "standalone"].some((m) => matchMedia("(display-mode: " + m + ")").matches)
+        || navigator.standalone === true || new URLSearchParams(location.search).has("app");
+      if (app) {
+        document.body.classList.add("app", "is-full");
+        document.getElementById("screen").classList.add("full");
+      }
+
+      const loader = document.createElement("script");
+      loader.src = build + ".loader.js";
+      loader.onload = () => {
+        createUnityInstance(canvas, {
+          dataUrl: build + ".data.unityweb",
+          frameworkUrl: build + ".framework.js.unityweb",
+          codeUrl: build + ".wasm.unityweb",
+          companyName: "Green Bear Labs",
+          productName: "Mythica Farmer",
+          productVersion: "0.1",
+          devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        }, (p) => { bar.style.width = Math.round(p * 100) + "%"; })
+          .then((u) => {
+            instance = u;
+            if (app) {
+              // One tap is still needed before the browser lets the game make sound.
+              overlay.innerHTML = '<h2>Mythica Farmer</h2><button class="play-full" type="button">Tap to start</button>';
+              overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; canvas.focus(); });
+              return;
+            }
+            // Offer full screen first; "play in window" keeps the page as it is.
+            overlay.innerHTML = '<h2>Mythica Farmer</h2><button class="play-full" type="button">Play full screen</button><button class="alt" type="button">play in window</button>';
+            overlay.querySelector(".play-full").addEventListener("click", () => { overlay.hidden = true; enterFull(); });
+            overlay.querySelector(".alt").addEventListener("click", () => { overlay.hidden = true; canvas.focus(); });
+            overlay.querySelector(".play-full").focus();
+          })
+          .catch((err) => { status.textContent = "The game couldn't start in this browser. " + err; });
+      };
+      loader.onerror = () => { status.textContent = "The game files didn't load. Try refreshing."; };
+      document.body.append(loader);
+
+      const screen = document.getElementById("screen");
+      const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+      function enterFull() {
+        screen.classList.add("full");
+        document.body.classList.add("is-full");
+        const req = screen.requestFullscreen || screen.webkitRequestFullscreen;
+        if (req) {
+          const done = req.call(screen, { navigationUI: "hide" });
+          // The farm is wide, so ask a phone to turn sideways where the browser allows it.
+          if (done && done.then) done.then(() => window.screen.orientation && window.screen.orientation.lock && window.screen.orientation.lock("landscape").catch(() => {})).catch(() => {});
+        }
+        turnSideways();
+        wakeExit();
+        canvas.focus();
+      }
+      function leaveFull() {
+        screen.classList.remove("full");
+        document.body.classList.remove("is-full");
+        turnSideways();
+      }
+
+      // Full screen stays sideways. Android locks the rotation for us (above, and in the manifest for the app);
+      // where it can't be locked and the phone is upright, we turn the game a quarter clockwise instead.
+      const touchPhone = matchMedia("(pointer: coarse)").matches;
+      const turn = document.getElementById("turn");
+      let sideways = false;
+      function turnSideways() {
+        const W = innerWidth, H = innerHeight;
+        sideways = touchPhone && screen.classList.contains("full") && H > W;
+        screen.classList.toggle("sideways", sideways);
+        Object.assign(turn.style, sideways
+          ? { width: H + "px", height: W + "px", transform: "translateX(" + W + "px) rotate(90deg)" }
+          : { width: "", height: "", transform: "" });
+      }
+      addEventListener("resize", turnSideways);
+      // Unity measures the canvas and reads touches against its on-screen box. Turned, that box is upright, so we
+      // give Unity the game's own sideways box and turn each touch back into it: a point drawn at (x, y) on the
+      // glass is (y, W - x) on the game.
+      const rawRect = canvas.getBoundingClientRect.bind(canvas);
+      canvas.getBoundingClientRect = () => {
+        if (!sideways) return rawRect();
+        const w = canvas.offsetWidth, h = canvas.offsetHeight;
+        return { left: 0, top: 0, x: 0, y: 0, width: w, height: h, right: w, bottom: h };
+      };
+      const turnTouch = (t) => {
+        const x = t.clientY, y = innerWidth - t.clientX;
+        return { identifier: t.identifier, clientX: x, clientY: y, pageX: x, pageY: y, screenX: x, screenY: y };
+      };
+      for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+        addEventListener(type, (e) => {
+          if (!sideways || !e.isTrusted || e.target !== canvas) return;
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          const turned = new Event(type, { bubbles: true, cancelable: true });
+          for (const k of ["touches", "changedTouches", "targetTouches"]) Object.defineProperty(turned, k, { value: Array.from(e[k], turnTouch) });
+          canvas.dispatchEvent(turned);
+        }, { capture: true, passive: false });
+      }
+      function exitFull() {
+        if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        leaveFull();
+      }
+      // Esc (or the system back gesture) leaves real full screen; drop our layout with it.
+      const onChange = () => { if (!fsElement()) leaveFull(); };
+      document.addEventListener("fullscreenchange", onChange);
+      document.addEventListener("webkitfullscreenchange", onChange);
+
+      document.getElementById("full").addEventListener("click", () => (screen.classList.contains("full") ? exitFull() : enterFull()));
+      // The exit tab rests as a faint handle after 3 seconds; the first tap on the handle only wakes it.
+      const exitTab = document.getElementById("exit-full");
+      let restTimer = 0;
+      function wakeExit() {
+        exitTab.classList.remove("rest");
+        clearTimeout(restTimer);
+        restTimer = setTimeout(() => exitTab.classList.add("rest"), 3000);
+      }
+      exitTab.addEventListener("click", () => (exitTab.classList.contains("rest") ? wakeExit() : exitFull()));
+      // With a mouse, nearing the top edge brings it back too.
+      screen.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" && screen.classList.contains("full") && e.clientY < 60) wakeExit(); });
+
+      turnSideways();
+
+      // Offline play and fast restarts (see sw.js).
+      if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+
+      // Install: Android and desktop Chrome hand us a prompt to show; on iPhone and iPad we explain the Share menu.
+      const install = document.getElementById("install");
+      const tip = document.getElementById("install-tip");
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      let deferred = null;
+      if (!app && ios) install.hidden = false;
+      addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; if (!app) install.hidden = false; });
+      addEventListener("appinstalled", () => { install.hidden = true; deferred = null; });
+      install.addEventListener("click", () => {
+        if (deferred) { deferred.prompt(); deferred.userChoice.finally(() => { deferred = null; install.hidden = true; }); }
+        else { tip.style.top = install.getBoundingClientRect().bottom + 10 + "px"; tip.hidden = !tip.hidden; }
+      });
+      tip.querySelector("button").addEventListener("click", () => { tip.hidden = true; });
+    })();
+  </script>
+</body>
+</html>

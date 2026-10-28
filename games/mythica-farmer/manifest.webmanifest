@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Claude Farmer",
-  "short_name": "Claude Farmer",
+  "name": "Mythica Farmer",
+  "short_name": "Mythica Farmer",
   "description": "A cozy pixel farm: grow crops, catch fish, and sell your haul to Mabel.",
   "start_url": "./index.html?app=1",
   "scope": "./",
