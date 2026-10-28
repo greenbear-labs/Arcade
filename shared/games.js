@@ -89,7 +89,7 @@ window.ARCADE_GAMES = [
   {
     slug: "mythica-farmer",
     title: "Mythica Farmer",
-    tagline: "Grow crops through the seasons, raise chickens for eggs, fish the pond, and sell it all to Mabel.",
+    tagline: "Grow crops through the seasons, raise chickens, make friends, and dig for gems in the mine.",
     controls: "Keys or touch",
     color: "#7cc95a",
     // Unity (WebGL) farming game; the farm saves in the player's browser each night, not in the Den.
