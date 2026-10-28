@@ -92,7 +92,7 @@ window.ARCADE_GAMES = [
     tagline: "Grow crops through the seasons, raise chickens for eggs, fish the pond, and sell it all to Mabel.",
     controls: "Keys or touch",
     color: "#7cc95a",
-    // Unity (WebGL) farming game; a fresh farm each time you open it, nothing saves yet.
+    // Unity (WebGL) farming game; the farm saves in the player's browser each night, not in the Den.
     meta: "SPRING 1",
   },
 ];
