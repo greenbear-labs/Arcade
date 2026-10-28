@@ -89,10 +89,10 @@ window.ARCADE_GAMES = [
   {
     slug: "mythica-farmer",
     title: "Mythica Farmer",
-    tagline: "Dig, plant and water your field, fish the pond, bonk slimes, and sell it all to Mabel.",
+    tagline: "Grow crops through the seasons, raise chickens for eggs, fish the pond, and sell it all to Mabel.",
     controls: "Keys or touch",
     color: "#7cc95a",
     // Unity (WebGL) farming game; a fresh farm each time you open it, nothing saves yet.
-    meta: "DAY 1",
+    meta: "SPRING 1",
   },
 ];
