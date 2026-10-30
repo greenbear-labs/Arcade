@@ -95,13 +95,4 @@ window.ARCADE_GAMES = [
     // Unity (WebGL) farming game; the farm saves in the player's browser each night, not in the Den.
     meta: "SPRING 1",
   },
-  {
-    slug: "mythica-valley",
-    title: "Mythica Valley",
-    tagline: "Farm your plot, befriend the valley's creatures, and win back the town's trust.",
-    controls: "Keys or touch",
-    color: "#b57ae0",
-    // Unity (WebGL) cozy adventure; the valley saves in the player's browser, not in the Den.
-    meta: "DAY 1",
-  },
 ];
