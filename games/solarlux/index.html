@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="Cache-Control" content="no-cache">
+  <!-- Unlisted: no links from the Arcade hub, and search engines are asked not to index it. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#05050d">
+  <!-- Installable as an app (Add to Home Screen): full screen, portrait, plays offline after the first load. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SolarLux">
+  <title>SolarLux Galactic Cruise</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #05050d; overflow: hidden; touch-action: none; overscroll-behavior: none; }
+    #unity-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; background: #05050d; touch-action: none; outline: none; }
+    #loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #eec76b; font: 600 18px/1.4 system-ui, sans-serif; letter-spacing: .2em; }
+    #bar { width: 220px; height: 6px; margin-top: 14px; background: #1c1d2e; border-radius: 3px; overflow: hidden; }
+    #fill { height: 100%; width: 0; background: #eec76b; transition: width .2s; }
+    #error { color: #ff8080; letter-spacing: 0; font-weight: 400; max-width: 80vw; text-align: center; margin-top: 14px; }
+    #agegate { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+      background: #05050d; color: #f3ead6; font: 400 17px/1.5 system-ui, sans-serif; text-align: center; padding: 24px; }
+    #agegate h1 { margin: 0; color: #eec76b; letter-spacing: .2em; font-size: 22px; }
+    #agegate p { max-width: 420px; margin: 0; color: #c9c2b3; }
+    #agegate button { font: 600 16px system-ui, sans-serif; padding: 14px 28px; border-radius: 12px; border: 0; cursor: pointer; }
+    #enter { background: #eec76b; color: #1a1206; }
+    #leave { background: #23253a; color: #f3ead6; }
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+  <div id="loading">SOLARLUX<div id="bar"><div id="fill"></div></div><div id="error"></div></div>
+  <div id="agegate">
+    <h1>SOLARLUX</h1>
+    <p>This game contains suggestive themes and fan service intended for adults. All characters are 21 or older.</p>
+    <p>Please confirm you are 18 or older to continue.</p>
+    <button id="enter">I am 18 or older</button>
+    <button id="leave">Leave</button>
+  </div>
+  <script>
+    var canvas = document.getElementById("unity-canvas");
+    canvas.addEventListener("pointerdown", function () { canvas.focus(); });
+    var script = document.createElement("script");
+    script.src = "Build/arcade.loader.js";
+    script.onload = function () {
+      createUnityInstance(canvas, {
+        dataUrl: "Build/arcade.data.unityweb",
+        frameworkUrl: "Build/arcade.framework.js.unityweb",
+        codeUrl: "Build/arcade.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "SolarLux",
+        productName: "SolarLux Galactic Cruise",
+        productVersion: "1.0",
+      }, function (p) {
+        document.getElementById("fill").style.width = (100 * p) + "%";
+      }).then(function () {
+        document.getElementById("loading").style.display = "none";
+        canvas.focus();
+      }).catch(function (e) {
+        // A cached index.html can point at build files from an older build (file names are hashed).
+        // Reload once, bypassing the cache, before showing the error.
+        if (location.search.indexOf("r=") < 0) { location.replace(location.pathname + "?r=" + Date.now()); return; }
+        document.getElementById("error").textContent = e;
+      });
+    };
+    // Offline and install support.
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+    }
+
+    // 18+ confirmation (design doc: age gate the site). Remembered on this device.
+    var gate = document.getElementById("agegate");
+    function start() { gate.style.display = "none"; document.body.appendChild(script); }
+    var ok = false;
+    try { ok = localStorage.getItem("solarlux.age_ok") === "1"; } catch (e) {}
+    if (ok) start();
+    else {
+      gate.style.display = "flex";
+      document.getElementById("enter").onclick = function () { try { localStorage.setItem("solarlux.age_ok", "1"); } catch (e) {} start(); };
+      document.getElementById("leave").onclick = function () { location.href = "https://www.google.com"; };
+    }
+  </script>
+</body>
+</html>
