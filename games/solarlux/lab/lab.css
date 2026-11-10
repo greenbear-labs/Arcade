@@ -1,0 +1,90 @@
+/* SolarLux Battle Lab: shared look for the two prototype battle modes. */
+:root {
+  --bg: #05050d; --panel: #12142a; --panel2: #1c1f3c; --line: #2c2f55;
+  --gold: #eec76b; --text: #f3ead6; --dim: #a59fb5; --red: #ff5d6c; --green: #6ee7a0; --blue: #6cc7ff;
+  --d0: #4f7bd9; --d1: #e9c46a; --d2: #9bd16b; --d3: #e25555; --d4: #a77ae6;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; overscroll-behavior: none; }
+body { display: flex; justify-content: center; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; }
+a { color: inherit; text-decoration: none; }
+img { -webkit-user-drag: none; user-select: none; }
+.app { position: relative; width: 100%; max-width: 520px; height: 100%; height: 100dvh; overflow: hidden; background: #000; user-select: none; -webkit-user-select: none; touch-action: none; }
+.bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(.55) saturate(1.1); }
+.topbar { position: absolute; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top) + 8px) 8px 8px; display: flex; align-items: center; gap: 6px; z-index: 20; }
+.pill { background: rgba(10, 10, 25, .72); border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; font-weight: 700; font-size: 13px; letter-spacing: .04em; white-space: nowrap; }
+.pill.btn { min-width: 40px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.pill.on { background: var(--gold); color: #1a1206; border-color: var(--gold); }
+.grow { flex: 1; }
+.title { color: var(--gold); font-weight: 800; letter-spacing: .14em; font-size: 13px; text-transform: uppercase; }
+
+/* Health bars */
+.bar { height: 6px; background: rgba(0,0,0,.6); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); }
+.bar > i { display: block; height: 100%; width: 100%; background: var(--green); transition: width .18s; }
+.bar.foe > i { background: var(--red); }
+.bar.shield > i { background: var(--blue); }
+
+/* Enemies */
+.enemy { position: absolute; display: flex; flex-direction: column; align-items: center; transition: opacity .4s, transform .4s; }
+.enemy img { width: 100%; height: auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); pointer-events: none; }
+.enemy .bar { width: 80%; margin-top: 4px; }
+.enemy .name { font-size: 11px; font-weight: 700; color: var(--dim); text-shadow: 0 1px 2px #000; }
+.enemy.dead { opacity: 0; transform: scale(.7) translateY(-20px); pointer-events: none; }
+.enemy.hit img { animation: hit .25s; }
+.enemy.target::after { content: ""; position: absolute; top: -6px; left: 50%; width: 0; height: 0; margin-left: -8px; border: 8px solid transparent; border-top-color: var(--gold); }
+@keyframes hit { 0% { transform: translateX(0); filter: brightness(3); } 30% { transform: translateX(-6px); } 60% { transform: translateX(5px); } 100% { transform: none; } }
+.intent { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); background: rgba(10,10,25,.85); border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 2px 8px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+
+/* Floating numbers */
+.float { position: absolute; z-index: 40; font-weight: 900; font-size: 22px; pointer-events: none; text-shadow: 0 2px 0 #000, 0 0 8px rgba(0,0,0,.8); animation: float .9s ease-out forwards; white-space: nowrap; }
+.float.heal { color: var(--green); } .float.crit { color: var(--gold); font-size: 28px; } .float.hurt { color: var(--red); } .float.info { color: var(--blue); font-size: 16px; }
+@keyframes float { 0% { transform: translate(-50%, 0) scale(.6); opacity: 0; } 15% { transform: translate(-50%, -10px) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -60px) scale(1); opacity: 0; } }
+
+/* Skill cut-in */
+.cutin { position: absolute; inset: 0; z-index: 60; pointer-events: none; overflow: hidden; }
+.cutin .stripe { position: absolute; left: -10%; right: -10%; top: 30%; height: 38%; transform: skewY(-8deg); animation: stripe .9s ease-out forwards; }
+.cutin img { position: absolute; bottom: 20%; height: 78%; right: -5%; filter: drop-shadow(0 0 18px rgba(0,0,0,.7)); animation: slide .9s cubic-bezier(.2,.9,.2,1) forwards; }
+.cutin .label { position: absolute; left: 6%; top: 38%; animation: label .9s ease-out forwards; }
+.cutin .label b { display: block; font-size: 30px; font-weight: 900; letter-spacing: .04em; text-shadow: 0 3px 0 #000; font-style: italic; }
+.cutin .label span { display: block; color: var(--gold); font-weight: 800; letter-spacing: .2em; font-size: 12px; text-transform: uppercase; }
+@keyframes stripe { 0% { transform: skewY(-8deg) scaleX(0); opacity: .95; } 20% { transform: skewY(-8deg) scaleX(1); } 80% { opacity: .95; } 100% { opacity: 0; } }
+@keyframes slide { 0% { transform: translateX(70%); opacity: 0; } 25% { transform: translateX(0); opacity: 1; } 80% { transform: translateX(-6%); opacity: 1; } 100% { transform: translateX(-30%); opacity: 0; } }
+@keyframes label { 0% { transform: translateX(-60%); opacity: 0; } 25% { transform: none; opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Banners (wave, chain, results) */
+.banner { position: absolute; left: 0; right: 0; top: 38%; z-index: 55; text-align: center; font-size: 34px; font-weight: 900; font-style: italic; letter-spacing: .06em; color: var(--gold); text-shadow: 0 3px 0 #000, 0 0 20px rgba(238,199,107,.6); pointer-events: none; animation: banner 1.4s ease-out forwards; }
+.banner small { display: block; font-size: 14px; color: var(--text); font-style: normal; letter-spacing: .2em; }
+@keyframes banner { 0% { transform: scale(2); opacity: 0; } 15% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
+
+.overlay { position: absolute; inset: 0; z-index: 80; background: rgba(5,5,13,.86); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; }
+.overlay h2 { margin: 0; color: var(--gold); letter-spacing: .14em; font-size: 26px; }
+.overlay p { margin: 0; color: var(--dim); max-width: 380px; }
+.big { background: var(--gold); color: #1a1206; font-weight: 800; padding: 14px 26px; border-radius: 12px; font-size: 16px; min-width: 200px; }
+.big.alt { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+.stars { font-size: 36px; letter-spacing: 6px; color: var(--gold); }
+
+/* Crew portrait cards (both modes) */
+.cards { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 8px calc(env(safe-area-inset-bottom) + 10px); display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; z-index: 30; background: linear-gradient(to top, rgba(5,5,13,.95) 60%, rgba(5,5,13,0)); }
+.card { position: relative; border-radius: 12px; overflow: hidden; background: var(--panel); border: 2px solid var(--line); padding: 0; aspect-ratio: 3 / 4; display: block; transition: transform .12s, border-color .2s, box-shadow .2s; }
+.card img.face { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.card .fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, rgba(238,199,107,.55), rgba(238,199,107,.08)); transition: height .15s linear; pointer-events: none; }
+.card .meta { position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 5px 5px; background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0)); text-align: left; }
+.card .nm { font-size: 11px; font-weight: 800; text-shadow: 0 1px 2px #000; display: block; }
+.card .bar { height: 5px; margin-top: 2px; }
+.card .dept { position: absolute; top: 4px; left: 4px; width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.6); }
+.card .ready { position: absolute; top: 4px; right: 4px; font-size: 10px; font-weight: 900; background: var(--gold); color: #1a1206; border-radius: 6px; padding: 1px 5px; display: none; letter-spacing: .05em; }
+.card.full { border-color: var(--gold); box-shadow: 0 0 14px rgba(238,199,107,.7); animation: pulse 1s infinite alternate; }
+.card.full .ready { display: block; }
+.card.down { filter: grayscale(1) brightness(.4); pointer-events: none; }
+.card:active { transform: scale(.95); }
+.card .key { position: absolute; top: 3px; right: 6px; font-size: 10px; color: var(--dim); }
+.card.full .key { display: none; }
+@keyframes pulse { from { box-shadow: 0 0 6px rgba(238,199,107,.5); } to { box-shadow: 0 0 18px rgba(238,199,107,.95); } }
+
+.help { font-size: 12px; color: var(--dim); }
+
+/* Age gate */
+.gate { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+.gate h1 { margin: 0; color: var(--gold); letter-spacing: .2em; font-size: 22px; }
+.gate p { margin: 0; max-width: 420px; color: #c9c2b3; }

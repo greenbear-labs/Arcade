@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#05050d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="../icons/icon-192.png">
+  <title>Spotlight Rush</title>
+  <link rel="stylesheet" href="lab.css?v=1">
+  <style>
+    .foes { position: absolute; left: 4%; right: 4%; top: calc(env(safe-area-inset-top) + 64px); height: 36%; display: flex; align-items: flex-end; justify-content: center; gap: 2%; z-index: 5; }
+    .foes .enemy { position: relative; flex: 0 1 31%; cursor: pointer; }
+    .foes .enemy.boss { flex-basis: 62%; }
+    .crewrow { position: absolute; left: 2%; right: 2%; bottom: calc(min(100vw, 520px) * .34 + 22px + env(safe-area-inset-bottom)); height: 26%; display: flex; justify-content: space-around; align-items: flex-end; z-index: 6; pointer-events: none; }
+    .unit { position: relative; flex: 0 1 24%; height: 100%; display: flex; align-items: flex-end; justify-content: center; transition: filter .3s, transform .3s; }
+    .unit img { max-height: 100%; max-width: 135%; filter: drop-shadow(0 4px 8px rgba(0,0,0,.7)); }
+    .unit.atk img { animation: lunge .22s ease-out; }
+    .unit.hurt img { animation: hurt .3s; }
+    .unit.shielded::before { content: ""; position: absolute; inset: 8% 0 0; border-radius: 50% 50% 12px 12px; background: radial-gradient(ellipse at center, rgba(108,199,255,.0) 55%, rgba(108,199,255,.45)); border: 2px solid rgba(108,199,255,.6); }
+    .unit.down { filter: grayscale(1) brightness(.35); transform: translateY(10%); }
+    @keyframes lunge { 0% { transform: none; } 45% { transform: translateY(-14%) scale(1.06); } 100% { transform: none; } }
+    @keyframes hurt { 0% { filter: brightness(2) sepia(1) hue-rotate(-40deg) saturate(5); transform: translateX(-4px); } 100% { filter: none; transform: none; } }
+    .chain { transition: transform .15s; }
+    .chain.hot { background: #ff7a3d; border-color: #ff7a3d; color: #1a0d06; }
+    .chain.show { background: var(--gold); color: #1a1206; animation: pulse .5s infinite alternate; }
+    .tip { position: absolute; left: 12px; right: 12px; top: 47%; z-index: 7; text-align: center; color: var(--text); font-size: 13px; text-shadow: 0 1px 3px #000; pointer-events: none; transition: opacity .6s; }
+    .app.showtime .bg { filter: brightness(.8) saturate(1.6) hue-rotate(-15deg); }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="bg" id="bg"></div>
+    <div class="topbar">
+      <a class="pill btn" href="index.html" aria-label="Back to Battle Lab">✕</a>
+      <span class="pill" id="wave">W1/3</span>
+      <span class="pill chain" id="chain">CHAIN ×0</span>
+      <span class="grow"></span>
+      <button class="pill btn" id="auto">AUTO</button>
+      <button class="pill btn" id="speed">1x</button>
+      <button class="pill btn" id="mute">♪</button>
+    </div>
+    <div class="foes" id="foes"></div>
+    <div class="tip" id="tip">Tap an enemy to focus it. Tap a glowing portrait (or press 1-4) to fire her skill.</div>
+    <div class="crewrow" id="crewrow"></div>
+  </div>
+  <script src="shared.js?v=1"></script>
+  <script src="rush.js?v=1"></script>
+</body>
+</html>

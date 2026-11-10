@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#05050d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="../icons/icon-192.png">
+  <title>SolarLux Battle Lab</title>
+  <link rel="stylesheet" href="lab.css?v=1">
+  <style>
+    .app { overflow-y: auto; touch-action: pan-y; background: radial-gradient(ellipse at top, #1a1640, #05050d 70%); }
+    .wrap { padding: calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; }
+    h1 { margin: 0; color: var(--gold); letter-spacing: .2em; font-size: 20px; text-align: center; }
+    .sub { text-align: center; color: var(--dim); margin: -8px 0 0; font-size: 13px; }
+    .mode { display: flex; gap: 12px; align-items: stretch; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px; text-align: left; width: 100%; }
+    .mode img { width: 84px; height: 112px; object-fit: cover; object-position: top; border-radius: 10px; flex: none; }
+    .mode b { display: block; font-size: 18px; color: var(--gold); }
+    .mode p { margin: 4px 0 0; color: var(--dim); font-size: 13px; }
+    .mode:active { transform: scale(.98); }
+    h3 { margin: 6px 0 0; font-size: 12px; letter-spacing: .18em; color: var(--dim); text-transform: uppercase; }
+    .stages { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stage { background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 10px; text-align: left; font-weight: 700; font-size: 13px; position: relative; min-height: 64px; background-size: cover; background-position: center; overflow: hidden; }
+    .stage::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to right, rgba(5,5,13,.9), rgba(5,5,13,.4)); }
+    .stage span { position: relative; display: block; }
+    .stage small { position: relative; color: var(--gold); font-weight: 400; }
+    .stage.on { border-color: var(--gold); }
+    .squad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .pick { position: relative; border-radius: 10px; overflow: hidden; border: 2px solid var(--line); padding: 0; aspect-ratio: 1; background: var(--panel); }
+    .pick img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pick span { position: absolute; left: 0; right: 0; bottom: 0; font-size: 11px; font-weight: 800; padding: 2px 4px; background: linear-gradient(to top, rgba(0,0,0,.9), transparent); text-align: left; }
+    .pick i { position: absolute; top: 4px; left: 4px; width: 10px; height: 10px; border-radius: 50%; }
+    .pick.on { border-color: var(--gold); box-shadow: 0 0 10px rgba(238,199,107,.6); }
+    .pick.on::after { content: attr(data-n); position: absolute; top: 3px; right: 3px; background: var(--gold); color: #1a1206; font-weight: 900; font-size: 11px; border-radius: 6px; padding: 0 5px; }
+    .info { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: var(--dim); min-height: 44px; }
+    .info b { color: var(--text); }
+    .back { color: var(--dim); text-align: center; font-size: 13px; }
+    .back a { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="app"><div class="wrap" id="wrap">
+    <h1>BATTLE LAB</h1>
+    <p class="sub">Two prototype battle modes for playtesting. Progress here doesn't affect the main game.</p>
+    <a class="mode" id="go-rush" href="rush.html"><img src="art/lyra.webp" alt=""><div><b>Spotlight Rush</b><p>Your crew fight on their own. Tap a glowing portrait to fire her skill. Fire three skills in a row for a Showstopper.</p></div></a>
+    <a class="mode" id="go-match" href="match.html"><img src="art/juni.webp" alt=""><div><b>Deck Match</b><p>Swap tiles to match three or more. Each crew member's tiles power her attacks; hearts heal. Watch the enemy's countdown.</p></div></a>
+    <h3>Stage</h3>
+    <div class="stages" id="stages"></div>
+    <h3>Squad (pick 4)</h3>
+    <div class="squad" id="squad"></div>
+    <div class="info" id="info">Tap a crew member to add or remove her.</div>
+    <p class="back"><a href="../">Back to SolarLux</a></p>
+  </div></div>
+  <script src="shared.js?v=1"></script>
+  <script>
+    ageGate(function () {
+      var squad = getSquad(), stage = getStage();
+      var best = store.get("best", {});
+      var stagesEl = document.getElementById("stages"), squadEl = document.getElementById("squad"), info = document.getElementById("info");
+      function stars(n) { return n ? "★".repeat(n) + "☆".repeat(3 - n) : ""; }
+      function drawStages() {
+        stagesEl.innerHTML = "";
+        STAGES.forEach(function (s, i) {
+          var b = el("button", "stage" + (i === stage ? " on" : ""), stagesEl);
+          b.style.backgroundImage = "url(" + bgUrl(s.bg) + ")";
+          el("span", "", b, (i + 1) + ". " + s.name);
+          var r = best["rush:" + i], m = best["match:" + i];
+          el("small", "", b, (r ? "Rush " + stars(r) + " " : "") + (m ? "Match " + stars(m) : ""));
+          b.onclick = function () { stage = i; store.set("stage", i); drawStages(); links(); };
+        });
+      }
+      function drawSquad() {
+        squadEl.innerHTML = "";
+        CREW_IDS.forEach(function (id) {
+          var c = CREW[id], n = squad.indexOf(id);
+          var b = el("button", "pick" + (n >= 0 ? " on" : ""), squadEl);
+          b.dataset.n = n + 1;
+          var img = el("img", "", b); img.src = faceUrl(id); img.alt = "";
+          el("i", "", b).style.background = DEPTS[c.dept].color;
+          el("span", "", b, c.name);
+          b.onclick = function () {
+            var k = squad.indexOf(id);
+            if (k >= 0) { if (squad.length > 1) squad.splice(k, 1); }
+            else { if (squad.length >= 4) squad.shift(); squad.push(id); }
+            if (squad.length === 4) store.set("squad", squad);
+            info.innerHTML = "<b>" + c.full + "</b> (" + DEPTS[c.dept].name + ")<br>Skill: <b>" + c.skill.name + "</b>. " + skillText(id) + "." +
+              (squad.length < 4 ? "<br>Pick " + (4 - squad.length) + " more." : "");
+            drawSquad(); links();
+          };
+        });
+      }
+      function links() {
+        var ok = squad.length === 4;
+        ["go-rush", "go-match"].forEach(function (k) {
+          var a = document.getElementById(k);
+          a.style.opacity = ok ? 1 : .4;
+          a.href = ok ? (k === "go-rush" ? "rush.html" : "match.html") + "?stage=" + stage : "javascript:void 0";
+        });
+      }
+      drawStages(); drawSquad(); links();
+    });
+  </script>
+</body>
+</html>
