@@ -460,6 +460,26 @@
         ctx.beginPath(); ctx.ellipse(150, y, 5 * Math.abs(Math.cos(t * 8)) + 1, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       }
     },
+    "dwarves-vs-orcs"(ctx, t) {
+      // The dwarf hall from the game; a dwarf axeman and an orc march in, clash, and start over.
+      ctx.fillStyle = "#3d5a2a"; ctx.fillRect(0, 0, W, H);
+      if (dvoArt.complete && dvoArt.naturalWidth) ctx.drawImage(dvoArt, 0, 0, W, H);
+      if (!(dvoUnits.complete && dvoUnits.naturalWidth)) return;
+      const k = (t * 0.22) % 1;                               // one march-and-clash every ~4.5 s
+      const meet = W / 2, reach = Math.min(1, k / 0.6);
+      const dx = 10 + (meet - 22 - 10) * reach, ox = W - 10 - (W - 10 - (meet + 22)) * reach;
+      const y = 128, fighting = k >= 0.6;
+      const step = Math.floor(t * 6) % 2, swing = Math.floor(t * 4) % 2;
+      const frame = (i, x) => ctx.drawImage(dvoUnits, i * 48, 0, 48, 54, Math.round(x - 24), y - 46, 48, 54);
+      frame(fighting ? (swing ? 4 : 0) : step, dx);            // dwarf faces right
+      ctx.save(); ctx.translate(ox, 0); ctx.scale(-1, 1);       // orc walks left
+      frame(fighting ? (swing ? 1 + 4 : 2) : 2 + step, 0);
+      ctx.restore();
+      if (fighting && swing) {                                 // sparks where the blades meet
+        ctx.fillStyle = "#ffe070";
+        for (let i = 0; i < 5; i++) { const a = i * 1.26 + t * 9; ctx.fillRect(meet + Math.cos(a) * 8, y - 26 + Math.sin(a) * 6, 2, 2); }
+      }
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
@@ -476,6 +496,12 @@
   farmArt.onload = farmerArt.onload = redrawFarm;
   farmArt.src = "assets/mythica-farmer.png";
   farmerArt.src = "assets/mythica-farmer-farmer.png";
+
+  const dvoArt = new Image(), dvoUnits = new Image();
+  const redrawDvo = () => { const c = cabs.find((x) => x.slug === "dwarves-vs-orcs"); if (c && c.ctx) attract[c.slug](c.ctx, 1.3); };
+  dvoArt.onload = dvoUnits.onload = redrawDvo;
+  dvoArt.src = "assets/dwarves-vs-orcs.jpg";
+  dvoUnits.src = "assets/dwarves-vs-orcs-units.png";
 
   // Sprites shared with the games live in each game; these are small preview versions.
   function drawHive(ctx, x, ground, s) {
