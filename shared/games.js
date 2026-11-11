@@ -98,7 +98,7 @@ window.ARCADE_GAMES = [
   {
     slug: "dwarves-vs-orcs",
     title: "Dwarves vs Orcs",
-    tagline: "Mine, build and march to war. Hold off the orc raids and burn their warcamp.",
+    tagline: "Play as dwarves, men or orcs. Gather, build and march to war against the enemy stronghold.",
     controls: "Mouse or touch",
     color: "#d8a63a",
     // Unity (WebGL) real-time strategy game; it doesn't report scores to the Den.
