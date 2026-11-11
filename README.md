@@ -34,6 +34,8 @@ Also on the floor:
 
 - **Mythica Farmer**: a cozy pixel farm. Dig and water a field, grow crops through four seasons, raise chickens for eggs, fish the pond, bonk slimes and sell everything to Mabel. It's a Unity WebGL build in `games/mythica-farmer/Build`, made from the ClaudeFarmer Unity project; rebuild it there with **Tools > Farm Demo > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here. All its art is original, drawn for the game. On a phone it shows a joystick and buttons, and like Battle of the Bands it installs as a phone app and plays offline after it has loaded once (`manifest.webmanifest`, `icons/` and `sw.js` in its folder).
 
+- **Dwarves vs Orcs**: a real-time strategy game in the classic isometric style. Mine, build on the grid, train dwarf axemen, bowmen and boar riders, and burn down the orc warcamp before the raids wear you down. It's a Unity WebGL build in `games/dwarves-vs-orcs/Build`; rebuild it in the MiddleEarthRTS Unity project with **Dwarves vs Orcs > Build WebGL (for the Arcade)** and copy the four files from `Builds/WebGL/Build` over the ones here. It's made for mouse and keyboard; on a phone or tablet it has touch controls and the page suggests playing on a computer. Its art is original, made for the game.
+
 - **Mythica Sanctuary**: a cozy creature-rescue game hosted on the Mythica site ([mythica.greenbearlabs.com/sanctuary](https://mythica.greenbearlabs.com/sanctuary/)). Its cabinet links out using the `url` field in `shared/games.js`.
 
 Everything is plain HTML, CSS and JavaScript with no build step and no dependencies. Best scores live in the player's browser.
