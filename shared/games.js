@@ -104,4 +104,13 @@ window.ARCADE_GAMES = [
     // Unity (WebGL) real-time strategy game; it doesn't report scores to the Den.
     meta: "BEST ON PC",
   },
+  {
+    slug: "leukocyte",
+    title: "Leukocyte",
+    tagline: "You're a white blood cell. Hold the artery, take the lungs back from the germs.",
+    controls: "Mouse or touch",
+    color: "#e8486a",
+    // Unity (WebGL) first-person shooter; it doesn't report scores to the Den.
+    meta: "2 MODES",
+  },
 ];

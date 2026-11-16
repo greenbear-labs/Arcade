@@ -480,6 +480,48 @@
         for (let i = 0; i < 5; i++) { const a = i * 1.26 + t * 9; ctx.fillRect(meet + Math.cos(a) * 8, y - 26 + Math.sin(a) * 6, 2, 2); }
       }
     },
+    leukocyte(ctx, t) {
+      // Inside an artery: a white blood cell holds the middle and zaps germs drifting in with the flow.
+      const g = ctx.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, W * 0.7);
+      g.addColorStop(0, "#7a1020"); g.addColorStop(1, "#2a0509");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      // red blood cells streaming past
+      for (let i = 0; i < 9; i++) {
+        const x = ((i * 53 + t * (28 + (i % 3) * 9)) % (W + 30)) - 15;
+        const y = 18 + ((i * 37) % (H - 36));
+        ctx.fillStyle = "#b51e2c"; ctx.beginPath(); ctx.ellipse(x, y, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#8c1220"; ctx.beginPath(); ctx.ellipse(x, y, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+      }
+      // the trooper: a bumpy white cell with a lobed nucleus and a cyan visor
+      const cx = 64, cy = H / 2 + Math.sin(t * 2) * 4;
+      ctx.fillStyle = "#e8f0ff"; ctx.beginPath();
+      for (let k = 0; k <= 36; k++) { const a = k / 36 * Math.PI * 2, r = 24 * (1 + 0.06 * Math.sin(a * 9 + t * 3)); ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
+      ctx.fill();
+      ctx.fillStyle = "#7a5ac8";
+      for (const [ox, oy, r] of [[-7, -3, 6], [0, -8, 5.5], [7, -2, 6], [1, 6, 5.5]]) { ctx.beginPath(); ctx.arc(cx + ox, cy + oy, r, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "#66f2ff"; ctx.fillRect(cx + 10, cy - 2, 16, 4);
+      // germs on a loop: each drifts in from the right and pops when the bolt reaches it
+      const period = 1.6;
+      for (let i = 0; i < 3; i++) {
+        const k = ((t + i * period / 3) % period) / period;
+        const gx = W + 20 - k * (W - 70), gy = 34 + i * 48 + Math.sin(t * 3 + i) * 6;
+        const popped = k > 0.82;
+        if (!popped) {
+          ctx.fillStyle = i === 1 ? "#9a4fe0" : "#62d93a";
+          ctx.beginPath(); ctx.arc(gx, gy, 9, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 2;
+          for (let s = 0; s < 8; s++) { const a = s / 8 * Math.PI * 2 + t; ctx.beginPath(); ctx.moveTo(gx + Math.cos(a) * 9, gy + Math.sin(a) * 9); ctx.lineTo(gx + Math.cos(a) * 14, gy + Math.sin(a) * 14); ctx.stroke(); }
+          ctx.fillStyle = "#3a0a10"; ctx.fillRect(gx - 5, gy - 2, 3, 3); ctx.fillRect(gx + 2, gy - 2, 3, 3);
+        } else {
+          ctx.fillStyle = "#b8ff7a";
+          for (let s = 0; s < 6; s++) { const a = s * 1.05, d = (k - 0.82) * 120; ctx.fillRect(gx + Math.cos(a) * d, gy + Math.sin(a) * d, 3, 3); }
+        }
+        if (k > 0.7 && k <= 0.82) {
+          ctx.strokeStyle = "#66f2ff"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(cx + 26, cy); ctx.lineTo(gx - 10, gy); ctx.stroke();
+        }
+      }
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
