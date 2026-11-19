@@ -116,7 +116,7 @@ window.ARCADE_GAMES = [
   {
     slug: "froggy-farm",
     title: "Froggy Farm",
-    tagline: "For little ones: feed the frog bugs, wave the magic wand, build silly ice creams, carve glowing pumpkins. No reading, no losing.",
+    tagline: "For little ones: feed the frog bugs, wave the magic wand, build silly ice creams, carve glowing pumpkins, wash muddy trucks. No reading, no losing.",
     controls: "Tap and drag",
     color: "#5cc84a",
     // Toddler toy (plain HTML/SVG, sound made in code). It installs as a tablet app and plays offline; no scores.

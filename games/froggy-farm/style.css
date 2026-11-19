@@ -116,3 +116,16 @@ html, body {
 .pk-btn-bg { fill: #2a1d52; stroke: #ffb347; stroke-width: 5; transition: fill .2s, stroke .2s; }
 .pk-btn.chosen .pk-btn-bg { fill: #5a3fa0; stroke: #fff; stroke-width: 7; }
 .pk-win { transition: fill-opacity .8s; fill-opacity: .35; }
+
+/* car wash */
+.cw-veh .paint { fill: var(--body); stroke: rgba(0,0,0,.28); }
+.cw-veh .glit { display: none; }
+.cw-veh.sparkly .glit { display: inline; animation: flick 1s ease-in-out infinite; }
+.cw-veh.alive .pupil { animation: look 2.6s ease-in-out infinite; }
+@keyframes look { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(9px,4px); } 50% { transform: translate(-8px,6px); } 75% { transform: translate(2px,-9px); } }
+.cw-drip { animation: drip 1.4s ease-in infinite; }
+@keyframes drip { 0% { transform: translateY(0) scale(.4); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(46px) scale(1); opacity: 0; } }
+#cw-light circle { fill: #59626d; transition: fill .15s; }
+#cw-light.red .lt-r { fill: #ff4d4d; }
+#cw-light.yellow .lt-y { fill: #ffd93b; }
+#cw-light.green .lt-g { fill: #5cdc4a; }

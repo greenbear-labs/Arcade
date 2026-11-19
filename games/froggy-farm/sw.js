@@ -3,10 +3,11 @@
  * offline, it answers from the saved copy. It only ever touches its own caches, because
  * it can share a website with other games. */
 const PREFIX = 'froggy-farm-';
-const CACHE = PREFIX + 'v6';
+const CACHE = PREFIX + 'v7';
 const ASSETS = [
   './', './index.html', './style.css', './js/audio.js', './js/app.js', './js/kit.js', './js/games/frog.js', './js/games/icecream.js',
   './js/games/pumpkin.js',
+  './js/games/carwash.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
 ];
 self.addEventListener('install', e => {
