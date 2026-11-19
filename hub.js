@@ -554,6 +554,39 @@
         ctx.beginPath(); ctx.arc(30 + i * 44, 24 + (i % 2) * 18, 2.5, 0, Math.PI * 2); ctx.fill();
       }
     },
+    "upgrade-island"(ctx, t) {
+      // Kai on the beach under a palm while a coconut drops, with the plane's tail sticking out of the sand.
+      ctx.fillStyle = "#9fd8ef"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#3fb2c9"; ctx.fillRect(0, 108, W, H - 108);
+      for (let i = 0; i < 6; i++) {
+        const x = ((i * 48 + t * 18) % (W + 40)) - 20;
+        ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(x, 118 + (i % 2) * 22, 18, 2);
+      }
+      ctx.fillStyle = "#f3dfae"; ctx.beginPath(); ctx.ellipse(120, 150, 118, 30, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#7cc46a"; ctx.beginPath(); ctx.ellipse(104, 142, 62, 14, 0, 0, Math.PI * 2); ctx.fill();
+      // plane tail
+      ctx.fillStyle = "#f4f3ee"; ctx.beginPath(); ctx.moveTo(176, 150); ctx.lineTo(214, 150); ctx.lineTo(206, 132); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#2f6fb0"; ctx.beginPath(); ctx.moveTo(196, 136); ctx.lineTo(210, 136); ctx.lineTo(214, 104); ctx.lineTo(204, 104); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#f08a3c"; ctx.fillRect(203, 100, 12, 6);
+      // palm
+      ctx.strokeStyle = "#b98b5e"; ctx.lineWidth = 9; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(70, 146); ctx.quadraticCurveTo(66, 96, 84, 52); ctx.stroke();
+      ctx.fillStyle = "#4fa45a";
+      for (let i = 0; i < 6; i++) {
+        const a = -Math.PI / 2 + (i - 2.5) * 0.62 + Math.sin(t * 1.5 + i) * 0.05;
+        ctx.save(); ctx.translate(84, 52); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(26, 0, 28, 6, 0.25, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+      // a coconut falls every couple of seconds
+      const k = (t * 0.45) % 1, ny = 58 + Math.min(1, k * 2.2) ** 2 * 82;
+      ctx.fillStyle = "#7a5232"; ctx.beginPath(); ctx.arc(92, ny, 5, 0, Math.PI * 2); ctx.fill();
+      // Kai walks back and forth on the sand
+      const kx = 130 + Math.sin(t * 0.8) * 22, step = Math.sin(t * 7) * 3, ky = 148;
+      ctx.fillStyle = "#3a4a63"; ctx.fillRect(kx - 6 + step, ky - 12, 4, 12); ctx.fillRect(kx + 2 - step, ky - 12, 4, 12);
+      ctx.fillStyle = "#eae3d2"; Arcade.roundRect(ctx, kx - 9, ky - 30, 18, 19, 5); ctx.fill();
+      ctx.fillStyle = "#f2c9a0"; ctx.beginPath(); ctx.arc(kx, ky - 40, 11, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#2b2622"; ctx.beginPath(); ctx.arc(kx, ky - 44, 11.5, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = "#1d1d1d"; ctx.beginPath(); ctx.arc(kx - 4, ky - 39, 2, 0, Math.PI * 2); ctx.arc(kx + 4, ky - 39, 2, 0, Math.PI * 2); ctx.fill();
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
