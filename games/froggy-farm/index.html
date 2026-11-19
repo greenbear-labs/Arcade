@@ -374,6 +374,101 @@
   <g id="pk-bubbles" pointer-events="none"></g>
 </svg>
 
+<!-- GAME 4, THE ELEPHANT CAR WASH: pick a muddy truck, spray, soap, scrub, rinse and dry it,
+     paint it (and mix colors), add stickers, then tap the light and off it drives. -->
+<svg id="carwash" class="screen" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cw-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd8ff"/><stop offset="1" stop-color="#e6f8ff"/></linearGradient>
+    <linearGradient id="cw-rainbow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff5c6c"/><stop offset=".2" stop-color="#ffa53b"/><stop offset=".4" stop-color="#ffe14d"/>
+      <stop offset=".6" stop-color="#6fdc6a"/><stop offset=".8" stop-color="#5cb3ff"/><stop offset="1" stop-color="#b98bff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#cw-sky)"/>
+  <g fill="#fff" opacity=".9">
+    <g class="drift"><ellipse cx="250" cy="150" rx="90" ry="32"/><circle cx="225" cy="130" r="38"/><circle cx="280" cy="122" r="44"/></g>
+    <g class="drift slow"><ellipse cx="1420" cy="250" rx="80" ry="28"/><circle cx="1400" cy="232" r="32"/><circle cx="1445" cy="226" r="38"/></g>
+  </g>
+
+  <!-- sun: tap for a rainbow -->
+  <g class="tap" data-act="sun" transform="translate(1290,130)"><g class="anim">
+    <g class="rays" fill="#ffe680"><path d="M-8 -92 L8 -92 L0 -70Z"/><path d="M-8 92 L8 92 L0 70Z"/><path d="M-92 -8 L-92 8 L-70 0Z"/><path d="M92 -8 L92 8 L70 0Z"/>
+      <path d="M-70 -58 L-58 -70 L-50 -50Z"/><path d="M70 58 L58 70 L50 50Z"/><path d="M58 -70 L70 -58 L50 -50Z"/><path d="M-58 70 L-70 58 L-50 50Z"/></g>
+    <circle r="55" fill="#ffd93b" stroke="#f5b800" stroke-width="5"/>
+    <circle cx="-18" cy="-8" r="6" fill="#5a4300"/><circle cx="18" cy="-8" r="6" fill="#5a4300"/>
+    <path d="M-20 14 Q0 30 20 14" stroke="#5a4300" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g></g>
+
+  <!-- grass, road -->
+  <path d="M0 600 Q 400 560 800 590 T 1600 580 V900 H0Z" fill="#8fdc6a"/>
+  <rect y="712" width="1600" height="188" fill="#7fd05e"/>
+  <rect y="772" width="1600" height="128" fill="#8a96a0"/>
+  <g fill="#fff"><rect x="40" y="832" width="90" height="12" rx="6"/><rect x="240" y="832" width="90" height="12" rx="6"/><rect x="1270" y="832" width="90" height="12" rx="6"/><rect x="1470" y="832" width="90" height="12" rx="6"/></g>
+
+  <!-- the car wash bay -->
+  <rect x="540" y="296" width="520" height="424" fill="#d2efff"/>
+  <g stroke="#b5e0f7" stroke-width="4"><path d="M540 380 H1060 M540 460 H1060 M540 540 H1060 M540 620 H1060"/></g>
+  <rect x="520" y="712" width="560" height="62" fill="#b8c4cc"/>
+  <g fill="#9aa8b2"><rect x="560" y="740" width="40" height="8" rx="4"/><rect x="680" y="740" width="40" height="8" rx="4"/><rect x="800" y="740" width="40" height="8" rx="4"/><rect x="920" y="740" width="40" height="8" rx="4"/></g>
+  <rect x="538" y="290" width="30" height="430" rx="8" fill="#4cb8e6" stroke="#2f8fbf" stroke-width="5"/>
+  <rect x="1032" y="290" width="30" height="430" rx="8" fill="#4cb8e6" stroke="#2f8fbf" stroke-width="5"/>
+  <rect x="520" y="262" width="560" height="44" rx="14" fill="#4cb8e6" stroke="#2f8fbf" stroke-width="5"/>
+  <g fill="#fff"><path d="M640 284 m0 -14 q10 12 0 22 q-10 -10 0 -22z"/><circle cx="700" cy="284" r="8"/><circle cx="900" cy="284" r="8"/><path d="M960 284 m0 -14 q10 12 0 22 q-10 -10 0 -22z"/></g>
+
+  <!-- traffic light: tap to drive away -->
+  <g id="cw-light" class="tap" data-act="light">
+    <path d="M800 306 V318" stroke="#2f8fbf" stroke-width="6"/>
+    <rect x="722" y="316" width="156" height="56" rx="18" fill="#3a4450" stroke="#262d35" stroke-width="5"/>
+    <circle class="lt-r" cx="752" cy="344" r="17"/><circle class="lt-y" cx="800" cy="344" r="17"/><circle class="lt-g" cx="848" cy="344" r="17"/>
+  </g>
+
+  <g id="cw-bay"></g>
+
+  <!-- the elephant (mascot) -->
+  <g id="cw-elephant" class="tap" data-act="elephant" transform="translate(300,720) scale(.85)"><g class="anim">
+    <path d="M-135 -160 Q-168 -150 -160 -112" stroke="#8296ab" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <rect x="-110" y="-95" width="52" height="95" rx="20" fill="#8ea3b8"/><rect x="30" y="-95" width="52" height="95" rx="20" fill="#8ea3b8"/>
+    <ellipse cx="-10" cy="-155" rx="132" ry="102" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/>
+    <rect x="-72" y="-86" width="54" height="86" rx="20" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/>
+    <rect x="58" y="-86" width="54" height="86" rx="20" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/>
+    <g fill="#fff"><circle cx="-56" cy="-6" r="6"/><circle cx="-34" cy="-6" r="6"/><circle cx="74" cy="-6" r="6"/><circle cx="96" cy="-6" r="6"/></g>
+    <circle cx="110" cy="-222" r="80" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/>
+    <g class="trunk">
+      <path d="M150 -190 Q215 -178 222 -240 Q226 -292 256 -302" stroke="#7f93a8" stroke-width="46" fill="none" stroke-linecap="round"/>
+      <path d="M150 -190 Q215 -178 222 -240 Q226 -292 256 -302" stroke="#a9bccf" stroke-width="36" fill="none" stroke-linecap="round"/>
+      <ellipse cx="260" cy="-304" rx="14" ry="10" fill="#7f93a8" transform="rotate(-20 260 -304)"/>
+    </g>
+    <g class="ear"><ellipse cx="52" cy="-215" rx="58" ry="72" fill="#b9cadb" stroke="#7f93a8" stroke-width="5"/><ellipse cx="52" cy="-212" rx="38" ry="52" fill="#ffc4d6"/></g>
+    <ellipse cx="135" cy="-246" rx="10" ry="14" fill="#26323d"/><circle cx="139" cy="-251" r="4" fill="#fff"/>
+    <circle cx="150" cy="-206" r="13" fill="#ff8fa8" opacity=".6"/>
+    <path class="el-smile" d="M112 -184 Q128 -168 146 -184" stroke="#26323d" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M62 -286 Q110 -336 162 -286 Z" fill="#4cb8e6" stroke="#2f8fbf" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M140 -290 Q175 -292 192 -280" stroke="#2f8fbf" stroke-width="9" fill="none" stroke-linecap="round"/>
+  </g></g>
+
+  <!-- puddle duck -->
+  <g class="tap" data-act="duck" transform="translate(480,800)">
+    <ellipse rx="95" ry="22" fill="#7cc8ff" stroke="#5cb3ff" stroke-width="4"/>
+    <g class="anim">
+      <ellipse cy="-14" rx="28" ry="18" fill="#ffd93b" stroke="#e8b400" stroke-width="4"/>
+      <circle cx="16" cy="-36" r="14" fill="#ffd93b" stroke="#e8b400" stroke-width="4"/>
+      <path d="M28 -38 L44 -34 L28 -30Z" fill="#ff9f1c"/><circle cx="20" cy="-40" r="3.5" fill="#26323d"/>
+      <path d="M-26 -18 L-40 -26 L-28 -8Z" fill="#ffd93b" stroke="#e8b400" stroke-width="3"/>
+    </g>
+  </g>
+
+  <!-- stickers -->
+  <rect x="1150" y="318" width="240" height="384" rx="28" fill="#fff" stroke="#4cb8e6" stroke-width="6" stroke-dasharray="18 10"/>
+  <g id="cw-stickers"></g>
+
+  <!-- wash tools and paint -->
+  <rect x="470" y="36" width="660" height="212" rx="30" fill="#e9f8ff" stroke="#4cb8e6" stroke-width="6"/>
+  <g id="cw-board"></g>
+
+  <g id="cw-fx" pointer-events="none"></g>
+  <g id="cw-bubbles" pointer-events="none"></g>
+</svg>
+
 <!-- HUB: each mini-game is a mascot. Tap one to play. -->
 <div id="hub" class="screen">
 <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -387,7 +482,7 @@
   <path d="M0 720 Q 500 670 900 720 T 1600 700 V900 H0Z" fill="#6cc44c"/>
 
   <!-- game 1: the frog and the bugs -->
-  <g class="tile tap" data-game="frog" transform="translate(410,470) scale(.76)"><g class="bob"><g class="tile-anim">
+  <g class="tile tap" data-game="frog" transform="translate(380,470) scale(.56)"><g class="bob"><g class="tile-anim">
     <circle r="235" fill="#c9f0ff" stroke="#fff" stroke-width="16"/>
     <ellipse cy="150" rx="190" ry="50" fill="#4cb8e6"/><ellipse cy="138" rx="140" ry="32" fill="#4fae3c"/>
     <g transform="translate(0,135) scale(.62)">
@@ -409,7 +504,7 @@
   </g></g></g>
 
   <!-- game 2: ice cream kitchen -->
-  <g class="tile tap" data-game="icecream" transform="translate(800,470) scale(.76)"><g class="bob late"><g class="tile-anim">
+  <g class="tile tap" data-game="icecream" transform="translate(660,470) scale(.56)"><g class="bob late"><g class="tile-anim">
     <circle r="235" fill="#ffe1ef" stroke="#fff" stroke-width="16"/>
     <g transform="translate(0,40)">
       <ellipse cx="-48" cy="172" rx="40" ry="16" fill="#ff9f1c"/><ellipse cx="48" cy="172" rx="40" ry="16" fill="#ff9f1c"/>
@@ -431,7 +526,7 @@
     </g>
   </g></g></g>
   <!-- game 3: the pumpkin house -->
-  <g class="tile tap" data-game="pumpkin" transform="translate(1190,470) scale(.76)"><g class="bob"><g class="tile-anim">
+  <g class="tile tap" data-game="pumpkin" transform="translate(940,470) scale(.56)"><g class="bob"><g class="tile-anim">
     <circle r="235" fill="#3b2a6b" stroke="#fff" stroke-width="16"/>
     <g fill="#fff"><circle cx="-130" cy="-120" r="5"/><circle cx="120" cy="-150" r="4"/><circle cx="160" cy="-60" r="5"/><circle cx="-170" cy="0" r="4"/><circle cx="-60" cy="-180" r="3"/></g>
     <circle cx="140" cy="-130" r="34" fill="#fff4c2"/>
@@ -450,6 +545,24 @@
       <g fill="#ff9a2e" stroke="#d96a00" stroke-width="5"><ellipse cx="-78" rx="82" ry="124"/><ellipse cx="78" rx="82" ry="124"/><ellipse cx="-36" rx="80" ry="138"/><ellipse cx="36" rx="80" ry="138"/><ellipse rx="70" ry="143"/></g>
       <g fill="#ffd94a" stroke="#d96a00" stroke-width="4"><path d="M-85 -17 L-55 -61 L-25 -17Z"/><path d="M25 -17 L55 -61 L85 -17Z"/><path d="M-18 36 L0 6 L18 36Z"/><path d="M-80 66 Q0 142 80 66 Q0 102 -80 66Z"/></g>
     </g>
+  </g></g></g>
+  <!-- game 4: the elephant car wash -->
+  <g class="tile tap" data-game="carwash" transform="translate(1220,470) scale(.56)"><g class="bob late"><g class="tile-anim">
+    <circle r="235" fill="#d2efff" stroke="#fff" stroke-width="16"/>
+    <g fill="#fff" stroke="#9fd8f5" stroke-width="4"><circle cx="-150" cy="-110" r="22"/><circle cx="-110" cy="-160" r="14"/><circle cx="150" cy="-130" r="18"/><circle cx="120" cy="-175" r="10"/></g>
+    <g transform="translate(-40,150) scale(.95)">
+      <ellipse cx="-10" cy="-155" rx="132" ry="102" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/>
+      <rect x="-72" y="-86" width="54" height="86" rx="20" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/><rect x="58" y="-86" width="54" height="86" rx="20" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/>
+      <circle cx="110" cy="-222" r="80" fill="#a9bccf" stroke="#7f93a8" stroke-width="5"/>
+      <path d="M150 -190 Q215 -178 222 -240 Q226 -292 256 -302" stroke="#7f93a8" stroke-width="46" fill="none" stroke-linecap="round"/>
+      <path d="M150 -190 Q215 -178 222 -240 Q226 -292 256 -302" stroke="#a9bccf" stroke-width="36" fill="none" stroke-linecap="round"/>
+      <ellipse cx="52" cy="-215" rx="58" ry="72" fill="#b9cadb" stroke="#7f93a8" stroke-width="5"/><ellipse cx="52" cy="-212" rx="38" ry="52" fill="#ffc4d6"/>
+      <ellipse cx="135" cy="-246" rx="10" ry="14" fill="#26323d"/><circle cx="139" cy="-251" r="4" fill="#fff"/>
+      <circle cx="150" cy="-206" r="13" fill="#ff8fa8" opacity=".6"/>
+      <path d="M112 -184 Q128 -168 146 -184" stroke="#26323d" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M62 -286 Q110 -336 162 -286 Z" fill="#4cb8e6" stroke="#2f8fbf" stroke-width="5"/>
+    </g>
+    <g fill="#5cb3ff"><path d="M200 -150 Q212 -132 200 -122 Q188 -132 200 -150Z"/><path d="M226 -110 Q238 -92 226 -82 Q214 -92 226 -110Z"/><path d="M182 -96 Q194 -78 182 -68 Q170 -78 182 -96Z"/></g>
   </g></g></g>
 </svg>
 </div>
@@ -480,5 +593,6 @@
 <script src="js/games/frog.js"></script>
 <script src="js/games/icecream.js"></script>
 <script src="js/games/pumpkin.js"></script>
+<script src="js/games/carwash.js"></script>
 </body>
 </html>
