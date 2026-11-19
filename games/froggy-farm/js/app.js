@@ -43,18 +43,24 @@ const App = (() => {
 
   /* ---------- switching between the hub and the games ---------- */
   const api = { settings, Voice, current: null, register, show, goFullscreen };
+  // Use the attribute and inline style, not the .hidden property: Safari doesn't support
+  // .hidden on <svg> elements, so a game's screen would stay visible over the others.
+  function setShown(node, on) {
+    node.toggleAttribute('hidden', !on);
+    node.style.display = on ? '' : 'none';
+  }
   function register(game) {
     games[game.id] = game;
-    game.screen.hidden = true;
+    setShown(game.screen, false);
   }
   function show(id) {
     const prev = games[api.current];
-    if (prev) { prev.leave && prev.leave(); prev.screen.hidden = true; }
+    if (prev) { prev.leave && prev.leave(); setShown(prev.screen, false); }
     api.current = id || null;
     const g = games[id];
-    hub.hidden = !!g;
-    home.hidden = !g;
-    if (g) { g.screen.hidden = false; g.enter && g.enter(); }
+    setShown(hub, !g);
+    setShown(home, !!g);
+    if (g) { setShown(g.screen, true); g.enter && g.enter(); }
     else Sound.setMood('day');
   }
 
