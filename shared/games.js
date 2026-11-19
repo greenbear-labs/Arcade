@@ -131,4 +131,13 @@ window.ARCADE_GAMES = [
     // three.js survival game made for tablets. It installs as a tablet app and plays offline; the island saves in the player's browser.
     meta: "AGES 6+",
   },
+  {
+    slug: "fossil-fury",
+    title: "Fossil Fury",
+    tagline: "A stone age roguelike. Throw rocks, dodge dinos, dig through three cave floors and topple the beast.",
+    controls: "Keys, mouse or touch",
+    color: "#e0703a",
+    // Single-file HTML5 canvas roguelike; the deepest floor reached saves in the player's browser, not in the Den.
+    meta: "3 FLOORS",
+  },
 ];
