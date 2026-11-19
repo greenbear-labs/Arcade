@@ -9,7 +9,9 @@
   const layer = { fx: $('#cw-fx'), bubbles: $('#cw-bubbles') };
   const K = Kit(svg, layer);
   const { el, anim, toSvg, tween, sparkles, rings, talk, rand, pick, lerp, wait, starPath, shapes } = K;
-  const bay = $('#cw-bay'), board = $('#cw-board'), stickerSheet = $('#cw-stickers');
+  const bay = $('#cw-bay'), board = svg, stickerSheet = $('#cw-stickers');
+  const toolsG = $('#cw-tools'), paintsG = $('#cw-paints');
+  const PANELS = { tools: $('#cw-tools-panel'), paint: $('#cw-paint-panel'), stickers: $('#cw-stk-panel'), light: $('#cw-light'), newcar: $('#cw-new') };
   const light = $('#cw-light'), elephant = $('#cw-elephant'), elAnim = elephant.querySelector('.anim');
 
   const SPOT = { x: 800, y: 720 };
@@ -136,9 +138,9 @@
     setTimeout(() => h.remove(), 400 + delay);
     if (!a) h.remove();
   }
-  function addBubbles(V, n) {
+  function addBubbles(V, n, px, py) {
     for (let i = 0; i < n; i++) {
-      const [x, y] = areaPoint(V);
+      const [x, y] = px != null ? [px, py] : areaPoint(V);
       const h = el('g', { transform: `translate(${(x + rand(-20, 20)).toFixed(0)},${(y + rand(-20, 10)).toFixed(0)})`, class: 'cw-bubble' }, V.bub);
       const b = el('g', {}, h);
       const r = rand(14, 30);
@@ -172,12 +174,39 @@
     });
   }
 
+  /* ---------- steps: pick a car, wash it, then paint and stickers ---------- */
+  let stage = '';
+  const SHOW = { pick: [], wash: ['tools', 'newcar'], decorate: ['paint', 'stickers', 'light', 'newcar'] };
+  function setStage(s) {
+    if (s === stage) return;
+    stage = s;
+    for (const k in PANELS) {
+      const n = PANELS[k], on = SHOW[s].includes(k), shown = n.style.display !== 'none';
+      if (on && !shown) {
+        n.style.display = '';
+        const from = k === 'tools' || k === 'paint' ? 'translateY(-200px)' : k === 'stickers' ? 'translateX(320px)' : 'scale(0)';
+        if (k === 'light' || k === 'newcar') anim(n.querySelector('.anim') || n, [{ opacity: 0 }, { opacity: 1 }], 400);
+        else anim(n, [{ transform: from }, { transform: 'translate(0,0)' }], 500, { easing: 'cubic-bezier(.3,1.4,.5,1)' });
+      } else if (!on && shown) {
+        const a = anim(n, [{ opacity: 1 }, { opacity: 0 }], 250);
+        if (a) a.onfinish = () => { if (!SHOW[stage].includes(k)) n.style.display = 'none'; }; else n.style.display = 'none';
+      }
+    }
+  }
+  function maybeFinish(C) {
+    if (C !== V || stage !== 'wash' || mudLeft(C).length || C.wet) return;
+    Sound.play('cheer');
+    setStage('decorate');
+    setTimeout(() => { elSay(pick(['So shiny! Now paint it!', 'All clean! Paint it and add stickers!'])); hopRow('paint'); }, 600);
+  }
+
   /* ---------- the chooser: three muddy vehicles wait in the bay ---------- */
   let V = null, choices = [], busy = false;
   const state = { get V() { return V; }, get choices() { return choices; }, get busy() { return busy; } };
 
   async function spawnChooser() {
     busy = true;
+    setStage('pick');
     const types = Object.keys(TYPES).sort(() => Math.random() - 0.5).slice(0, 3);
     choices = types.map((t, i) => {
       const C = makeVehicle(t, bay);
@@ -220,6 +249,7 @@
     V = C;
     if (mudLeft(V).length < 9) addMud(V, 9 - mudLeft(V).length);
     busy = false;
+    setStage('wash');
     setTimeout(() => talkVehicle(V, V.T.line), 200);
     setTimeout(() => elSay(pick(["So muddy! Let's spray it!", 'Yucky mud! Wash time!'])), 1600);
   }
@@ -343,8 +373,7 @@
     if (!mudLeft(C).length) {
       Sound.play('twinkle');
       shine(C);
-      if (!C.shinySaid) { C.shinySaid = true; elSay('So shiny! Now paint it!'); hopRow('paint'); }
-      else elSay(pick(['All dry!', 'Shiny!']));
+      if (stage === 'wash') maybeFinish(C); else elSay(pick(['All dry!', 'Shiny!']));
     } else elSay(pick(['Whoosh! Still muddy!', 'All dry, but still muddy!']));
   }
   function shine(C) {
@@ -370,7 +399,10 @@
     rainbowArc();
     sparkles(C.x, C.y - 160, { n: 16, colors: ['#fff', '#ffe14d', '#bfe9ff'], spread: 260, up: 40 });
     setTimeout(() => talkVehicle(C, pick(["I'm clean!", 'Yay! No more mud!'])), 300);
-    setTimeout(() => { elSay(C.wet ? 'Sparkly clean! Now dry it!' : 'Sparkly clean!'); hopRow(C.wet ? 'tool' : 'paint'); }, 2200);
+    setTimeout(() => {
+      if (C.wet) { elSay('Sparkly clean! Now dry it with the fan!'); hop(board.querySelector('[data-tool=fan] .anim'), 20); }
+      else maybeFinish(C);
+    }, 2200);
   }
 
   function rainbowArc() {
@@ -493,23 +525,34 @@
       if (trails.length && now - last > 90) { last = now; const T = TRAIL[pick(trails)]; sparkles(C.x - 220, C.y - rand(40, 160), { n: 2, shape: T.shape, colors: T.colors, size: 14, spread: 50 }); }
     });
     light.setAttribute('class', 'tap');
-    V = null;
     await wait(900);
-    if (wasClean && Math.random() < 0.4) {
-      // around the block and back... through a mud puddle
-      addMud(C, 9); C.cleanSaid = false; C.shinySaid = false; setWet(C, false);
-      place(C, -400, SPOT.y, 1);
-      spin(C, true, 400);
-      await tween(1300, t => place(C, lerp(-400, SPOT.x, 1 - Math.pow(1 - t, 3)), SPOT.y, 1));
-      spin(C, false);
-      Sound.play('land'); bounce(C, 14);
-      V = C; busy = false;
-      elSay(pick(['Oops! Muddy again!', 'Oh no! A mud puddle!']));
-      return;
-    }
+    // around the block and back, sometimes through a mud puddle
+    const muddy = wasClean && Math.random() < 0.4;
+    if (muddy) { addMud(C, 9); C.cleanSaid = false; C.shinySaid = false; setWet(C, false); }
+    place(C, -400, SPOT.y, 1);
+    spin(C, true, 400);
+    await tween(1300, t => place(C, lerp(-400, SPOT.x, 1 - Math.pow(1 - t, 3)), SPOT.y, 1));
+    spin(C, false);
+    Sound.play('land'); bounce(C, 14);
+    V = C; busy = false;
+    if (muddy) { setStage('wash'); elSay(pick(['Oops! Muddy again!', 'Oh no! A mud puddle!'])); }
+    else { Sound.play(C.T.horn); talkVehicle(C, pick(['That was fun!', 'Again! Again!', 'Wheee!'])); }
+  }
+
+  async function newCar() {
+    anim(PANELS.newcar.querySelector('.anim'), [{ transform: 'scale(1)' }, { transform: 'scale(.85)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], 350);
+    if (!V || busy) return;
+    busy = true;
+    const C = V;
+    Sound.play(C.T.horn);
+    talkVehicle(C, pick(['Bye bye!', 'See you later!', 'Thank you!']));
+    await wait(600);
+    spin(C, true, 350);
+    Sound.play('putt');
+    await tween(1000, t => place(C, SPOT.x + t * t * 1100, SPOT.y, 1));
     spin(C, false);
     C.g.remove();
-    busy = false;
+    V = null; busy = false;
     spawnChooser();
   }
 
@@ -547,15 +590,15 @@
   };
   Object.keys(TOOLS).forEach((k, i) => {
     const x = 605 + i * 130, y = 94;
-    const b = el('g', { class: 'tap', transform: `translate(${x},${y})` }, board);
+    const b = el('g', { class: 'tap', transform: `translate(${x},${y})` }, toolsG);
     b.dataset.act = 'tool'; b.dataset.tool = k; b.dataset.x = x; b.dataset.y = y;
     const a = el('g', { class: 'anim' }, b);
     el('circle', { r: 44, fill: '#fff', stroke: '#4cb8e6', 'stroke-width': 5 }, a);
     TOOLS[k](a);
   });
   Object.keys(PAINTS).forEach((k, i) => {
-    const x = 580 + i * 110, y = 192;
-    const b = el('g', { class: 'tap', transform: `translate(${x},${y})` }, board);
+    const x = 580 + i * 110, y = 100;
+    const b = el('g', { class: 'tap', transform: `translate(${x},${y})` }, paintsG);
     b.dataset.act = 'paint'; b.dataset.paint = k;
     const a = el('g', { class: 'anim' }, b);
     el('path', { d: 'M-30 -22 L30 -22 L24 30 Q0 38 -24 30 Z', fill: '#cfd6dc', stroke: '#8a96a0', 'stroke-width': 4, 'stroke-linejoin': 'round' }, a);
@@ -572,7 +615,7 @@
   }
 
   /* ---------- input ---------- */
-  let rub = null, sdrag = null, lastInput = performance.now(), hints = 0, lastScrub = 0;
+  let rub = null, sdrag = null, tdrag = null, lastInput = performance.now(), hints = 0, lastScrub = 0;
   svg.addEventListener('pointerdown', e => {
     lastInput = performance.now(); hints = 0;
     const hit = e.target.closest('[data-act]');
@@ -606,15 +649,28 @@
       Sound.play('pop');
       return;
     }
+    if (act === 'tool' && (hit.dataset.tool === 'soap' || hit.dataset.tool === 'sponge')) {
+      if (tdrag) return;
+      e.preventDefault();
+      try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      const ghost = el('g', { transform: `translate(${p.x},${p.y})` }, layer.fx);
+      const gi = el('g', {}, ghost);
+      TOOLS[hit.dataset.tool](gi);
+      ghost.style.opacity = 0;
+      tdrag = { id: e.pointerId, tool: hit.dataset.tool, btn: hit, ghost, gi, cx: e.clientX, cy: e.clientY, moved: false, last: 0, snd: 0 };
+      return;
+    }
     if (act === 'pick') pickVehicle(+hit.dataset.i);
     else if (act === 'tool') useTool(hit.dataset.tool, hit);
     else if (act === 'paint') paint(hit.dataset.paint, hit);
     else if (act === 'light') go();
+    else if (act === 'newcar') newCar();
     else if (act === 'elephant') tapElephant();
     else if (act === 'duck') tapDuck(hit);
     else if (act === 'sun') tapSun(hit);
   });
   svg.addEventListener('pointermove', e => {
+    if (tdrag && e.pointerId === tdrag.id) { moveTool(e); return; }
     const d = rub || sdrag;
     if (!d || e.pointerId !== d.id) return;
     lastInput = performance.now();
@@ -634,7 +690,36 @@
     if (now - lastScrub > 140 && overVehicle(V, p)) { lastScrub = now; Sound.play('scrub'); if (bubblesLeft(V).length < 30 && Math.random() < 0.3) addBubbles(V, 1); }
     if (hit) setTimeout(() => checkClean(V), 420);
   });
+  function moveTool(e) {
+    const d = tdrag;
+    lastInput = performance.now();
+    if (!d.moved && Math.hypot(e.clientX - d.cx, e.clientY - d.cy) > 10) { d.moved = true; Sound.play('pop'); }
+    if (!d.moved) return;
+    const p = toSvg(e.clientX, e.clientY);
+    d.ghost.style.opacity = 1;
+    d.ghost.setAttribute('transform', `translate(${p.x.toFixed(0)},${p.y.toFixed(0)}) scale(1.5) rotate(${(Math.sin(performance.now() / 60) * 10).toFixed(0)})`);
+    if (!V || busy || !overVehicle(V, p)) return;
+    const l = toLocal(V, p), now = performance.now();
+    if (d.tool === 'soap') {
+      if (now - d.last > 70 && bubblesLeft(V).length < 45) { d.last = now; addBubbles(V, 1, l.x + rand(-25, 25), l.y + rand(-20, 20)); }
+      if (now - d.snd > 260) { d.snd = now; Sound.play('bubbles'); }
+    } else {
+      const hit = scrubAt(V, l.x, l.y, 55);
+      if (now - d.snd > 140) { d.snd = now; Sound.play('scrub'); if (Math.random() < 0.4) addBubbles(V, 1, l.x, l.y); }
+      if (hit) setTimeout(() => checkClean(V), 420);
+    }
+  }
+  function endTool(e) {
+    const d = tdrag; tdrag = null;
+    if (!d.moved) { d.ghost.remove(); useTool(d.tool, d.btn); return; }
+    // the tool floats back to its spot on the board
+    const m = d.ghost.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);
+    const x0 = +m[1], y0 = +m[2], x1 = +d.btn.dataset.x, y1 = +d.btn.dataset.y;
+    tween(300, t => d.ghost.setAttribute('transform', `translate(${lerp(x0, x1, t).toFixed(0)},${lerp(y0, y1, t).toFixed(0)}) scale(${lerp(1.5, 1, t).toFixed(2)})`)).then(() => d.ghost.remove());
+    if (V && d.tool === 'soap' && Math.random() < 0.5) elSay(pick(['Bubbles! Now spray it!', 'So soapy!']));
+  }
   function endInput(e) {
+    if (tdrag && e.pointerId === tdrag.id) { endTool(e); return; }
     if (rub && e.pointerId === rub.id) {
       const r = rub; rub = null;
       if (!r.moved && V) {
@@ -658,7 +743,7 @@
 
   /* ---------- gentle hints when nobody is tapping ---------- */
   setInterval(() => {
-    if (App.current !== 'carwash' || busy || rub || sdrag || performance.now() - lastInput < 9000 || hints >= 3) return;
+    if (App.current !== 'carwash' || busy || rub || sdrag || tdrag || performance.now() - lastInput < 9000 || hints >= 3) return;
     lastInput = performance.now(); hints++;
     if (!V) { elSay('Pick a muddy one!'); choices.forEach((C, i) => hop(C.a, 24, i * 120)); return; }
     if (mudLeft(V).length) {
@@ -666,11 +751,13 @@
       else { elSay(pick(["Let's spray it!", 'Try the soap!'])); hop(board.querySelector(`[data-tool=${pick(['water', 'soap'])}] .anim`), 16); }
     } else if (V.wet) { elSay('Dry it with the fan!'); hop(board.querySelector('[data-tool=fan] .anim'), 16); }
     else if (V.paint === 'base' && !V.stickers.length) { elSay('Paint it! Add stickers!'); hopRow('paint'); }
+    else if (hints === 3) { elSay('Want a new car? Tap here!'); hop(PANELS.newcar.querySelector('.anim'), 20); }
     else { elSay('Tap the light to go!'); anim(light, [{ opacity: 1 }, { opacity: 0.4 }, { opacity: 1 }], 400, { iterations: 3 }); }
   }, 1000);
   // the elephant flaps an ear now and then
   setInterval(() => { if (App.current === 'carwash' && Math.random() < 0.5) flapEar(1); }, 3500);
 
+  for (const k in PANELS) PANELS[k].style.display = 'none';
   spawnChooser();
 
   App.register({
@@ -681,7 +768,7 @@
       Sound.setMood('wash');
       setTimeout(() => elSay(V ? 'Welcome back!' : "Let's wash a car!"), 500);
     },
-    leave() { rub = null; if (sdrag) { sdrag.ghost.remove(); sdrag = null; } },
+    leave() { rub = null; if (sdrag) { sdrag.ghost.remove(); sdrag = null; } if (tdrag) { tdrag.ghost.remove(); tdrag = null; } },
     clear() {
       if (busy) return;
       if (V) { V.g.remove(); V = null; }
