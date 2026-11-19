@@ -278,6 +278,102 @@
   <g id="ic-bubbles" pointer-events="none"></g>
 </svg>
 
+<!-- GAME 3, THE PUMPKIN HOUSE: pick a pumpkin from the patch, carve eyes, a nose and a mouth,
+     watch it light up, then drag it onto the porch of the spooky house. -->
+<svg id="pumpkin" class="screen" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pk-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#25195a"/><stop offset="1" stop-color="#7656b8"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#pk-sky)"/>
+  <g id="pk-stars"></g>
+
+  <!-- moon: tap for bats -->
+  <g class="tap" data-act="moon" transform="translate(255,110)"><g class="anim">
+    <circle r="62" fill="#fff4c2" stroke="#e9d98a" stroke-width="5"/>
+    <circle cx="26" cy="-24" r="10" fill="#efe1a0"/><circle cx="-28" cy="28" r="7" fill="#efe1a0"/>
+    <path d="M-30 -4 Q-20 6 -10 -4 M10 -4 Q20 6 30 -4" stroke="#7a6a2a" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M-12 18 Q0 28 12 18" stroke="#7a6a2a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g></g>
+
+  <!-- hills and ground -->
+  <path d="M0 520 Q 300 430 640 500 T 1600 470 V900 H0Z" fill="#3c3478"/>
+  <path d="M0 600 Q 400 540 820 590 T 1600 580 V900 H0Z" fill="#3e7d6a"/>
+  <g fill="#ffb347" opacity=".9"><circle cx="160" cy="560" r="4"/><circle cx="700" cy="560" r="3"/><circle cx="1480" cy="540" r="4"/></g>
+
+  <!-- the spooky house -->
+  <g id="pk-house" class="tap" data-act="house" style="--lit:.35">
+    <path d="M1032 316 L1220 132 L1408 316 Z" fill="#4b3488" stroke="#2f2060" stroke-width="6" stroke-linejoin="round"/>
+    <rect x="1340" y="170" width="34" height="80" fill="#4b3488" stroke="#2f2060" stroke-width="5"/>
+    <rect x="1062" y="300" width="316" height="292" fill="#7b5ac9" stroke="#4b3488" stroke-width="6"/>
+    <g fill="#ffd94a" stroke="#4b3488" stroke-width="6">
+      <rect class="pk-win" x="1100" y="350" width="74" height="84" rx="10"/><rect class="pk-win" x="1266" y="350" width="74" height="84" rx="10"/>
+    </g>
+    <path d="M1137 350 V434 M1100 392 H1174 M1303 350 V434 M1266 392 H1340" stroke="#4b3488" stroke-width="5"/>
+    <!-- attic window with a skeleton peeking out -->
+    <circle cx="1220" cy="236" r="44" fill="#2a1d52"/>
+  </g>
+  <g id="pk-skel2" class="tap" data-act="skeleton" transform="translate(1220,262)"><g class="anim">
+    <g class="armL"><path d="M-26 -8 L-58 -40 L-66 -62" stroke="#f6f3ea" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-66" cy="-66" r="8" fill="#f6f3ea"/></g>
+    <g class="armR"><path d="M26 -8 L58 -40 L66 -62" stroke="#f6f3ea" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="66" cy="-66" r="8" fill="#f6f3ea"/></g>
+    <g class="skull"><circle cy="-30" r="28" fill="#f6f3ea" stroke="#b9b2a0" stroke-width="3"/><circle cx="-10" cy="-34" r="7" fill="#2a1d52"/><circle cx="10" cy="-34" r="7" fill="#2a1d52"/>
+      <path d="M-12 -16 Q0 -8 12 -16" stroke="#2a1d52" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+  </g></g>
+  <circle cx="1220" cy="236" r="44" fill="none" stroke="#4b3488" stroke-width="8" pointer-events="none"/>
+  <!-- the door: something friendly lives behind it -->
+  <g class="tap" data-act="door">
+    <rect x="1186" y="470" width="68" height="122" fill="#2a1d52"/>
+    <g id="pk-cat" opacity="0"><ellipse cx="1220" cy="560" rx="22" ry="26" fill="#1b1430"/><path d="M1204 540 l4 -16 l8 10 z M1236 540 l-4 -16 l-8 10 z" fill="#1b1430"/>
+      <circle cx="1212" cy="548" r="5" fill="#c8ff7a"/><circle cx="1228" cy="548" r="5" fill="#c8ff7a"/></g>
+    <g id="pk-door"><path d="M1186 592 V500 Q1186 470 1220 470 Q1254 470 1254 500 V592 Z" fill="#c2733a" stroke="#4b3488" stroke-width="5"/><circle cx="1242" cy="535" r="5" fill="#ffd94a"/></g>
+  </g>
+  <rect x="1040" y="590" width="360" height="36" rx="8" fill="#5c4197" stroke="#3d2a72" stroke-width="5"/>
+  <g id="pk-porch"></g>
+
+  <!-- dancing skeleton -->
+  <g id="pk-skel1" class="tap" data-act="skeleton" transform="translate(985,705)"><g class="anim">
+    <g class="legL"><path d="M-10 -86 L-22 -44 L-18 -4" stroke="#f6f3ea" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="-24" cy="-2" rx="14" ry="7" fill="#f6f3ea"/></g>
+    <g class="legR"><path d="M10 -86 L22 -44 L18 -4" stroke="#f6f3ea" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="24" cy="-2" rx="14" ry="7" fill="#f6f3ea"/></g>
+    <path d="M-20 -94 Q0 -80 20 -94 L16 -84 Q0 -74 -16 -84 Z" fill="#f6f3ea" stroke="#b9b2a0" stroke-width="3"/>
+    <path d="M0 -94 V-170" stroke="#f6f3ea" stroke-width="8" stroke-linecap="round"/>
+    <g stroke="#f6f3ea" stroke-width="7" fill="none" stroke-linecap="round"><path d="M-24 -156 Q0 -150 24 -156"/><path d="M-26 -140 Q0 -133 26 -140"/><path d="M-22 -124 Q0 -118 22 -124"/></g>
+    <g class="armL"><path d="M-14 -164 L-46 -136 L-60 -104" stroke="#f6f3ea" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-62" cy="-100" r="8" fill="#f6f3ea"/></g>
+    <g class="armR"><path d="M14 -164 L46 -136 L60 -104" stroke="#f6f3ea" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="62" cy="-100" r="8" fill="#f6f3ea"/></g>
+    <g class="skull"><circle cy="-202" r="34" fill="#f6f3ea" stroke="#b9b2a0" stroke-width="3"/>
+      <circle cx="-12" cy="-206" r="9" fill="#2a1d52"/><circle cx="12" cy="-206" r="9" fill="#2a1d52"/><circle cx="-10" cy="-209" r="3" fill="#fff"/><circle cx="14" cy="-209" r="3" fill="#fff"/>
+      <path d="M-3 -192 L0 -186 L3 -192 Z" fill="#2a1d52"/>
+      <path d="M-16 -180 Q0 -170 16 -180" stroke="#2a1d52" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="-24" cy="-188" r="6" fill="#ffb3c6" opacity=".6"/><circle cx="24" cy="-188" r="6" fill="#ffb3c6" opacity=".6"/></g>
+  </g></g>
+
+  <!-- the ghost (mascot) -->
+  <g id="pk-ghost" class="tap" data-act="ghost" transform="translate(330,330)"><g class="ghost-bob"><g class="anim">
+    <path d="M-78 40 Q-84 -100 0 -104 Q84 -100 78 40 Q66 72 52 48 Q40 76 26 50 Q12 78 0 52 Q-12 78 -26 50 Q-40 76 -52 48 Q-66 72 -78 40 Z" fill="#ffffff" stroke="#d6d0f0" stroke-width="5"/>
+    <path d="M-76 -8 Q-110 -2 -104 -30" stroke="#ffffff" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <path d="M76 -8 Q110 -2 104 -30" stroke="#ffffff" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-24" cy="-42" rx="11" ry="15" fill="#2a1d52"/><ellipse cx="24" cy="-42" rx="11" ry="15" fill="#2a1d52"/>
+    <circle cx="-20" cy="-47" r="4" fill="#fff"/><circle cx="28" cy="-47" r="4" fill="#fff"/>
+    <circle cx="-44" cy="-16" r="10" fill="#ffb3c6" opacity=".7"/><circle cx="44" cy="-16" r="10" fill="#ffb3c6" opacity=".7"/>
+    <ellipse class="ghost-mouth" cy="-10" rx="12" ry="9" fill="#2a1d52"/>
+  </g></g></g>
+
+  <!-- the pumpkin patch -->
+  <path d="M190 760 Q260 700 330 760 T470 760 T610 770 M230 850 Q330 800 420 850 T560 840" stroke="#4f9a35" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <g id="pk-patch"></g>
+
+  <!-- the carving stump -->
+  <ellipse cx="760" cy="745" rx="175" ry="32" fill="#c98a5a" stroke="#8e5a35" stroke-width="5"/>
+  <path d="M590 745 L600 900 L920 900 L930 745" fill="#a86b3e" stroke="#8e5a35" stroke-width="5"/>
+  <ellipse cx="760" cy="745" rx="120" ry="20" fill="none" stroke="#b07648" stroke-width="4"/>
+
+  <!-- what to carve: eyes, nose, mouth -->
+  <rect x="490" y="48" width="540" height="290" rx="30" fill="#3b2a6b" stroke="#ffb347" stroke-width="6"/>
+  <g id="pk-board"></g>
+
+  <g id="pk-table"></g>
+  <g id="pk-fx" pointer-events="none"></g>
+  <g id="pk-bubbles" pointer-events="none"></g>
+</svg>
+
 <!-- HUB: each mini-game is a mascot. Tap one to play. -->
 <div id="hub" class="screen">
 <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -291,7 +387,7 @@
   <path d="M0 720 Q 500 670 900 720 T 1600 700 V900 H0Z" fill="#6cc44c"/>
 
   <!-- game 1: the frog and the bugs -->
-  <g class="tile tap" data-game="frog" transform="translate(530,470)"><g class="bob"><g class="tile-anim">
+  <g class="tile tap" data-game="frog" transform="translate(410,470) scale(.76)"><g class="bob"><g class="tile-anim">
     <circle r="235" fill="#c9f0ff" stroke="#fff" stroke-width="16"/>
     <ellipse cy="150" rx="190" ry="50" fill="#4cb8e6"/><ellipse cy="138" rx="140" ry="32" fill="#4fae3c"/>
     <g transform="translate(0,135) scale(.62)">
@@ -312,8 +408,8 @@
     </g>
   </g></g></g>
 
-  <!-- game 2: ice cream kitchen (coming next) -->
-  <g class="tile tap" data-game="icecream" transform="translate(1070,470)"><g class="bob late"><g class="tile-anim">
+  <!-- game 2: ice cream kitchen -->
+  <g class="tile tap" data-game="icecream" transform="translate(800,470) scale(.76)"><g class="bob late"><g class="tile-anim">
     <circle r="235" fill="#ffe1ef" stroke="#fff" stroke-width="16"/>
     <g transform="translate(0,40)">
       <ellipse cx="-48" cy="172" rx="40" ry="16" fill="#ff9f1c"/><ellipse cx="48" cy="172" rx="40" ry="16" fill="#ff9f1c"/>
@@ -332,6 +428,27 @@
         <circle cy="-14" r="34" fill="#ff8fc0"/><circle cx="-12" cy="-48" r="28" fill="#fff3b0"/><circle cx="10" cy="-76" r="14" fill="#e3263b"/>
       </g>
       <ellipse cx="94" cy="44" rx="26" ry="44" fill="#2b3a55" transform="rotate(-30 94 44)"/>
+    </g>
+  </g></g></g>
+  <!-- game 3: the pumpkin house -->
+  <g class="tile tap" data-game="pumpkin" transform="translate(1190,470) scale(.76)"><g class="bob"><g class="tile-anim">
+    <circle r="235" fill="#3b2a6b" stroke="#fff" stroke-width="16"/>
+    <g fill="#fff"><circle cx="-130" cy="-120" r="5"/><circle cx="120" cy="-150" r="4"/><circle cx="160" cy="-60" r="5"/><circle cx="-170" cy="0" r="4"/><circle cx="-60" cy="-180" r="3"/></g>
+    <circle cx="140" cy="-130" r="34" fill="#fff4c2"/>
+    <g transform="translate(-30,-10) scale(1.15)">
+      <path d="M-78 40 Q-84 -100 0 -104 Q84 -100 78 40 Q66 72 52 48 Q40 76 26 50 Q12 78 0 52 Q-12 78 -26 50 Q-40 76 -52 48 Q-66 72 -78 40 Z" fill="#fff" stroke="#d6d0f0" stroke-width="5"/>
+      <path d="M-76 -8 Q-110 -2 -104 -30" stroke="#fff" stroke-width="22" fill="none" stroke-linecap="round"/>
+      <path d="M76 -8 Q110 -2 104 -30" stroke="#fff" stroke-width="22" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-24" cy="-42" rx="11" ry="15" fill="#2a1d52"/><ellipse cx="24" cy="-42" rx="11" ry="15" fill="#2a1d52"/>
+      <circle cx="-20" cy="-47" r="4" fill="#fff"/><circle cx="28" cy="-47" r="4" fill="#fff"/>
+      <circle cx="-44" cy="-16" r="10" fill="#ffb3c6" opacity=".7"/><circle cx="44" cy="-16" r="10" fill="#ffb3c6" opacity=".7"/>
+      <ellipse cy="-10" rx="12" ry="9" fill="#2a1d52"/>
+    </g>
+    <g transform="translate(100,130) scale(.55)">
+      <circle r="190" fill="#ffd94a" opacity=".25"/>
+      <path d="M-14 -128 Q-18 -160 -4 -178 L14 -172 Q4 -156 12 -128Z" fill="#6b9a3a" stroke="#3d6a1f" stroke-width="5"/>
+      <g fill="#ff9a2e" stroke="#d96a00" stroke-width="5"><ellipse cx="-78" rx="82" ry="124"/><ellipse cx="78" rx="82" ry="124"/><ellipse cx="-36" rx="80" ry="138"/><ellipse cx="36" rx="80" ry="138"/><ellipse rx="70" ry="143"/></g>
+      <g fill="#ffd94a" stroke="#d96a00" stroke-width="4"><path d="M-85 -17 L-55 -61 L-25 -17Z"/><path d="M25 -17 L55 -61 L85 -17Z"/><path d="M-18 36 L0 6 L18 36Z"/><path d="M-80 66 Q0 142 80 66 Q0 102 -80 66Z"/></g>
     </g>
   </g></g></g>
 </svg>
@@ -362,5 +479,6 @@
 <script src="js/kit.js"></script>
 <script src="js/games/frog.js"></script>
 <script src="js/games/icecream.js"></script>
+<script src="js/games/pumpkin.js"></script>
 </body>
 </html>
