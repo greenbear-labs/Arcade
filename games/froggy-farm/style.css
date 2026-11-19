@@ -7,7 +7,7 @@ html, body {
   font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", "Comic Sans MS", system-ui, sans-serif;
 }
 .screen { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; }
-#scene[hidden], #hub[hidden], #icecream[hidden] { display: none; }
+.screen[hidden] { display: none; }
 .screen svg { width: 100%; height: 100%; display: block; }
 .screen * { transform-origin: 0 0; }
 .tap { cursor: pointer; }
