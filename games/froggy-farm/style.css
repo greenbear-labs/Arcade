@@ -7,7 +7,7 @@ html, body {
   font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", "Comic Sans MS", system-ui, sans-serif;
 }
 .screen { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; }
-#scene[hidden], #hub[hidden] { display: none; }
+#scene[hidden], #hub[hidden], #icecream[hidden] { display: none; }
 .screen svg { width: 100%; height: 100%; display: block; }
 .screen * { transform-origin: 0 0; }
 .tap { cursor: pointer; }
@@ -97,3 +97,9 @@ html, body {
 @keyframes ffloat { 0%, 100% { translate: 0 0; } 25% { translate: 40px -30px; } 50% { translate: -10px -60px; } 75% { translate: -45px -20px; } }
 .night .ff-tail { stroke: #f6ffb0; }
 .night .firefly .ff-halo { animation-duration: 1.8s; }
+
+/* ice cream kitchen */
+.eater .mouth-open { display: none; }
+.eater.open .mouth-open { display: inline; }
+.eater.open .mouth-closed { display: none; }
+#ic-walrus.open .mouth-open { display: inline; }
