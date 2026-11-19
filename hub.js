@@ -522,6 +522,38 @@
         }
       }
     },
+    "froggy-farm"(ctx, t) {
+      // The frog on his lily pad, spitting out a ladybug that arcs off and comes back.
+      ctx.fillStyle = "#8fd3ff"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#7fd05e"; ctx.fillRect(0, 112, W, H - 112);
+      ctx.fillStyle = "#4cb8e6"; ctx.beginPath(); ctx.ellipse(120, 156, 92, 20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#4fae3c"; ctx.beginPath(); ctx.ellipse(120, 150, 58, 12, 0, 0, Math.PI * 2); ctx.fill();
+      const hop = Math.max(0, Math.sin(t * 3)) * 6, fy = 146 - hop;
+      const green = "#5cc84a", dark = "#3e9b32";
+      ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(96, fy - 8, 18, 10, 0, 0, Math.PI * 2); ctx.ellipse(144, fy - 8, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = green; ctx.beginPath(); ctx.ellipse(120, fy - 24, 36, 28, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#f4f6b4"; ctx.beginPath(); ctx.ellipse(120, fy - 20, 23, 18, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = green; ctx.beginPath(); ctx.ellipse(120, fy - 50, 34, 21, 0, 0, Math.PI * 2); ctx.fill();
+      for (const ex of [101, 139]) {
+        ctx.fillStyle = green; ctx.beginPath(); ctx.arc(ex, fy - 66, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ex, fy - 66, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#1d2b1a"; ctx.beginPath(); ctx.arc(ex + 2, fy - 65, 4.5, 0, Math.PI * 2); ctx.fill();
+      }
+      const k = (t * 0.6) % 1, open = k < 0.12;
+      ctx.strokeStyle = "#24521a"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(101, fy - 48); ctx.quadraticCurveTo(120, open ? fy - 30 : fy - 36, 139, fy - 48); ctx.stroke();
+      // the ladybug: out of his mouth, up in an arc, and down on the grass
+      const bx = 120 + k * 90, by = fy - 40 - Math.sin(Math.PI * Math.min(1, k * 1.6)) * 60 + (k > 0.62 ? 0 : 0);
+      ctx.fillStyle = "#ff4b4b"; ctx.beginPath(); ctx.arc(bx, by, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#2a2a2a"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(bx, by - 7); ctx.lineTo(bx, by + 7); ctx.stroke();
+      ctx.fillStyle = "#2a2a2a"; ctx.beginPath(); ctx.arc(bx, by - 7, 3.5, 0, Math.PI * 2); ctx.fill();
+      // twinkles from the magic wand
+      for (let i = 0; i < 5; i++) {
+        const a = Math.max(0, Math.sin(t * 2.5 + i * 1.3));
+        ctx.fillStyle = `rgba(255, 217, 59, ${a})`;
+        ctx.beginPath(); ctx.arc(30 + i * 44, 24 + (i % 2) * 18, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;

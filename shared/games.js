@@ -113,4 +113,13 @@ window.ARCADE_GAMES = [
     // Unity (WebGL) first-person shooter; it doesn't report scores to the Den.
     meta: "2 MODES",
   },
+  {
+    slug: "froggy-farm",
+    title: "Froggy Farm",
+    tagline: "For little ones: tickle the frog, feed him bugs, wave the magic wand. No reading, no losing.",
+    controls: "Tap and drag",
+    color: "#5cc84a",
+    // Toddler toy (plain HTML/SVG, sound made in code). It installs as a tablet app and plays offline; no scores.
+    meta: "AGES 2+",
+  },
 ];
