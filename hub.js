@@ -587,6 +587,34 @@
       ctx.fillStyle = "#2b2622"; ctx.beginPath(); ctx.arc(kx, ky - 44, 11.5, Math.PI, 0); ctx.fill();
       ctx.fillStyle = "#1d1d1d"; ctx.beginPath(); ctx.arc(kx - 4, ky - 39, 2, 0, Math.PI * 2); ctx.arc(kx + 4, ky - 39, 2, 0, Math.PI * 2); ctx.fill();
     },
+    "fossil-fury"(ctx, t) {
+      // A cave room from the game: the caveman kid strafes and lobs rocks at the tyrant lizard, which flashes when hit.
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = "#2a241e"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#5e5446"; ctx.fillRect(6, 6, W - 12, H - 12);
+      ctx.fillStyle = "#5b4a35"; ctx.fillRect(18, 18, W - 36, H - 36);
+      for (let i = 0; i < 10; i++) { ctx.fillStyle = i % 2 ? "#4a3b2a" : "#6c5a42"; ctx.fillRect(24 + (i * 47) % 180, 26 + (i * 31) % 120, 10 + (i % 3) * 6, 3); }
+      ctx.fillStyle = "#7a7266"; ctx.fillRect(30, 30, 12, 10); ctx.fillRect(196, 136, 14, 10);
+      ctx.fillStyle = "#5c9a34"; ctx.fillRect(32, 28, 8, 3);
+      const kid = ffSpr.kid[Math.floor(t * 6) % 2], boss = ffSpr.boss[Math.floor(t * 3) % 2];
+      const ky = 70 + Math.sin(t * 1.3) * 36, kx = 30;
+      const by = 56 + Math.sin(t * 0.9 + 1) * 24, bx = 132;
+      // rocks: one every 0.6 s, flying right from the kid toward the beast
+      let hit = false;
+      for (let i = 0; i < 3; i++) {
+        const k = ((t + i * 0.6) % 1.8) / 1.8;
+        const born = t - k * 1.8, y0 = 70 + Math.sin(born * 1.3) * 36 + 22;
+        const rx = kx + 40 + k * 108, ry = y0 + (by + 40 - y0) * k;
+        if (k > 0.9) { hit = true; continue; }
+        ctx.fillStyle = "#140c0a"; ctx.fillRect(rx - 4, ry - 4, 8, 8);
+        ctx.fillStyle = "#a8a090"; ctx.fillRect(rx - 3, ry - 3, 6, 6);
+      }
+      ctx.drawImage(hit ? ffSpr.bossHit : boss, bx, by, ffSpr.bw * 2.5, ffSpr.bh * 2.5);
+      ctx.drawImage(kid, kx, ky, ffSpr.kw * 3, ffSpr.kh * 3);
+      // three bone hearts in the corner
+      ctx.fillStyle = "#e05a4a";
+      for (let i = 0; i < 3; i++) { ctx.fillRect(24 + i * 12, 22, 8, 6); ctx.fillRect(26 + i * 12, 28, 4, 2); }
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
@@ -609,6 +637,41 @@
   dvoArt.onload = dvoUnits.onload = redrawDvo;
   dvoArt.src = "assets/dwarves-vs-orcs.jpg";
   dvoUnits.src = "assets/dwarves-vs-orcs-units.png";
+
+  // Fossil Fury's sprites, from the same pixel maps the game draws itself.
+  const ffSpr = (() => {
+    const make = (rows, pal, white) => {
+      const h = rows.length, w = Math.max(...rows.map((r) => r.length));
+      const c = document.createElement("canvas"); c.width = w + 2; c.height = h + 2;
+      const g = c.getContext("2d"), on = new Uint8Array((w + 2) * (h + 2)), ww = w + 2;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const col = pal[rows[y][x]]; if (!col) continue;
+        g.fillStyle = white ? "#fff" : col; g.fillRect(x + 1, y + 1, 1, 1); on[(y + 1) * ww + x + 1] = 1;
+      }
+      g.fillStyle = "#140c0a";
+      for (let y = 0; y < h + 2; y++) for (let x = 0; x < ww; x++) {
+        if (on[y * ww + x]) continue;
+        if ((x > 0 && on[y * ww + x - 1]) || (x < ww - 1 && on[y * ww + x + 1]) || (y > 0 && on[(y - 1) * ww + x]) || (y < h + 1 && on[(y + 1) * ww + x])) g.fillRect(x, y, 1, 1);
+      }
+      return c;
+    };
+    const flip = (c) => { const n = document.createElement("canvas"); n.width = c.width; n.height = c.height; const g = n.getContext("2d"); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0); return n; };
+    const kidPal = { h: "#4a2a14", s: "#e8a878", S: "#b87850", k: "#1b1210", f: "#c08a3c", F: "#6e4620" };
+    const top = ["...hhhhhh...", "..hhhhhhhh..", ".hhsssssshh.", ".hskssssksh.", ".hsssSSsssh.", "..hssssssh..", "...SssssS...", ".sffFffFffs.", "sSfffFffffSs", "..sffffffs..", "...FfFfFf..."];
+    const leg1 = ["...ss..ss...", "...ss..ss...", "..SSS..SSS.."], leg2 = ["...ss...ss..", "..ss....ss..", "..SSS...SSS."];
+    const bossPal = { R: "#6a9a3a", r: "#46702a", Y: "#d8c870", w: "#f4ead0", m: "#8a1a1a", k: "#f0e040" };
+    const body = [
+      "....................RRRRRRRR....", "...................RRRRRRRRRRR..", "..................RRRRkRRRRRRRR.", "..................RRRRRRRRRRRRRR",
+      "..................RRRRRRRwwwwwww", "..................RRRRRRmmmmmmm.", ".................RRRRRRRwwwwww..", "................RRRRRRRRRRRR....",
+      "..............RRRRRRRRRR........", "...........RRRRRrRRRRRRR........", "........RRrRRRrRRRrRRRRRRR......", "......RRRrRRRRrRRRRrRRRRRRRR....",
+      "....RRRRRRRRRRRRRRYYYYYRRR.R....", "...RRRRRRRRRRRRRRYYYYYYRR.RR....", "..RRRRRRRRRRRRRRRYYYYYYRR.......", ".RRRRRRrRRRRRRRRRYYYYYRR........",
+      "RRRR.....RRRRRRRRRYYYRR.........", "RR.......RRRRRRRRRRRRRR.........", "R........RRRRRRRRRRRRR.........."];
+    const bl1 = [".........RRRRR....RRRR..........", ".........RRRR.....RRRR..........", "..........RRR......RRR..........", "..........RRR......RRR..........", ".........RRRR.....RRRR..........", "........wRwRw....wRwRw.........."];
+    const bl2 = ["..........RRRR...RRRR...........", "........RRRR.......RRR..........", ".......RRR..........RRR.........", ".......RRR..........RRR.........", "......RRRR.........RRRR.........", ".....wRwRw.........wRwRw........"];
+    const kid = [make(top.concat(leg1), kidPal), make(top.concat(leg2), kidPal)];
+    const boss = [flip(make(body.concat(bl1), bossPal)), flip(make(body.concat(bl2), bossPal))];
+    return { kid, boss, bossHit: flip(make(body.concat(bl1), bossPal, true)), kw: kid[0].width, kh: kid[0].height, bw: boss[0].width, bh: boss[0].height };
+  })();
 
   // Sprites shared with the games live in each game; these are small preview versions.
   function drawHive(ctx, x, ground, s) {
