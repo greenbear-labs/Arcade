@@ -122,4 +122,13 @@ window.ARCADE_GAMES = [
     // Toddler toy (plain HTML/SVG, sound made in code). It installs as a tablet app and plays offline; no scores.
     meta: "AGES 2+",
   },
+  {
+    slug: "upgrade-island",
+    title: "Upgrade Island",
+    tagline: "The plane went down. Help Kai find berries and coconuts, make tools, and build a camp on the island.",
+    controls: "Tablet touch",
+    color: "#3fb2c9",
+    // three.js survival game made for tablets. It installs as a tablet app and plays offline; the island saves in the player's browser.
+    meta: "AGES 6+",
+  },
 ];

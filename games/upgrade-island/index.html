@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Upgrade Island</title>
+<meta name="description" content="Help Kai survive on the island after the plane crash.">
+<meta name="theme-color" content="#9fd8ef">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="canonical" href="https://arcade.greenbearlabs.com/games/upgrade-island/">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Upgrade Island">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+/* Tablet first: full-screen island, joystick on the left, one big action button on the right, pockets along the bottom. */
+:root{
+  --sky:#9fd8ef; --ink:#21323d; --paper:rgba(255,251,240,.92); --paper-solid:#fffbf0; --sun:#ffb347; --sea:#3fb2c9; --leaf:#5fae5a; --berry:#d8344f; --wood:#a8754a;
+  --font:ui-rounded,"SF Pro Rounded","Nunito","Trebuchet MS",system-ui,sans-serif;
+  --l:max(20px,env(safe-area-inset-left,0px)); --r:max(20px,env(safe-area-inset-right,0px));
+  --t:max(14px,env(safe-area-inset-top,0px)); --b:max(16px,env(safe-area-inset-bottom,0px));
+  --slot:clamp(48px,calc((100vw - 500px) / 8.8),76px);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{background:var(--sky);color:var(--ink);font-family:var(--font);font-weight:700;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#view{position:fixed;inset:0;display:block;width:100%;height:100%}
+.card{background:var(--paper);border-radius:18px;box-shadow:0 4px 16px rgba(33,50,61,.15)}
+
+/* food and water */
+.meters{position:fixed;top:var(--t);left:var(--l);padding:10px 14px;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.meters svg{width:30px;height:30px}
+.meters .bar{width:clamp(110px,16vw,190px);height:16px;border-radius:10px;background:rgba(33,50,61,.12);overflow:hidden}
+.meters .fill{height:100%;border-radius:10px;transition:width .4s ease}
+#foodFill{background:linear-gradient(90deg,var(--berry),var(--sun))}
+#waterFill{background:linear-gradient(90deg,#2d8fb8,#7fd6ea)}
+.meters .low{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4}}
+
+/* make button */
+#makeBtn{position:fixed;top:var(--t);right:var(--r);height:72px;min-width:120px;padding:0 18px 0 12px;border:0;border-radius:20px;background:var(--wood);color:#fff8ea;font-size:22px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 0 #7c5433,0 6px 16px rgba(33,50,61,.25)}
+#makeBtn svg{width:44px;height:44px}
+#makeBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #7c5433}
+
+/* pockets */
+.hotbar{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--b);display:flex;gap:6px;padding:8px}
+.slot{position:relative;width:var(--slot);height:var(--slot);border-radius:14px;border:3px solid rgba(33,50,61,.1);background:rgba(255,255,255,.75);display:grid;place-items:center;padding:0;color:var(--ink);cursor:pointer}
+.slot svg{width:70%;height:70%;pointer-events:none}
+.slot.sel{border-color:var(--sun);box-shadow:0 0 0 2px var(--ink) inset}
+.slot.food{background:#fff3dc}
+.slot:active{transform:scale(.94)}
+.slot .count{position:absolute;right:5px;bottom:1px;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;text-shadow:0 0 3px #fff}
+.slot.bump{animation:bump .35s ease}
+@keyframes bump{40%{transform:scale(1.18)}}
+.selName{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--b) + var(--slot) + 30px);font-size:18px;color:var(--ink);text-shadow:0 1px 0 rgba(255,251,240,.9);pointer-events:none;white-space:nowrap;transition:opacity .5s;opacity:0}
+.prompt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--b) + var(--slot) + 62px);background:rgba(33,50,61,.55);color:#fff8ea;border-radius:999px;padding:5px 14px;font-size:16px;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;left:50%;top:24%;transform:translateX(-50%);font-weight:800;font-size:24px;color:var(--ink);background:var(--paper);border-radius:999px;padding:6px 20px;box-shadow:0 4px 14px rgba(33,50,61,.18);pointer-events:none;animation:rise 1.6s ease forwards;white-space:nowrap}
+@keyframes rise{from{opacity:0;transform:translate(-50%,10px)}12%{opacity:1}75%{opacity:1}to{opacity:0;transform:translate(-50%,-30px)}}
+
+/* joystick: rests bottom-left, jumps to wherever the left thumb lands */
+#stick{position:fixed;left:calc(var(--l) + 85px);top:calc(100% - var(--b) - 95px);width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:rgba(255,251,240,.28);border:3px solid rgba(255,251,240,.75);pointer-events:none;opacity:.7;transition:opacity .2s}
+#stick.active{opacity:1;transition:none}
+#knob{position:absolute;left:42px;top:42px;width:60px;height:60px;border-radius:50%;background:var(--paper-solid);box-shadow:0 3px 10px rgba(33,50,61,.3)}
+/* action and jump */
+.round{position:fixed;border:0;border-radius:50%;display:grid;place-items:center;align-content:center;gap:0;box-shadow:0 5px 0 rgba(0,0,0,.18),0 8px 18px rgba(33,50,61,.25);padding:0}
+.round.down{transform:translateY(3px) scale(.96)}
+#actBtn{right:var(--r);bottom:calc(var(--b) + 10px);width:132px;height:132px;background:var(--ink);color:#fff8ea;font-size:22px}
+#actBtn svg{width:56px;height:56px;pointer-events:none}
+#actBtn span{pointer-events:none;line-height:1.1}
+#actBtn.idle{opacity:.45}
+#actBtn:not(.idle){animation:ready 1.4s ease-in-out infinite}
+@keyframes ready{50%{box-shadow:0 5px 0 rgba(0,0,0,.18),0 0 0 10px rgba(255,179,71,.45)}}
+#jumpBtn{right:calc(var(--r) + 24px);bottom:calc(var(--b) + 162px);width:84px;height:84px;background:var(--sun);color:var(--ink);font-size:18px}
+#jumpBtn svg{width:34px;height:34px}
+
+/* make and box panels */
+.craftWrap{position:fixed;inset:0;display:grid;place-items:center;background:rgba(33,50,61,.4);padding:var(--t) var(--r) var(--b) var(--l)}
+.craftPanel{background:var(--paper-solid);border-radius:24px;box-shadow:0 12px 40px rgba(33,50,61,.35);padding:16px 20px 20px;width:min(860px,100%);display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto;touch-action:pan-y}
+.craftPanel header{display:flex;align-items:center;justify-content:space-between}
+.craftPanel h2{font-weight:800;font-size:30px;margin:0;line-height:1}
+.closeBtn{border:0;background:var(--ink);color:#fff8ea;border-radius:16px;height:60px;padding:0 22px;font-size:22px;cursor:pointer}
+.makeList{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.recipe{border:3px solid rgba(33,50,61,.1);border-radius:20px;background:#f2ebdc;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink);cursor:pointer;opacity:.6}
+.recipe.ready{opacity:1;background:#fff;border-color:var(--sun);box-shadow:0 4px 0 #e59a35}
+.recipe:active{transform:scale(.97)}
+.recipe.made{animation:bump .4s ease}
+.recipe .out{position:relative;width:76px;height:76px}
+.recipe .out svg{width:100%;height:100%}
+.recipe .out .count{position:absolute;right:-6px;bottom:-4px;font-size:20px;font-weight:800}
+.recipe .rname{font-size:20px}
+.needs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.need{display:flex;align-items:center;gap:2px;background:rgba(33,50,61,.07);border-radius:12px;padding:3px 8px 3px 4px;font-size:16px}
+.need svg{width:28px;height:28px}
+.need.have{background:#dff3d8;color:#2f6b2a}
+.bench{display:flex;justify-content:center;padding:14px;border-radius:18px;background:linear-gradient(#c8935f,#a8754a)}
+.boxGrid{display:grid;grid-template-columns:repeat(6,auto);gap:8px}
+.boxGrid .slot,.pocket .slot{--slot:clamp(52px,9vw,72px);background:rgba(255,248,234,.9)}
+.pocket{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.hint{margin:0;font-size:17px;opacity:.75;text-align:center}
+#sleepFade{position:fixed;inset:0;background:#1c2a44;opacity:0;pointer-events:none}
+
+/* start screen and "turn it sideways" */
+#start{position:fixed;inset:0;display:grid;place-items:center;align-content:center;gap:18px;background:radial-gradient(circle at 50% 45%,rgba(200,236,247,.82),rgba(159,216,239,.55) 70%);text-align:center;padding:24px}
+#start h1{font-size:clamp(44px,8vw,84px);margin:0;line-height:1;font-weight:800;color:var(--ink);letter-spacing:.5px;text-shadow:0 3px 0 #fffbf0}
+#start .how{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:17px}
+#start .how span{background:var(--paper);border-radius:999px;padding:6px 14px}
+#start p{margin:0;font-size:20px;opacity:.8}
+#playBtn{border:0;border-radius:999px;background:var(--sun);color:var(--ink);font-size:34px;font-weight:800;padding:18px 64px;box-shadow:0 6px 0 #e59a35,0 10px 24px rgba(33,50,61,.25)}
+#playBtn:disabled{opacity:.5}
+#denLink{position:fixed;left:var(--l);bottom:var(--b);color:var(--ink);opacity:.7;font-size:16px;background:var(--paper);border-radius:999px;padding:8px 14px;text-decoration:none}
+@media (display-mode: standalone),(display-mode: fullscreen){#denLink{display:none}}
+#newBtn{border:0;background:none;color:var(--ink);opacity:.6;font-size:17px;text-decoration:underline;padding:10px}
+#rotate{position:fixed;inset:0;display:none;place-items:center;align-content:center;gap:16px;background:var(--sky);text-align:center;font-size:26px;z-index:10;padding:24px}
+#rotate svg{width:120px;height:120px;animation:turn 2s ease-in-out infinite}
+@keyframes turn{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait) and (pointer:coarse){#rotate{display:grid}}
+/* desktop with a mouse: keyboard works, hide the joystick */
+@media (hover:hover) and (pointer:fine){#stick{display:none}}
+@media (prefers-reduced-motion: reduce){.toast,.slot.bump,.meters .low,#actBtn:not(.idle),#rotate svg,.recipe.made{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="view" aria-label="The island with Kai"></canvas>
+
+<div class="meters card" id="meters">
+  <svg viewBox="0 0 32 32" aria-hidden="true" id="foodLabel"><circle cx="11" cy="20" r="7" fill="#d8344f"/><circle cx="21" cy="21" r="7" fill="#c42b46"/><circle cx="16" cy="12" r="7" fill="#e04a63"/><circle cx="13.5" cy="9.5" r="2" fill="#ff9fb1"/><path d="M16 5c2-3 6-3 8-2-2 2-5 3-8 2z" fill="#5fae5a"/></svg>
+  <div class="bar" role="meter" aria-label="Food" aria-valuemin="0" aria-valuemax="100" id="foodMeter"><div class="fill" id="foodFill"></div></div>
+  <svg viewBox="0 0 32 32" aria-hidden="true" id="waterLabel"><path d="M16 3C12 10 7 15 7 20a9 9 0 0 0 18 0c0-5-5-10-9-17z" fill="#3fa9d0"/><path d="M12 19a4 4 0 0 0 3 5" stroke="#bfe8f2" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+  <div class="bar" role="meter" aria-label="Water" aria-valuemin="0" aria-valuemax="100" id="waterMeter"><div class="fill" id="waterFill"></div></div>
+</div>
+<button id="makeBtn" type="button" aria-label="Make things"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 28L22 6" stroke="#fff8ea" stroke-width="4" stroke-linecap="round"/><path d="M15 6c5-3 11-1 13 3-4 0-7 2-9 6z" fill="#fff8ea"/></svg>Make</button>
+
+<div class="prompt" id="prompt" hidden><span id="promptText"></span></div>
+<div class="selName" id="selName"></div>
+<div class="hotbar card" id="hotbar" aria-label="Pockets"></div>
+<div id="stick" aria-hidden="true"><div id="knob"></div></div>
+<button id="jumpBtn" class="round" type="button" aria-label="Jump"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 5l10 11h-6v10h-8V16H6z" fill="#21323d"/></svg></button>
+<button id="actBtn" class="round idle" type="button"></button>
+
+<div class="craftWrap" id="craft" hidden>
+  <div class="craftPanel" role="dialog" aria-modal="true" aria-labelledby="craftTitle">
+    <header><h2 id="craftTitle">Make things</h2><button class="closeBtn" id="craftClose" type="button">Done</button></header>
+    <div class="makeList" id="makeList"></div>
+  </div>
+</div>
+
+<div class="craftWrap" id="store" hidden>
+  <div class="craftPanel" role="dialog" aria-modal="true" aria-labelledby="storeTitle">
+    <header><h2 id="storeTitle">Wooden box</h2><button class="closeBtn" id="storeClose" type="button">Done</button></header>
+    <div class="bench"><div class="boxGrid" id="boxGrid" aria-label="Inside the box"></div></div>
+    <p class="hint">Tap something to move it between your pockets and the box.</p>
+    <div class="pocket" id="storePocket" aria-label="Your pockets"></div>
+  </div>
+</div>
+<div id="sleepFade" aria-hidden="true"></div>
+
+<div id="start">
+  <h1>Upgrade Island</h1>
+  <p id="startMsg">Help Kai find food and water after the crash.</p>
+  <button id="playBtn" type="button" disabled>Loading&hellip;</button>
+  <div class="how"><span>Left thumb: walk</span><span>Big button: grab, pick, whack</span><span>Tap food to eat it</span></div>
+  <button id="newBtn" type="button" hidden>Start a new island</button>
+  <a id="denLink" href="../../index.html">&larr; Back to the arcade</a>
+</div>
+<div id="rotate"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="18" y="6" width="28" height="52" rx="5" fill="#fffbf0" stroke="#21323d" stroke-width="4"/><circle cx="32" cy="51" r="2.5" fill="#21323d"/></svg>Turn the tablet sideways to play</div>
+
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+<script type="module" src="game.js"></script>
+<script>
+if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
