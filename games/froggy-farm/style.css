@@ -103,3 +103,16 @@ html, body {
 .eater.open .mouth-open { display: inline; }
 .eater.open .mouth-closed { display: none; }
 #ic-walrus.open .mouth-open { display: inline; }
+
+/* pumpkin house */
+.ghost-bob { animation: gbob 3.4s ease-in-out infinite; }
+@keyframes gbob { 50% { transform: translateY(-18px); } }
+.pkin { --hole: #4a1c00; }
+.pkin.lit { --hole: var(--glow); }
+.pkin .halo { opacity: 0; transition: opacity .8s; }
+.pkin.lit .halo { opacity: 1; animation: flick 1.8s ease-in-out infinite; }
+.pkin.lit .face { animation: flick 1.3s ease-in-out infinite; }
+@keyframes flick { 0%, 100% { opacity: 1; } 35% { opacity: .78; } 55% { opacity: .96; } 80% { opacity: .84; } }
+.pk-btn-bg { fill: #2a1d52; stroke: #ffb347; stroke-width: 5; transition: fill .2s, stroke .2s; }
+.pk-btn.chosen .pk-btn-bg { fill: #5a3fa0; stroke: #fff; stroke-width: 7; }
+.pk-win { transition: fill-opacity .8s; fill-opacity: .35; }
