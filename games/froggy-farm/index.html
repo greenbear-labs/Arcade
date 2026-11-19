@@ -180,6 +180,104 @@
   <g id="bubbles" pointer-events="none"></g>
 </svg>
 
+<!-- GAME 2, THE ICE CREAM KITCHEN: pick a cone or cup, tap tubs for scoops, tap jars for toppings,
+     then drag the ice cream onto the penguin chef or a customer. -->
+<svg id="icecream" class="screen" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ic-rainbow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff6b8b"/><stop offset=".2" stop-color="#ffa53b"/><stop offset=".4" stop-color="#ffe14d"/>
+      <stop offset=".6" stop-color="#7ee07a"/><stop offset=".8" stop-color="#6cb6ff"/><stop offset="1" stop-color="#b98bff"/>
+    </linearGradient>
+    <pattern id="ic-stripes" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="80" height="80" fill="#dff6ee"/><rect width="40" height="80" fill="#cdf0e3"/></pattern>
+    <pattern id="ic-check" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="80" height="80" fill="#ffd3e2"/><rect width="40" height="40" fill="#fff"/><rect x="40" y="40" width="40" height="40" fill="#fff"/></pattern>
+  </defs>
+
+  <!-- wall, freezer case for the tubs, shelf for the toppings -->
+  <rect width="1600" height="900" fill="url(#ic-stripes)"/>
+  <g class="tap" data-act="bell" transform="translate(1290,90)"><g class="anim">
+    <path d="M-34 20 Q-34 -26 0 -28 Q34 -26 34 20 Z" fill="#ffd93b" stroke="#e0a800" stroke-width="5"/>
+    <rect x="-44" y="18" width="88" height="12" rx="6" fill="#e0a800"/><circle cy="-34" r="8" fill="#e0a800"/>
+  </g></g>
+  <rect x="240" y="110" width="725" height="165" rx="26" fill="#e9f8ff" stroke="#9fd3ea" stroke-width="6"/>
+  <path d="M270 130 l40 0 M270 145 l20 0" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  <rect x="975" y="248" width="450" height="18" rx="8" fill="#e0a96d" stroke="#b9824c" stroke-width="4"/>
+  <g id="ic-tubs"></g>
+  <g id="ic-jars"></g>
+
+  <!-- the penguin chef stands behind the counter -->
+  <g id="ic-penguin" class="tap eater" data-eater="penguin" transform="translate(610,568)"><g class="anim">
+    <g class="flipL"><ellipse cx="-94" cy="-120" rx="26" ry="62" fill="#2b3a55" transform="rotate(18 -94 -120)"/></g>
+    <g class="flipR"><ellipse cx="94" cy="-120" rx="26" ry="62" fill="#2b3a55" transform="rotate(-18 94 -120)"/></g>
+    <ellipse cy="-110" rx="100" ry="130" fill="#2b3a55"/>
+    <ellipse cy="-70" rx="72" ry="96" fill="#fff"/>
+    <ellipse cy="-162" rx="64" ry="46" fill="#fff"/>
+    <circle cx="-26" cy="-174" r="11" fill="#1b1b1b"/><circle cx="26" cy="-174" r="11" fill="#1b1b1b"/>
+    <circle cx="-22" cy="-178" r="4" fill="#fff"/><circle cx="30" cy="-178" r="4" fill="#fff"/>
+    <circle cx="-50" cy="-148" r="11" fill="#ff8fa8" opacity=".6"/><circle cx="50" cy="-148" r="11" fill="#ff8fa8" opacity=".6"/>
+    <path class="mouth-closed" d="M-22 -158 L22 -158 L0 -134Z" fill="#ff9f1c" stroke="#e07a00" stroke-width="4" stroke-linejoin="round"/>
+    <g class="mouth-open"><path d="M-24 -164 L24 -164 L0 -150Z M-20 -144 L20 -144 L0 -126Z" fill="#ff9f1c" stroke="#e07a00" stroke-width="4" stroke-linejoin="round"/><ellipse cy="-147" rx="14" ry="5" fill="#7a1d33"/></g>
+    <path d="M-30 -74 L0 -60 L-30 -46Z M30 -74 L0 -60 L30 -46Z" fill="#e3263b" stroke="#a8182a" stroke-width="3" stroke-linejoin="round"/><circle cy="-60" r="7" fill="#a8182a"/>
+    <g transform="translate(0,-236)">
+      <rect x="-56" y="-10" width="112" height="32" rx="10" fill="#fff" stroke="#d8d8e6" stroke-width="4"/>
+      <circle cx="-36" cy="-34" r="32" fill="#fff"/><circle cx="0" cy="-52" r="38" fill="#fff"/><circle cx="36" cy="-34" r="32" fill="#fff"/>
+    </g>
+  </g></g>
+
+  <!-- counter -->
+  <rect y="560" width="1600" height="340" fill="url(#ic-check)"/>
+  <rect y="548" width="1600" height="24" rx="8" fill="#fff" stroke="#f0b3c8" stroke-width="5"/>
+  <ellipse cx="800" cy="562" rx="86" ry="14" fill="#f5c6d8" stroke="#e79ab8" stroke-width="4"/>
+
+  <!-- cones and cup to pick from -->
+  <g class="tap" data-act="base" data-base="cone" transform="translate(240,462) scale(.74)"><g class="anim base-art" data-art="cone"></g></g>
+  <g class="tap" data-act="base" data-base="choco" transform="translate(335,462) scale(.74)"><g class="anim base-art" data-art="choco"></g></g>
+  <rect x="190" y="500" width="196" height="60" rx="12" fill="#c98a5a" stroke="#8e5a35" stroke-width="5" pointer-events="none"/>
+  <path d="M206 520 h164" stroke="#b07648" stroke-width="5" stroke-linecap="round" pointer-events="none"/>
+  <g class="tap" data-act="base" data-base="cup" transform="translate(452,486) scale(.7)"><g class="anim base-art" data-art="cup"></g></g>
+
+  <!-- customers: puffin on the counter, a polar bear cub and a walrus out front -->
+  <g id="ic-puffin" class="tap eater" data-eater="puffin" transform="translate(1100,560)"><g class="anim">
+    <ellipse cx="-14" cy="-4" rx="15" ry="7" fill="#ff7a2e"/><ellipse cx="14" cy="-4" rx="15" ry="7" fill="#ff7a2e"/>
+    <ellipse cy="-58" rx="42" ry="56" fill="#222b3a"/>
+    <ellipse cy="-42" rx="28" ry="38" fill="#fff"/>
+    <ellipse cy="-96" rx="32" ry="24" fill="#fff"/>
+    <circle cx="-12" cy="-100" r="5" fill="#111"/><circle cx="12" cy="-100" r="5" fill="#111"/>
+    <path d="M-20 -104 l-6 -4 M20 -104 l6 -4" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <g class="mouth-closed"><path d="M-15 -88 L15 -88 L0 -62Z" fill="#ff7a2e" stroke="#c94f12" stroke-width="3" stroke-linejoin="round"/><path d="M-9 -80 L9 -80" stroke="#ffd23f" stroke-width="4"/></g>
+    <g class="mouth-open"><path d="M-16 -92 L16 -92 L0 -80Z M-13 -74 L13 -74 L0 -58Z" fill="#ff7a2e" stroke="#c94f12" stroke-width="3" stroke-linejoin="round"/><ellipse cy="-77" rx="9" ry="4" fill="#7a1d33"/></g>
+  </g></g>
+  <g id="ic-cub" class="tap eater" data-eater="cub" transform="translate(985,900)"><g class="anim">
+    <ellipse cy="-92" rx="96" ry="96" fill="#fbfbff" stroke="#c9cde0" stroke-width="5"/>
+    <ellipse cy="-72" rx="56" ry="56" fill="#fff"/>
+    <ellipse cx="-72" cy="-34" rx="30" ry="24" fill="#fbfbff" stroke="#c9cde0" stroke-width="5"/><ellipse cx="72" cy="-34" rx="30" ry="24" fill="#fbfbff" stroke="#c9cde0" stroke-width="5"/>
+    <circle cx="-58" cy="-268" r="24" fill="#fbfbff" stroke="#c9cde0" stroke-width="5"/><circle cx="58" cy="-268" r="24" fill="#fbfbff" stroke="#c9cde0" stroke-width="5"/>
+    <circle cx="-58" cy="-268" r="11" fill="#ffc2d1"/><circle cx="58" cy="-268" r="11" fill="#ffc2d1"/>
+    <circle cy="-208" r="80" fill="#fbfbff" stroke="#c9cde0" stroke-width="5"/>
+    <circle cx="-27" cy="-220" r="9" fill="#222"/><circle cx="27" cy="-220" r="9" fill="#222"/><circle cx="-24" cy="-223" r="3" fill="#fff"/><circle cx="30" cy="-223" r="3" fill="#fff"/>
+    <circle cx="-52" cy="-190" r="12" fill="#ffb3c6" opacity=".7"/><circle cx="52" cy="-190" r="12" fill="#ffb3c6" opacity=".7"/>
+    <ellipse cy="-184" rx="36" ry="26" fill="#fff" stroke="#c9cde0" stroke-width="4"/>
+    <ellipse cy="-194" rx="12" ry="8" fill="#333"/>
+    <path class="mouth-closed" d="M-12 -176 Q0 -166 12 -176" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <ellipse class="mouth-open" cy="-171" rx="15" ry="11" fill="#7a1d33"/>
+  </g></g>
+  <g id="ic-walrus" class="tap eater" data-eater="walrus" transform="translate(1255,905)"><g class="anim">
+    <ellipse cx="-140" cy="-42" rx="52" ry="22" fill="#9b6a4e" stroke="#7d5440" stroke-width="5" transform="rotate(-15 -140 -42)"/>
+    <ellipse cx="140" cy="-42" rx="52" ry="22" fill="#9b6a4e" stroke="#7d5440" stroke-width="5" transform="rotate(15 140 -42)"/>
+    <ellipse cy="-120" rx="148" ry="128" fill="#a8775a" stroke="#7d5440" stroke-width="5"/>
+    <ellipse cy="-252" rx="106" ry="86" fill="#b5846a" stroke="#7d5440" stroke-width="5"/>
+    <circle cx="-38" cy="-286" r="10" fill="#222"/><circle cx="38" cy="-286" r="10" fill="#222"/><circle cx="-35" cy="-289" r="3" fill="#fff"/><circle cx="41" cy="-289" r="3" fill="#fff"/>
+    <ellipse class="mouth-open" cy="-205" rx="24" ry="16" fill="#5a1a2a"/>
+    <path d="M-24 -208 Q-30 -168 -18 -134 Q-8 -168 -10 -208Z M24 -208 Q30 -168 18 -134 Q8 -168 10 -208Z" fill="#fffbea" stroke="#d8cfa8" stroke-width="3"/>
+    <ellipse cx="-27" cy="-226" rx="36" ry="28" fill="#d9a88a"/><ellipse cx="27" cy="-226" rx="36" ry="28" fill="#d9a88a"/>
+    <g fill="#7d5440"><circle cx="-40" cy="-226" r="3"/><circle cx="-26" cy="-218" r="3"/><circle cx="-44" cy="-212" r="3"/><circle cx="40" cy="-226" r="3"/><circle cx="26" cy="-218" r="3"/><circle cx="44" cy="-212" r="3"/></g>
+    <ellipse cy="-252" rx="17" ry="11" fill="#5a3a2a"/>
+  </g></g>
+
+  <g id="ic-buildLayer"></g>
+  <g id="ic-fx" pointer-events="none"></g>
+  <g id="ic-bubbles" pointer-events="none"></g>
+</svg>
+
 <!-- HUB: each mini-game is a mascot. Tap one to play. -->
 <div id="hub" class="screen">
 <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -215,7 +313,7 @@
   </g></g></g>
 
   <!-- game 2: ice cream kitchen (coming next) -->
-  <g class="tile tap" data-game="icecream" data-soon="Ice cream is coming soon!" transform="translate(1070,470)"><g class="bob late"><g class="tile-anim">
+  <g class="tile tap" data-game="icecream" transform="translate(1070,470)"><g class="bob late"><g class="tile-anim">
     <circle r="235" fill="#ffe1ef" stroke="#fff" stroke-width="16"/>
     <g transform="translate(0,40)">
       <ellipse cx="-48" cy="172" rx="40" ry="16" fill="#ff9f1c"/><ellipse cx="48" cy="172" rx="40" ry="16" fill="#ff9f1c"/>
@@ -261,6 +359,8 @@
 
 <script src="js/audio.js"></script>
 <script src="js/app.js"></script>
+<script src="js/kit.js"></script>
 <script src="js/games/frog.js"></script>
+<script src="js/games/icecream.js"></script>
 </body>
 </html>
