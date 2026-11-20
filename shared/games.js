@@ -140,4 +140,13 @@ window.ARCADE_GAMES = [
     // Single-file HTML5 canvas roguelike; the deepest floor reached saves in the player's browser, not in the Den.
     meta: "3 FLOORS",
   },
+  {
+    slug: "full-moon-drive-thru",
+    title: "Full Moon Drive-Thru",
+    tagline: "A werewolf is loose in the Mega Moonburger. Hide in the ball pit, slip through vents, survive till closing. Play online with friends.",
+    controls: "Keys or touch",
+    color: "#ffcf3a",
+    // Peer-to-peer multiplayer (2-6 players, room codes) or practice with bots; it doesn't report scores to the Den.
+    meta: "2-6 PLAYERS",
+  },
 ];

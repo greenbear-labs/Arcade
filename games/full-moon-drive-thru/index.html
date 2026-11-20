@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Full Moon Drive-Thru · Green Bear Arcade</title>
+  <meta name="description" content="A werewolf is loose in the Mega Moonburger. Survive the night with your friends, or be the werewolf. 2–6 players online, or practise with bots.">
+  <meta name="theme-color" content="#0b0d0a">
+  <!-- Arcade: page info and icons for the Den -->
+  <link rel="canonical" href="https://arcade.greenbearlabs.com/games/full-moon-drive-thru/">
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-back="../../index.html"><!-- Arcade: back link to the Den -->
+  <header class="bar">
+    <a class="back" id="back-link" href="#" hidden>← The Den</a>
+    <h1>Full Moon Drive-Thru</h1>
+    <button class="icon-btn" id="mute" type="button"></button>
+  </header>
+
+  <main>
+    <!-- Main menu -->
+    <section class="panel" id="menu">
+      <div class="logo" aria-hidden="true">🌕🍔🐺</div>
+      <h2>A werewolf is loose in the Mega Moonburger!</h2>
+      <p class="lead">One player is the werewolf. Everyone else works the late shift and has to survive until closing time. Swap roles every round.</p>
+      <label class="field">Your name
+        <input id="name" maxlength="12" autocomplete="nickname" placeholder="Fry Cook">
+      </label>
+      <div class="buttons">
+        <button class="btn primary" id="host-btn" type="button">Host a game</button>
+        <button class="btn" id="practice-btn" type="button">Practice with bots</button>
+      </div>
+      <form class="join" id="join-form">
+        <label class="field">Got a room code?
+          <input id="code" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="BEAR42">
+        </label>
+        <button class="btn" type="submit">Join</button>
+      </form>
+      <p class="error" id="menu-error" role="alert"></p>
+      <details class="howto">
+        <summary>How to play</summary>
+        <ul>
+          <li><b>Move:</b> WASD or arrow keys. On a tablet, drag anywhere on the left side.</li>
+          <li><b>Use your pickup:</b> Space (or the USE button).</li>
+          <li><b>Survivors</b> score a point every second they stay free, plus a bonus for lasting the round. Caught survivors become ghosts.</li>
+          <li><b>The werewolf</b> scores for every survivor caught, and a bonus for catching everyone.</li>
+          <li><b>Vents</b> (grey grates) are survivor-only shortcuts. <b>Tubes</b> and <b>slides</b> in the Playland work for everyone. Hide in the <b>ball pit</b>!</li>
+          <li><b>Swinging doors</b> swing back after you run through. Anyone right behind you gets BONKED.</li>
+          <li>The <b>drive-thru lane</b> outside is a conveyor belt. Ride it, or fight against it.</li>
+          <li><b>Pickups:</b> 🥤 Turbo Soda (speed), 🪣 Grease Bucket (drop a slick), 🍟 Garlic Fries (survivor shield; werewolves sneeze), 🧅 Onion Bomb (hide in the stink), 🌕 Moon Pie (werewolf howl reveals everyone).</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- Lobby -->
+    <section class="panel" id="lobby" hidden>
+      <p class="code-label" id="code-label">Room code</p>
+      <p class="code" id="room-code">····</p>
+      <p class="lead" id="lobby-hint"></p>
+      <ul class="players" id="players"></ul>
+      <div class="host-only" id="host-controls">
+        <div class="buttons">
+          <button class="btn" id="add-bot" type="button">+ Add bot</button>
+          <button class="btn" id="remove-bot" type="button">− Remove bot</button>
+        </div>
+        <label class="field inline">Rounds
+          <select id="rounds">
+            <option value="1">Everyone is the werewolf once</option>
+            <option value="2">Everyone is the werewolf twice</option>
+          </select>
+        </label>
+        <button class="btn primary big" id="start-btn" type="button">Start!</button>
+      </div>
+      <p class="waiting" id="waiting" hidden>Waiting for the host to start…</p>
+      <p class="error" id="lobby-error" role="alert"></p>
+      <button class="btn ghost" id="leave-btn" type="button">Leave</button>
+    </section>
+
+    <!-- Game -->
+    <section id="game" hidden>
+      <div class="screen">
+        <canvas id="canvas" width="960" height="600" aria-label="Game screen"></canvas>
+        <div class="stick" id="stick"><span></span></div>
+        <button class="use-btn" id="use-btn" type="button">USE</button>
+        <div class="end" id="end" hidden>
+          <button class="btn primary" id="again-btn" type="button">Play again</button>
+          <p class="waiting" id="end-wait">Waiting for the host…</p>
+          <button class="btn ghost" id="end-leave" type="button">Leave</button>
+        </div>
+        <p class="toast" id="toast" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="vendor/peerjs.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

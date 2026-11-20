@@ -615,6 +615,49 @@
       ctx.fillStyle = "#e05a4a";
       for (let i = 0; i < 3; i++) { ctx.fillRect(24 + i * 12, 22, 8, 6); ctx.fillRect(26 + i * 12, 28, 4, 2); }
     },
+    "full-moon-drive-thru"(ctx, t) {
+      // A werewolf chases a crew kid around the booths of the Mega Moonburger; the kid ducks through a swinging door.
+      ctx.fillStyle = "#0a0a1c"; ctx.fillRect(0, 0, W, H);
+      for (let x = 0; x < W; x += 20) for (let y = 30; y < H; y += 20) {
+        ctx.fillStyle = (x + y) / 20 % 2 ? "#3a1714" : "#4a3a30";
+        ctx.fillRect(x, y, 20, 20);
+      }
+      ctx.fillStyle = "#7a2b25"; ctx.fillRect(0, 22, W, 10);
+      ctx.fillStyle = "#ffcf3a"; ctx.fillRect(0, 22, W, 2);
+      ctx.fillStyle = "#fff6c8"; ctx.beginPath(); ctx.arc(208, 11, 8, 0, 7); ctx.fill();
+      ctx.fillStyle = "#0a0a1c"; ctx.beginPath(); ctx.arc(212, 8, 7, 0, 7); ctx.fill();
+      for (const [bx, by] of [[60, 70], [140, 70], [60, 130], [140, 130]]) {
+        ctx.fillStyle = "#c8302a"; ctx.fillRect(bx, by, 36, 26);
+        ctx.fillStyle = "#e85a4a"; ctx.fillRect(bx + 4, by + 4, 28, 18);
+      }
+      const loopPos = (u) => { // rounded rectangle path around the booths
+        const a = u * Math.PI * 2;
+        return [118 + Math.cos(a) * 92, 105 + Math.sin(a) * 52];
+      };
+      const u = (t * 0.16) % 1;
+      const [kx, ky] = loopPos(u);
+      const [wx, wy] = loopPos(u - 0.11);
+      // night light around the kid
+      const g = ctx.createRadialGradient(kx, ky, 10, kx, ky, 90);
+      g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(6,6,24,.7)");
+      ctx.fillStyle = g; ctx.fillRect(0, 30, W, H);
+      const face = Math.cos(u * Math.PI * 2 + Math.PI / 2) < 0 ? 1 : -1;
+      // crew kid
+      ctx.fillStyle = "#4ec3ff"; ctx.beginPath(); ctx.arc(kx, ky, 9, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.fillRect(kx - 7, ky - 11, 14, 4);
+      ctx.fillStyle = "#e63b2e"; ctx.fillRect(kx - 7, ky - 8, 14, 2);
+      ctx.fillStyle = "#14161b"; ctx.fillRect(kx + face * 2 - 3, ky - 2, 2, 3); ctx.fillRect(kx + face * 2 + 2, ky - 2, 2, 3);
+      // werewolf
+      ctx.fillStyle = "#4b425a";
+      ctx.beginPath(); ctx.moveTo(wx - 9, wy - 5); ctx.lineTo(wx - 6, wy - 17); ctx.lineTo(wx - 1, wy - 8); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(wx + 9, wy - 5); ctx.lineTo(wx + 6, wy - 17); ctx.lineTo(wx + 1, wy - 8); ctx.fill();
+      ctx.beginPath(); ctx.arc(wx, wy, 12, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffe03a"; ctx.fillRect(wx - 6, wy - 4, 4, 3); ctx.fillRect(wx + 2, wy - 4, 4, 3);
+      ctx.fillStyle = "#fff"; ctx.fillRect(wx - 3, wy + 5, 2, 3); ctx.fillRect(wx + 1, wy + 5, 2, 3);
+      ctx.font = "9px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = "#ffcf3a"; ctx.fillText("MEGA MOONBURGER", 100, 14);
+      ctx.textAlign = "start";
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
