@@ -308,7 +308,8 @@ function takeFromSlot(i,n=1){const s=inv[i]; if(!s) return null; s.count-=n; con
 function takeItem(id,n=1){for(let i=inv.length-1;i>=0&&n>0;i--){const s=inv[i]; if(s&&s.id===id){const k=Math.min(n,s.count); s.count-=k; n-=k; if(!s.count) inv[i]=null}} renderInv()}
 const held=()=>inv[sel]?.id||null;
 // the action button picks the right tool by itself, so Kai just takes it out of his pocket
-function equip(id){const i=inv.findIndex(s=>s&&s.id===id); if(i>=0&&i!==sel){sel=i; renderInv()} return i>=0}
+let handPick=false; // true once the player has tapped a tool pocket themselves
+function equip(id){const i=inv.findIndex(s=>s&&s.id===id); if(i>=0&&i!==sel){sel=i; handPick=false; renderInv()} return i>=0}
 function slotHTML(s){return s?ICONS[s.id]+(s.count>1?`<span class="count">${s.count}</span>`:''):''}
 function slotLabel(s){return s?`${ITEMS[s.id].name}, ${s.count}`:'Empty'}
 function buildSlots(){
@@ -342,7 +343,7 @@ function dropSlot(i){ const s=inv[i]; if(!s||!started||sleep) return;
   toss(s.id,x,pos.y+0.6,z,Math.sin(facing)*0.4,Math.cos(facing)*0.4,1.0,0,{count:s.count,noAuto:true});
   const nm=ITEMS[s.id].name.toLowerCase(); toast(s.count>1?`Dropped ${s.count} ${plural(s.id,s.count)}`:`Dropped the ${nm}`); saveSoon() }
 function renderInv(){
-  hotbar.querySelectorAll('.slot').forEach((b,i)=>{const s=inv[i]; b.innerHTML=slotHTML(s); b.classList.toggle('sel',!!(i===sel&&s&&ITEMS[s.id].tool));
+  hotbar.querySelectorAll('.slot').forEach((b,i)=>{const s=inv[i]; b.innerHTML=slotHTML(s); b.classList.toggle('sel',!!(s&&((i===sel&&ITEMS[s.id].tool)||(placing&&placing.slot===i))));
     b.classList.toggle('food',!!(s&&ITEMS[s.id].verb)); b.setAttribute('aria-label',`${slotLabel(s)}${s&&ITEMS[s.id].verb?', tap to '+ITEMS[s.id].verb.toLowerCase():''}`)});
   const h=held(); heldStick.visible=h==='stick'; heldAxe.visible=h==='axe'; heldShovel.visible=h==='shovel';
   renderMake(); renderStore();
@@ -357,8 +358,8 @@ function tapSlot(i){
   const s=inv[i]; if(!s){showName('Empty pocket'); return}
   const it=ITEMS[s.id];
   if(it.verb) return eatSlot(i);
-  if(it.place) return place(s.id,i);
-  if(it.tool){ sel=i; renderInv(); showName(`Kai is holding the ${it.name.toLowerCase()}`); return }
+  if(it.place) return placing&&placing.slot===i?stopPlacing():startPlacing(s.id,i);
+  if(it.tool){ sel=i; handPick=true; renderInv(); showName(`Kai is holding the ${it.name.toLowerCase()}`); return }
   if(it.note){ toast(it.note); return }
   showName(`${it.name}: tap Make to use it`);
 }
@@ -438,6 +439,7 @@ addEventListener('keydown',e=>{
   if(!started) return;
   if(storeOpen){ if((e.code==='Escape'||e.code==='KeyE')&&!e.repeat) closeStore(); return }
   if(sleep) return;
+  if(e.code==='Escape'&&placing){ stopPlacing(); return }
   if(e.code==='KeyC'||(e.code==='Escape'&&crafting)){ if(!e.repeat) toggleCraft(); e.preventDefault(); return }
   if(crafting) return;
   keys.add(e.code); if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
@@ -503,6 +505,8 @@ let swingTool=null;
 function startSwing(kind){ if(swingT>=0) return; swingT=0; swingTool=held(); swingTarget=kind==='dig'?{kind:'dig',...digSpot()}:swingTargetNear(swingTool) }
 function swingTargetNear(tool){
   let best=null, bd=1e9;
+  if(tool==='axe'&&handPick) for(const o of placed){const d=Math.hypot(pos.x-o.x,pos.z-o.z); if(d<1.3&&d<bd){bd=d;best={kind:'placed',o,x:o.x,z:o.z}}}
+  if(best) return best;
   for(const p of palms){ if(p.state!=='up') continue; const d=Math.hypot(pos.x-p.x,pos.z-p.z); if(d<1.45&&d<bd){bd=d;best={kind:'palm',p,x:p.x,z:p.z}}}
   if(best) return best;
   if(tool==='axe') for(const l of logs){const c=logPoint(l), d=Math.hypot(pos.x-c.x,pos.z-c.z); if(d<1.0&&d<bd){bd=d;best={kind:'log',l,x:c.x,z:c.z}}}
@@ -514,6 +518,7 @@ function onSwingHit(target){
   if(!target){ return }
   if(target.kind==='palm') return swingTool==='axe'?onChopHit(target.p):onWhackHit(target.p);
   if(target.kind==='log') return chopLog(target.l);
+  if(target.kind==='placed') return packHit(target.o);
   if(target.kind==='dig') return isSand(target.x,target.z)?dig(target.x,target.z):toast('Too hard to dig here. Try the sand');
   const b=target.b; b.shake=1;
   const ready=b.berries.filter(x=>x.ready); if(!ready.length){toast('No berries left on this bush'); return}
@@ -649,15 +654,42 @@ function placeAt(kind,x,z,yaw,slots){
   const cols=kind==='box'?[{x,z,r:0.3}]:[{x:x+ax*0.3,z:z+az*0.3,r:0.32},{x:x-ax*0.3,z:z-az*0.3,r:0.32}]; colliders.push(...cols);
   const o={kind,g,x,z,y:h,yaw,cols,slots:kind==='box'?Array.from({length:12},(_,i)=>slots?.[i]&&ITEMS[slots[i].id]?{...slots[i]}:null):null};
   placed.push(o); return o}
-// tap a box or bed in the pockets: it goes down in front of Kai, or the nearest clear spot around him
-function place(id,slotI=sel){
-  for(const off of [0,0.7,-0.7,1.4,-1.4,2.1,-2.1,Math.PI]) for(const d of [0.95,1.4]){
-    const a=facing+off, x=pos.x+Math.sin(a)*d, z=pos.z+Math.cos(a)*d;
-    if(!spotFree(x,z)) continue;
-    placeAt(id,x,z,id==='box'?a+Math.PI:a+Math.PI/2); takeFromSlot(slotI);
-    toast(id==='box'?'Box put down. Walk up and tap Open':'Bed put down. Walk up and tap Sleep'); saveSoon(); return }
-  toast('No room here. Try an open bit of sand');
-}
+// tap a box or bed in the pockets: a see-through one shows where it will go, in front of Kai.
+// Green means it fits; walk or turn to move it, then tap Place. Tap the pocket again to put it away.
+let placing=null;
+const ghostOk=new THREE.MeshBasicMaterial({color:0x7be38f,transparent:true,opacity:0.45,depthWrite:false,depthTest:false}),
+      ghostBad=new THREE.MeshBasicMaterial({color:0xff6b6b,transparent:true,opacity:0.5,depthWrite:false,depthTest:false});
+function startPlacing(id,slot){ stopPlacing(true);
+  const g=id==='box'?makeBox():makeBed(); g.traverse(o=>{if(o.isMesh){o.material=ghostOk; o.castShadow=false; o.renderOrder=10}});
+  const ring=new THREE.Mesh(new THREE.RingGeometry(0.5,0.58,32),ghostOk); ring.rotation.x=-Math.PI/2; ring.position.y=0.03; ring.scale.set(id==='bed'?0.75:0.6,id==='bed'?1.25:0.6,1); g.add(ring);
+  scene.add(g); placing={id,slot,g,ok:false,x:0,z:0,yaw:0}; updatePlacing(); renderInv();
+  showName(`Walk to move the ${ITEMS[id].name.toLowerCase()}, then tap Place`) }
+function stopPlacing(quiet){ if(!placing) return; scene.remove(placing.g); placing=null; if(!quiet) renderInv() }
+function placeSpot(id,a){const d=id==='bed'?1.15:0.95; return {x:pos.x+Math.sin(a)*d,z:pos.z+Math.cos(a)*d,yaw:id==='box'?a+Math.PI:a+Math.PI/2}}
+function fits(id,x,z,yaw){ if(!spotFree(x,z)) return false; if(id!=='bed') return true;
+  const ax=Math.sin(yaw), az=Math.cos(yaw); // the bed is long: check both ends too
+  return [1,-1].every(k=>{const ex=x+ax*0.45*k, ez=z+az*0.45*k, h=height(ex,ez); return h>0.05&&rockTop(ex,ez)<h-0.2&&freeSpot(ex,ez,0.2)&&!bushes.some(b=>Math.hypot(ex-b.x,ez-b.z)<0.75*b.s+0.25)})}
+function updatePlacing(){ const P=placing; if(!P) return;
+  if(!inv[P.slot]||inv[P.slot].id!==P.id){ stopPlacing(); return }
+  const s=placeSpot(P.id,facing); P.x=s.x; P.z=s.z; P.yaw=s.yaw; P.ok=fits(P.id,s.x,s.z,s.yaw);
+  P.g.position.set(s.x,height(s.x,s.z)+0.01,s.z); P.g.rotation.y=s.yaw;
+  const m=P.ok?ghostOk:ghostBad; P.g.traverse(o=>{if(o.isMesh)o.material=m});
+  const t=performance.now()/1000; ghostOk.opacity=0.35+0.15*Math.sin(t*5) }
+function confirmPlace(){ const P=placing; if(!P) return; updatePlacing(); if(!placing) return;
+  if(!P.ok){ toast('No room here. Try an open bit of sand'); return }
+  placeAt(P.id,P.x,P.z,P.yaw); takeFromSlot(P.slot); const id=P.id; stopPlacing();
+  toast(id==='box'?'Box put down. Walk up and tap Open':'Bed put down. Walk up and tap Sleep'); saveSoon() }
+function place(id,slotI=sel){ startPlacing(id,slotI) }
+// ---- hit a bed or box 3 times with the ax (held in hand) and Kai packs it back up. A box spills what is inside.
+function packHit(o){
+  o.shake=1; o.hits=(o.hits||0)+1;
+  if(o.hits<3){toast(o.hits===1?'Bonk! 2 more hits to pack it up':'Bonk! 1 more hit'); return}
+  scene.remove(o.g); o.cols.forEach(c=>c.off=true); placed.splice(placed.indexOf(o),1);
+  if(o.slots) o.slots.forEach((st,i)=>{ if(!st) return; const a=i/12*Math.PI*2; toss(st.id,o.x,o.y+0.5,o.z,Math.cos(a)*1.0,Math.sin(a)*1.0,1.6,0,{count:st.count}) });
+  const nm=ITEMS[o.kind].name.toLowerCase();
+  if(roomFor(o.kind)>0){ const c=makeItemMesh(o.kind); c.position.set(o.x,o.y+0.2,o.z); scene.add(c); reach=0.35; flyToKai(c,()=>{addItem(o.kind); toast(`Packed up the ${nm}!`)}) }
+  else { toss(o.kind,o.x,o.y+0.4,o.z,0,0,1.2,0,{count:1}); toast(`Packed up the ${nm}, but your pockets are full`) }
+  saveSoon() }
 // ---- sleeping: lie down for a moment, the screen dims, then Kai gets back up
 let sleep=null; const sleepFade=document.getElementById('sleepFade');
 function startSleep(bed){ sleep={t:0,bed,zz:0}; keys.clear(); stickEnd(); speed=0; toast('Zzz...') }
@@ -669,6 +701,8 @@ function findAction(){
   if(best) return best;
   for(const b of bugs){ const d=Math.hypot(pos.x-b.x,pos.z-b.z); if(d<1.0&&d<bd){bd=d;best={kind:'bug',b,label:'Catch the bug',short:'Catch',icon:'bug'}} }
   for(const f of butterflies){ const d=Math.hypot(pos.x-f.x,pos.z-f.z); if(d<1.1&&f.y-pos.y<1.5&&d<bd){bd=d;best={kind:'fly',f,label:'Catch the butterfly',short:'Catch',icon:'butterfly'}} }
+  if(best) return best;
+  if(held()==='axe'&&handPick) for(const o of placed){ const d=Math.hypot(pos.x-o.x,pos.z-o.z); if(d<1.3&&d<bd){bd=d;best={kind:'swing',tool:'axe',label:`Hit the ${ITEMS[o.kind].name.toLowerCase()} 3 times to pack it up`,short:'Pack up',icon:'axe'}} }
   if(best) return best;
   for(const o of placed){ const d=Math.hypot(pos.x-o.x,pos.z-o.z); if(d<(o.kind==='bed'?1.2:1.05)&&d<bd){bd=d;best=o.kind==='box'?{kind:'open',o,label:'Open the box',short:'Open',icon:'box'}:{kind:'sleep',o,label:'Sleep in the bed',short:'Sleep',icon:'bed'}} }
   if(best) return best;
@@ -822,6 +856,7 @@ function tick(){
       const x=f.m.position.x, z=f.m.position.z, grp=new THREE.Group(); f.m.position.set(0,f.r,0); f.m.rotation.set(0,Math.random()*6,0); grp.add(f.m); placePickup(f.id,grp,x,z,{keep:false,count:f.count,noAuto:f.noAuto}); if(f.count>1) saveSoon()}}}
   // logs wobble when chopped, dug holes fill back in
   for(const l of logs){ l.shake=Math.max(0,l.shake-dt*3); l.g.rotation.x=Math.sin(t*40)*0.06*l.shake }
+  for(const o of placed){ if(!o.shake) continue; o.shake=Math.max(0,o.shake-dt*3); o.g.rotation.z=Math.sin(t*40)*0.05*o.shake }
   for(let i=holes.length-1;i>=0;i--){const h=holes[i]; h.t-=dt; h.m.material.opacity=0.6*Math.min(1,h.t/5); if(h.t<=0){scene.remove(h.m); holes.splice(i,1)}}
   // bugs wander, scurry off if Kai runs at them, and new ones turn up now and then
   for(const b of bugs){
@@ -844,11 +879,13 @@ function tick(){
   for(const p of pickups) if(p.noAuto&&Math.hypot(pos.x-p.x,pos.z-p.z)>1.1) p.noAuto=false;
   if(started&&!crafting&&!storeOpen&&!sleep) for(const p of pickups){ if(p.active&&!p.noAuto&&Math.hypot(pos.x-p.x,pos.z-p.z)<0.6&&Math.abs(pos.y-p.obj.position.y)<0.8&&canAdd(p.id)){grab(p); break} }
   // context action: one big button that changes to fit what is nearby
-  const act=(!started||crafting||storeOpen||sleep||eating||swingT>=0)?null:findAction();
+  if(placing&&(!started||crafting||storeOpen||sleep)) stopPlacing(); updatePlacing();
+  const act=(!started||crafting||storeOpen||sleep||eating||swingT>=0)?null:placing?(placing.ok?{kind:'place',label:`Tap Place to put the ${ITEMS[placing.id].name.toLowerCase()} here`,short:'Place',icon:placing.id}:{kind:'noroom',label:'No room here. Walk to an open spot',short:null}):findAction();
   const label=act?act.label+'|'+(act.short||''):'';
   if(label!==lastPrompt){lastPrompt=label; promptEl.hidden=!act; if(act) promptText.textContent=act.label; setActBtn(act)}
   if(actionQueued&&swingT<0&&!eating){actionQueued=false; if(act&&act.short){ const k=act.kind; if(act.tool) equip(act.tool);
     if(k==='grab') grab(act.p); else if(k==='berry') pickBerry(act.b); else if(k==='swing') startSwing('swing'); else if(k==='dig') startSwing('dig');
+    else if(k==='place') confirmPlace();
     else if(k==='bug') catchBug(act.b); else if(k==='fly') catchButterfly(act.f); else if(k==='open') openStore(act.o); else if(k==='sleep') startSleep(act.o) }}
   if(swingT>=0){const before=swingT; swingT+=dt; if(before<0.2&&swingT>=0.2) onSwingHit(swingTarget); if(swingT>0.45){swingT=-1;swingTarget=null;swingTool=null}}
 
@@ -906,4 +943,4 @@ camTarget.set(pos.x,pos.y+0.75,pos.z);
 requestAnimationFrame(tick);
 window.__game={setNeeds(f,w){food=f;water=w},get mood(){return mood},keys,get pos(){return pos},get ready(){return ready},inv,get food(){return food},get water(){return water},get sel(){return sel},palms,pickups,bushes,surface,
   teleport(x,z,f){pos.set(x,surface(x,z),z);if(f!==undefined){facing=f;camYaw=f+Math.PI}},cam(yaw,pitch,dist){camYaw=yaw;camPitch=pitch;camDist=dist},addItem,
-  bugs,butterflies,logs,placed,dropSlot,swapSlots,get sleeping(){return !!sleep},get store(){return storeOpen},tapSlot,act(){actionQueued=true},get started(){return started}};
+  bugs,butterflies,logs,placed,get placing(){return placing},dropSlot,swapSlots,get sleeping(){return !!sleep},get store(){return storeOpen},tapSlot,act(){actionQueued=true},get started(){return started}};
