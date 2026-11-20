@@ -8,7 +8,7 @@ renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.NeutralToneMapping; renderer.toneMappingExposure=1.0;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x9fd8ef);
-scene.fog=new THREE.Fog(0x9fd8ef,35,90);
+scene.fog=new THREE.Fog(0x9fd8ef,45,110);
 const camera=new THREE.PerspectiveCamera(50,1,0.1,200);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -21,7 +21,8 @@ scene.add(sun); scene.add(sun.target);
 
 // ---------- island height field
 const smooth=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
-function islandR(ang){return 11+1.3*Math.sin(3*ang+1)+0.8*Math.sin(5*ang+2)+0.4*Math.sin(7*ang)}
+const S=1.4; // the island is 1.4x the size it first was; everything on it is spread out to match
+function islandR(ang){return S*(11+1.3*Math.sin(3*ang+1)+0.8*Math.sin(5*ang+2)+0.4*Math.sin(7*ang))}
 function height(x,z){
   const d=Math.hypot(x,z)/islandR(Math.atan2(z,x));
   let h=-1.4+1.8*(1-smooth(0.82,1.18,d));           // beach shelf down into the sea
@@ -31,7 +32,7 @@ function height(x,z){
 }
 const SAND=new THREE.Color(0xf3dfae), WET=new THREE.Color(0xd9bf8a), GRASS=new THREE.Color(0x7cc46a), GRASS2=new THREE.Color(0x5fae5a);
 {
-  const g=new THREE.PlaneGeometry(64,64,180,180); g.rotateX(-Math.PI/2);
+  const g=new THREE.PlaneGeometry(88,88,230,230); g.rotateX(-Math.PI/2);
   const p=g.attributes.position, col=new Float32Array(p.count*3), c=new THREE.Color();
   for(let i=0;i<p.count;i++){
     const x=p.getX(i), z=p.getZ(i), h=height(x,z); p.setY(i,h);
@@ -52,7 +53,7 @@ const seaGeo=new THREE.PlaneGeometry(220,220,60,60); seaGeo.rotateX(-Math.PI/2);
 const sea=new THREE.Mesh(seaGeo,new THREE.MeshStandardMaterial({color:0x3fb2c9,roughness:0.25,metalness:0.05,transparent:true,opacity:0.82}));
 sea.receiveShadow=true; scene.add(sea);
 const seaBase=Float32Array.from(seaGeo.attributes.position.array);
-const foamPts=[]; for(let i=0;i<=128;i++){const a=i/128*Math.PI*2; let lo=5,hi=20; for(let k=0;k<20;k++){const m=(lo+hi)/2; if(height(Math.cos(a)*m,Math.sin(a)*m)>0.02) lo=m; else hi=m} foamPts.push([Math.cos(a)*lo,Math.sin(a)*lo])}
+const foamPts=[]; for(let i=0;i<=128;i++){const a=i/128*Math.PI*2; let lo=7,hi=28; for(let k=0;k<20;k++){const m=(lo+hi)/2; if(height(Math.cos(a)*m,Math.sin(a)*m)>0.02) lo=m; else hi=m} foamPts.push([Math.cos(a)*lo,Math.sin(a)*lo])}
 const foam=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(foamPts.map(([x,z])=>new THREE.Vector3(x,0.04,z)),true),256,0.12,6,true),new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.6,transparent:true,opacity:0.8}));
 foam.scale.y=0.25; scene.add(foam);
 
@@ -95,13 +96,15 @@ function bush(x,z,s=1){const g=new THREE.Group(); const blobs=[[0,0.35,0,0.5],[0
     const m=new THREE.Mesh(berryGeo,berryMat); m.position.set((a+Math.cos(th)*Math.sin(ph)*r*0.98)*s,(b+Math.cos(ph)*r*0.98)*s,(c+Math.sin(th)*Math.sin(ph)*r*0.98)*s);
     g.add(m); berries.push({mesh:m,ready:true,regrow:0})}
   add(g,x,z,0,false); bushes.push({g,x,z,s,shake:0,berries})}
-[[3.5,-2.5,0.4,0.6],[-4.2,-1.8,-0.5,2],[-1.5,4.6,0.5,4],[5.8,3.2,0.6,1],[-7.4,3.4,0.5,3],[1.0,-7.2,0.5,5],[7.6,-4.6,0.4,0.2]].forEach(a=>palm(...a));
-[[6.4,0.2,1.1],[-6.9,-4.6,1.3],[2.8,7.6,0.8],[-2.6,-8.4,0.9],[7.9,4.6,0.9],[-8.4,0.4,1.1]].forEach(a=>rock(...a));
-[[-2.2,-1.4,1],[1.6,2.6,0.8],[-5.2,1.6,0.9],[4.2,-5.4,0.8],[0.4,-3.6,0.7]].forEach(a=>bush(...a));
+const sp=([x,z,...r])=>[x*S,z*S,...r];
+// the first island's palms, rocks and bushes spread out, plus more to fill the new space
+[[3.5,-2.5,0.4,0.6],[-4.2,-1.8,-0.5,2],[-1.5,4.6,0.5,4],[5.8,3.2,0.6,1],[-7.4,3.4,0.5,3],[1.0,-7.2,0.5,5],[7.6,-4.6,0.4,0.2]].map(sp).concat([[-10.6,-5.6,0.45,1.3],[10.4,6.2,0.5,2.6],[-3.4,12.0,0.4,5.2],[0.6,-12.9,0.5,0.9],[-11.2,7.4,0.4,4.4],[5.4,11.3,0.45,3.6]]).forEach(a=>palm(...a));
+[[6.4,0.2,1.1],[-6.9,-4.6,1.3],[2.8,7.6,0.8],[-2.6,-8.4,0.9],[7.9,4.6,0.9],[-8.4,0.4,1.1]].map(sp).concat([[-6.6,-11.0,1.0],[12.6,-2.6,0.9],[-12.4,2.6,0.8]]).forEach(a=>rock(...a));
+[[-2.2,-1.4,1],[1.6,2.6,0.8],[-5.2,1.6,0.9],[4.2,-5.4,0.8],[0.4,-3.6,0.7]].map(sp).concat([[-8.6,-8.2,0.9],[9.2,-0.6,0.85],[-9.4,5.0,0.9],[2.6,9.4,0.8],[-4.6,8.6,0.75]]).forEach(a=>bush(...a));
 
 // the crash: a small high-wing plane nose-down on the beach, its other wing torn off nearby, plus a suitcase
 {
-  const cx=7.5, cz=-6.6, tx=0.66, tz=0.75;            // centre on the sand, and the shoreline direction
+  const cx=7.5*S, cz=-6.6*S, tx=0.66, tz=0.75;            // centre on the sand, and the shoreline direction
   const g=new THREE.Group();
   // fuselage: lathed body, nose at +x, tail at -x, painted with a blue window stripe and an orange line
   const prof=[[0,-3.3],[0.2,-3.25],[0.36,-2.9],[0.62,-2.0],[0.95,-0.9],[1.05,0],[1.05,1.3],[0.98,1.9],[0.8,2.4],[0.5,2.75],[0.2,2.9],[0,2.92]].map(([r,y])=>new THREE.Vector2(r,y));
@@ -135,10 +138,10 @@ function bush(x,z,s=1){const g=new THREE.Group(); const blobs=[[0,0.35,0,0.5],[0
   // the torn-off wing half, lying further along the beach
   const loose=new THREE.Group(); const lw=new THREE.Mesh(new THREE.BoxGeometry(3.0,0.14,1.35),wingM); loose.add(lw);
   const lt=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.15,1.36),std(0xd8344f,0.45)); lt.position.x=1.5; loose.add(lt);
-  loose.rotation.set(0.1,-0.4,0.08); add(loose,4.6,-9.4,0.05); colliders.push({x:4.6,z:-9.4,r:1.0},{x:5.9,z:-10.0,r:0.7},{x:3.3,z:-8.8,r:0.7});
+  loose.rotation.set(0.1,-0.4,0.08); const lx=4.6*S+0.9, lz=-9.4*S+0.6; add(loose,lx,lz,0.05); colliders.push({x:lx,z:lz,r:1.0},{x:lx+1.3,z:lz-0.6,r:0.7},{x:lx-1.3,z:lz+0.6,r:0.7});
   const case_=new THREE.Group(); const cb=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.45,0.25),std(0xd66b4f,0.6)); case_.add(cb);
   const h=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.025,8,16,Math.PI),std(0x333333,0.4)); h.position.y=0.22; case_.add(h); case_.rotation.set(0,0.6,1.35);
-  add(case_,5.7,-4.9,0.15); colliders.push({x:5.7,z:-4.9,r:0.4});
+  add(case_,5.7*S,-4.9*S,0.15); colliders.push({x:5.7*S,z:-4.9*S,r:0.4});
 }
 
 // ---------- things Kai can pick up: sticks, small rocks, shells, fallen coconuts
@@ -154,21 +157,32 @@ function makeWood(){const g=new THREE.Group(); g.add(new THREE.Mesh(new THREE.Bo
 function makeLeaf(){const g=new THREE.Group(); const m=new THREE.Mesh(new THREE.SphereGeometry(1,16,8),leafItemMat); m.scale.set(0.36,0.02,0.1); g.add(m);
   const st=new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.78,5),std(0x8a6a3a,0.8)); st.rotation.z=Math.PI/2; st.position.y=0.014; g.add(st); return g}
 function makeClay(){const m=new THREE.Mesh(new THREE.SphereGeometry(0.075,14,10),clayMat); m.scale.set(1.2,0.75,1); return m}
-const ITEM_R={berry:0.055,coconut:0.12,pebble:0.045,shell:0.01,wood:0.04,leaf:0.02,clay:0.055};
+const ITEM_R={berry:0.055,coconut:0.12,pebble:0.045,shell:0.01,wood:0.04,leaf:0.02,clay:0.055,cwater:0.1,stick:0.03,axe:0.06,shovel:0.03,sharp:0.03,string:0.02,bug:0,butterfly:0.01,box:0,bed:0};
+const lying=g=>{const w=new THREE.Group(); g.rotation.z=Math.PI/2; w.add(g); return w};
+const shrunk=(g,k)=>{g.scale.setScalar(k); const w=new THREE.Group(); w.add(g); return w};
 function makeItemMesh(id,i=0){switch(id){case 'berry':return new THREE.Mesh(berryGeo,berryMat); case 'coconut':return new THREE.Mesh(coconutGeo,coconutMat);
-  case 'pebble':return makePebble(i); case 'shell':return makeShell(i); case 'wood':return makeWood(); case 'leaf':return makeLeaf(); default:return makeClay()}}
+  case 'pebble':return makePebble(i); case 'shell':return makeShell(i); case 'wood':return makeWood(); case 'leaf':return makeLeaf(); case 'clay':return makeClay();
+  case 'stick':return lying(makeStick()); case 'axe':return lying(makeAxe()); case 'shovel':return lying(makeShovel());
+  case 'sharp':{const m=new THREE.Mesh(new THREE.ConeGeometry(0.06,0.16,5),pebbleMats[2]); m.rotation.z=Math.PI/2; m.scale.set(1,1,0.5); const w=new THREE.Group(); w.add(m); return w}
+  case 'string':{const m=new THREE.Mesh(new THREE.TorusGeometry(0.07,0.018,8,20),std(0xd9c08a,0.9)); m.rotation.x=Math.PI/2; const w=new THREE.Group(); w.add(m); return w}
+  case 'cwater':{const c=heldNut.clone(); c.visible=true; return c}
+  case 'bug':return makeBug(0); case 'butterfly':return makeButterfly(0,true);
+  case 'box':return shrunk(makeBox(),0.6); case 'bed':return shrunk(makeBed(),0.45);
+  default:return makeClay()}}
 // throw an item into the air; it lands, bounces once and becomes something to pick up
-function toss(id,x,y,z,vx,vz,vy=1.2,i=0){const m=makeItemMesh(id,i); m.traverse(o=>{if(o.isMesh)o.castShadow=true}); m.position.set(x,y,z); scene.add(m);
-  falling.push({m,id,r:ITEM_R[id]??0.05,vx,vz,vy,bounces:0,spin:id!=='leaf'&&id!=='wood'})}
+function toss(id,x,y,z,vx,vz,vy=1.2,i=0,extra={}){const m=makeItemMesh(id,i); m.traverse(o=>{if(o.isMesh)o.castShadow=true}); m.position.set(x,y,z); scene.add(m);
+  falling.push({m,id,r:ITEM_R[id]??0.05,vx,vz,vy,bounces:0,spin:['berry','coconut','pebble','clay'].includes(id),count:1,...extra})}
+// an item lying on the ground (used for dropped stacks coming back from a save)
+function groundItem(id,x,z,count=1){const m=makeItemMesh(id); m.position.y=ITEM_R[id]??0.05; const g=new THREE.Group(); g.add(m); return placePickup(id,g,x,z,{keep:false,count})}
 const pickups=[]; // {id, obj, x, z, active, respawn, keep}
-function placePickup(id,obj,x,z,{keep=true,yaw=0,y=null}={}){obj.rotation.y=yaw; obj.position.set(x,(y??surface(x,z)),z); obj.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}}); scene.add(obj);
-  const p={id,obj,x,z,active:true,respawn:0,keep}; pickups.push(p); return p}
+function placePickup(id,obj,x,z,{keep=true,yaw=0,y=null,count=1,noAuto=false}={}){obj.rotation.y=yaw; obj.position.set(x,(y??surface(x,z)),z); obj.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}}); scene.add(obj);
+  const p={id,obj,x,z,active:true,respawn:0,keep,count,noAuto}; pickups.push(p); return p}
 // sticks lie near the palms
 palms.forEach((p,i)=>{const a=i*1.9+0.5, d=1.1; const x=p.x+Math.cos(a)*d, z=p.z+Math.sin(a)*d; const s=makeStick(); s.rotation.z=Math.PI/2; const g=new THREE.Group(); g.add(s); s.position.y=0.03; placePickup('stick',g,x,z,{yaw:a})});
 // small rocks scattered on the sand and grass
-[[4.0,-3.6],[6.9,-2.2],[-3.4,-5.6],[-6.0,-2.9],[2.4,5.6],[-0.8,7.2],[-7.8,1.9],[8.4,1.9],[0.6,-5.2],[-4.6,5.8]].forEach(([x,z],i)=>{const m=makePebble(i); m.position.y=0.04; const g=new THREE.Group(); g.add(m); placePickup('pebble',g,x,z,{yaw:i*1.3})});
+[[4.0,-3.6],[6.9,-2.2],[-3.4,-5.6],[-6.0,-2.9],[2.4,5.6],[-0.8,7.2],[-7.8,1.9],[8.4,1.9],[0.6,-5.2],[-4.6,5.8]].map(sp).concat([[-9.8,-2.4],[3.4,-11.4],[7.6,8.8],[-7.2,10.2]]).forEach(([x,z],i)=>{const m=makePebble(i); m.position.y=0.04; const g=new THREE.Group(); g.add(m); placePickup('pebble',g,x,z,{yaw:i*1.3})});
 // shells along the shoreline
-for(let i=0;i<14;i++){const a=i*2.39, r=islandR(a)*0.9; const x=Math.cos(a)*r,z=Math.sin(a)*r; const g=new THREE.Group(); const s=makeShell(i); s.position.y=0.01; g.add(s); placePickup('shell',g,x,z,{yaw:a})}
+for(let i=0;i<20;i++){const a=i*2.39, r=islandR(a)*0.9; const x=Math.cos(a)*r,z=Math.sin(a)*r; const g=new THREE.Group(); const s=makeShell(i); s.position.y=0.01; g.add(s); placePickup('shell',g,x,z,{yaw:a})}
 
 // ---------- items, icons, recipes
 const ITEMS={
@@ -186,6 +200,7 @@ const ITEMS={
   string:{name:'String',max:30},
   clay:{name:'Clay',max:30},
   bug:{name:'Bug',max:10,note:'Kai would rather keep the bug than eat it'},
+  butterfly:{name:'Butterfly',max:10,note:'Kai likes watching the butterfly flap its wings'},
   box:{name:'Box',max:5,place:true},
   bed:{name:'Bed',max:2,place:true},
 };
@@ -205,6 +220,7 @@ ICONS.leaf=`<svg viewBox="0 0 32 32"><path d="M4 28C10 16 18 8 28 4" stroke="#8a
 ICONS.string=`<svg viewBox="0 0 32 32"><ellipse cx="16" cy="16" rx="10" ry="9" fill="none" stroke="#d9c08a" stroke-width="3"/><ellipse cx="16" cy="16" rx="5.5" ry="5" fill="none" stroke="#c4a86a" stroke-width="3"/><path d="M25 19c2 3 3 6 1 9" stroke="#d9c08a" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
 ICONS.clay=`<svg viewBox="0 0 32 32"><path d="M5 21c0-6 5-10 11-10 7 0 11 4 11 9 0 5-5 7-11 7S5 26 5 21z" fill="#c7775a"/><path d="M10 16c2-2 5-3 8-3" stroke="#e2a184" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`;
 ICONS.bug=`<svg viewBox="0 0 32 32"><path d="M9 13l-4-3M9 18H4M10 23l-4 3M23 13l4-3M23 18h5M22 23l4 3" stroke="#222" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="9" r="4" fill="#222"/><ellipse cx="16" cy="19" rx="8" ry="9" fill="#d8344f"/><path d="M16 10v18" stroke="#222" stroke-width="1.5"/><circle cx="12.5" cy="17" r="1.8" fill="#222"/><circle cx="19.5" cy="17" r="1.8" fill="#222"/><circle cx="13" cy="23" r="1.5" fill="#222"/><circle cx="19" cy="23" r="1.5" fill="#222"/></svg>`;
+ICONS.butterfly=`<svg viewBox="0 0 32 32"><path d="M15 15C11 6 3 5 3 11c0 4 4 6 12 5z" fill="#f28c28"/><path d="M17 15c4-9 12-10 12-4 0 4-4 6-12 5z" fill="#f28c28"/><path d="M15 17c-6 0-10 3-8 7 2 3 6 1 8-6zM17 17c6 0 10 3 8 7-2 3-6 1-8-6z" fill="#f5b041"/><circle cx="8" cy="11" r="1.8" fill="#fff3dc"/><circle cx="24" cy="11" r="1.8" fill="#fff3dc"/><rect x="15" y="9" width="2.4" height="15" rx="1.2" fill="#3b2a1a"/><path d="M15.5 9.5L12 5M17 9.5l3.5-4.5" stroke="#3b2a1a" stroke-width="1.3" stroke-linecap="round"/></svg>`;
 ICONS.box=`<svg viewBox="0 0 32 32"><rect x="4" y="10" width="24" height="18" rx="2" fill="#c8935f"/><rect x="3" y="6" width="26" height="6" rx="2" fill="#a8754a"/><path d="M5 17h22M5 23h22" stroke="#a8754a" stroke-width="1.6"/><rect x="14" y="10" width="4" height="5" rx="1" fill="#6b7477"/></svg>`;
 ICONS.bed=`<svg viewBox="0 0 32 32"><rect x="3" y="9" width="4" height="17" rx="1.5" fill="#a8754a"/><rect x="5" y="18" width="24" height="6" rx="1.5" fill="#c8935f"/><rect x="7" y="14" width="22" height="5" rx="2.5" fill="#6fbf5f"/><ellipse cx="11" cy="13" rx="4" ry="2.2" fill="#a6d98f"/><rect x="26" y="20" width="3" height="6" fill="#a8754a"/></svg>`;
 
@@ -273,18 +289,21 @@ const blob=new THREE.Mesh(new THREE.CircleGeometry(0.28,24),new THREE.MeshBasicM
 blob.rotation.x=-Math.PI/2; scene.add(blob);
 
 // ---------- inventory
-const SLOTS=8; const inv=Array.from({length:SLOTS},()=>null); let sel=0;
+const SLOTS=10; const inv=Array.from({length:SLOTS},()=>null); let sel=0;
 let food=75, water=70;
 const hotbar=document.getElementById('hotbar');
 const selName=document.getElementById('selName');
 function countOf(id){return inv.reduce((a,s)=>a+(s&&s.id===id?s.count:0),0)}
 function canAdd(id){return inv.some(s=>!s||(s.id===id&&s.count<ITEMS[id].max))}
+function roomFor(id){return inv.reduce((a,s)=>a+(!s?ITEMS[id].max:s.id===id?ITEMS[id].max-s.count:0),0)}
+const plural=(id,n)=>{const nm=ITEMS[id].name.toLowerCase(); return n===1||/(s|wood|clay|string|water)$/.test(nm)?nm:nm.replace(/y$/,'ie')+'s'};
+const FULL='Your pockets are full. Drag a pocket up off the bar to drop it';
 // put n of an item into a list of slots (pockets or a box); returns how many did not fit
 function fitInto(arr,id,n){
   for(const s of arr){ if(n&&s&&s.id===id&&s.count<ITEMS[id].max){const k=Math.min(n,ITEMS[id].max-s.count); s.count+=k; n-=k} }
   while(n>0){const i=arr.findIndex(s=>!s); if(i<0) break; const k=Math.min(n,ITEMS[id].max); arr[i]={id,count:k}; n-=k}
   return n}
-function addItem(id,n=1){ n=fitInto(inv,id,n); renderInv(); bumpItem(id); if(n>0) toast('Your pockets are full'); return n===0 }
+function addItem(id,n=1){ n=fitInto(inv,id,n); renderInv(); bumpItem(id); if(n>0) toast(FULL); return n===0 }
 function takeFromSlot(i,n=1){const s=inv[i]; if(!s) return null; s.count-=n; const id=s.id; if(s.count<=0) inv[i]=null; renderInv(); return id}
 function takeItem(id,n=1){for(let i=inv.length-1;i>=0&&n>0;i--){const s=inv[i]; if(s&&s.id===id){const k=Math.min(n,s.count); s.count-=k; n-=k; if(!s.count) inv[i]=null}} renderInv()}
 const held=()=>inv[sel]?.id||null;
@@ -295,8 +314,33 @@ function slotLabel(s){return s?`${ITEMS[s.id].name}, ${s.count}`:'Empty'}
 function buildSlots(){
   hotbar.innerHTML='';
   for(let i=0;i<SLOTS;i++){const b=document.createElement('button'); b.type='button'; b.className='slot'; b.dataset.i=i;
-    b.addEventListener('click',()=>tapSlot(i)); hotbar.appendChild(b)}
+    b.addEventListener('click',()=>{ if(dragJustEnded) return; tapSlot(i) });
+    b.addEventListener('pointerdown',e=>slotDown(e,i,b)); hotbar.appendChild(b)}
 }
+let slotDrag=null, dragJustEnded=false; const dragGhost=document.getElementById('dragGhost');
+function slotDown(e,i,b){ if(!started||sleep||!inv[i]||slotDrag) return; slotDrag={i,id:e.pointerId,x:e.clientX,y:e.clientY,on:false};
+  try{b.setPointerCapture(e.pointerId)}catch(_){}
+  const move=ev=>{ if(!slotDrag||ev.pointerId!==slotDrag.id) return;
+    if(!slotDrag.on&&Math.hypot(ev.clientX-slotDrag.x,ev.clientY-slotDrag.y)>12){ slotDrag.on=true; dragGhost.innerHTML=slotHTML(inv[i]); dragGhost.hidden=false; b.classList.add('lifted') }
+    if(slotDrag.on){ dragGhost.style.transform=`translate(${ev.clientX}px,${ev.clientY}px)`; const r=hotbar.getBoundingClientRect(); dragGhost.classList.toggle('drop',ev.clientY<r.top-10) } };
+  const up=ev=>{ if(!slotDrag||ev.pointerId!==slotDrag.id) return; b.removeEventListener('pointermove',move); b.removeEventListener('pointerup',up); b.removeEventListener('pointercancel',up);
+    const d=slotDrag; slotDrag=null; dragGhost.hidden=true; dragGhost.classList.remove('drop'); b.classList.remove('lifted');
+    if(!d.on||ev.type==='pointercancel') return;
+    dragJustEnded=true; setTimeout(()=>dragJustEnded=false,0);
+    const r=hotbar.getBoundingClientRect();
+    const over=[...hotbar.querySelectorAll('.slot')].findIndex(el=>{const q=el.getBoundingClientRect(); return ev.clientX>=q.left&&ev.clientX<=q.right&&ev.clientY>=q.top-8&&ev.clientY<=q.bottom+8});
+    if(over>=0&&over!==d.i){ swapSlots(d.i,over); return }
+    if(ev.clientY<r.top-10) dropSlot(d.i) };
+  b.addEventListener('pointermove',move); b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up);
+}
+function swapSlots(a,b){ const t=inv[a]; inv[a]=inv[b]; inv[b]=t; if(sel===a) sel=b; else if(sel===b) sel=a; renderInv(); saveSoon() }
+// drop a whole stack just in front of Kai, as one pile he can pick back up
+function dropSlot(i){ const s=inv[i]; if(!s||!started||sleep) return;
+  let x=pos.x+Math.sin(facing)*0.7, z=pos.z+Math.cos(facing)*0.7;
+  if(height(x,z)<0.02||!freeSpot(x,z,0.05)){x=pos.x; z=pos.z}
+  inv[i]=null; renderInv();
+  toss(s.id,x,pos.y+0.6,z,Math.sin(facing)*0.4,Math.cos(facing)*0.4,1.0,0,{count:s.count,noAuto:true});
+  const nm=ITEMS[s.id].name.toLowerCase(); toast(s.count>1?`Dropped ${s.count} ${plural(s.id,s.count)}`:`Dropped the ${nm}`); saveSoon() }
 function renderInv(){
   hotbar.querySelectorAll('.slot').forEach((b,i)=>{const s=inv[i]; b.innerHTML=slotHTML(s); b.classList.toggle('sel',!!(i===sel&&s&&ITEMS[s.id].tool));
     b.classList.toggle('food',!!(s&&ITEMS[s.id].verb)); b.setAttribute('aria-label',`${slotLabel(s)}${s&&ITEMS[s.id].verb?', tap to '+ITEMS[s.id].verb.toLowerCase():''}`)});
@@ -307,8 +351,9 @@ function bumpItem(id){const i=inv.findIndex(s=>s&&s.id===id); const b=hotbar.que
 let selNameTimer=0;
 function showName(text){selName.textContent=text; selName.style.opacity=1; clearTimeout(selNameTimer); selNameTimer=setTimeout(()=>selName.style.opacity=0,1800)}
 // tapping a pocket does the obvious thing: eat or drink it, put a box or bed down, or hold a tool
+let lastSlot=0;
 function tapSlot(i){
-  if(!started||sleep) return;
+  if(!started||sleep) return; lastSlot=i;
   const s=inv[i]; if(!s){showName('Empty pocket'); return}
   const it=ITEMS[s.id];
   if(it.verb) return eatSlot(i);
@@ -358,7 +403,7 @@ function buildMake(){
     if(!canMake(r)){const miss=Object.entries(r.need).filter(([k,n])=>countOf(k)<n).map(([k,n])=>`${n-countOf(k)} more ${ITEMS[k].name.toLowerCase()}`); toast(`You need ${miss.join(' and ')}`); return}
     // check there is room first, counting the pockets the ingredients free up
     const trial=inv.map(s=>s&&{...s}); Object.entries(r.need).forEach(([k,n])=>{for(let j=trial.length-1;j>=0&&n>0;j--){const s=trial[j]; if(s&&s.id===k){const q=Math.min(n,s.count); s.count-=q; n-=q; if(!s.count) trial[j]=null}}});
-    if(fitInto(trial,r.out,r.n)>0){toast('Your pockets are full'); return}
+    if(fitInto(trial,r.out,r.n)>0){toast(FULL); return}
     Object.entries(r.need).forEach(([k,n])=>takeItem(k,n));
     fitInto(inv,r.out,r.n); renderInv(); bumpItem(r.out);
     b.classList.remove('made'); void b.offsetWidth; b.classList.add('made');
@@ -399,7 +444,8 @@ addEventListener('keydown',e=>{
   if(e.repeat) return;
   if(e.code==='KeyE') actionQueued=true;
   if(e.code==='KeyF') eatSomething();
-  const m=/^Digit([1-8])$/.exec(e.code); if(m) tapSlot(+m[1]-1);
+  const m=/^Digit([0-9])$/.exec(e.code); if(m) tapSlot((+m[1]+9)%10);
+  if(e.code==='KeyQ') dropSlot(lastSlot);
 });
 addEventListener('keyup',e=>keys.delete(e.code));
 addEventListener('blur',()=>keys.clear());
@@ -442,13 +488,16 @@ document.addEventListener('touchmove',e=>{if(!e.target.closest('.craftPanel')) e
 const promptEl=document.getElementById('prompt'), promptText=document.getElementById('promptText');
 let reach=0, swingT=-1, swingTarget=null; const flying=[], falling=[];
 function flyToKai(obj,onArrive){flying.push({obj,from:obj.position.clone(),t:0,onArrive})}
-function pickBerry(b){const br=b.berries.find(x=>x.ready); if(!br) return; if(!canAdd('berry')){toast('Your pockets are full'); return}
+function pickBerry(b){const br=b.berries.find(x=>x.ready); if(!br) return; if(!canAdd('berry')){toast(FULL); return}
   br.ready=false; br.regrow=40; br.mesh.visible=false; b.shake=Math.max(b.shake,0.6); reach=0.35;
   const m=new THREE.Mesh(berryGeo,berryMat); br.mesh.getWorldPosition(m.position); scene.add(m); flyToKai(m,()=>{addItem('berry'); toast('+1 berry')})}
-function grab(p){ if(!canAdd(p.id)){toast('Your pockets are full'); return}
-  p.active=false; reach=0.35; const obj=p.obj; const copy=obj.clone(); scene.add(copy); obj.visible=false;
-  if(p.keep) p.respawn=90; else {scene.remove(obj); pickups.splice(pickups.indexOf(p),1)}
-  flyToKai(copy,()=>{addItem(p.id); toast(`+1 ${ITEMS[p.id].name.toLowerCase()}`)})}
+function grab(p){ const n=Math.min(p.count||1,roomFor(p.id)); if(n<=0){toast(FULL); return}
+  reach=0.35; const obj=p.obj; const copy=obj.clone(); scene.add(copy);
+  const nm=ITEMS[p.id].name.toLowerCase();
+  if(n<(p.count||1)){ p.count-=n; p.noAuto=true; flyToKai(copy,()=>{addItem(p.id,n); toast(`+${n} ${plural(p.id,n)}. Your pockets are full`)}); saveSoon(); return }
+  p.active=false; obj.visible=false;
+  if(p.keep) p.respawn=90; else {scene.remove(obj); pickups.splice(pickups.indexOf(p),1); saveSoon()}
+  flyToKai(copy,()=>{addItem(p.id,n); toast(`+${n} ${plural(p.id,n)}`)})}
 // swing whatever tool is in hand: stick (whack palms, smack bushes), ax (chop palms and logs), shovel (dig sand)
 let swingTool=null;
 function startSwing(kind){ if(swingT>=0) return; swingT=0; swingTool=held(); swingTarget=kind==='dig'?{kind:'dig',...digSpot()}:swingTargetNear(swingTool) }
@@ -541,11 +590,45 @@ function makeBug(kind){const [c,dot]=bugColors[kind]; const g=new THREE.Group();
   g.traverse(o=>{if(o.isMesh)o.castShadow=true}); g.userData.legs=legs; return g}
 function spawnBug(x,z,kind){const g=makeBug(kind); scene.add(g); bugs.push({g,x,z,dir:Math.random()*Math.PI*2,t:0,pause:false,flee:false})}
 function freeSpot(x,z,room){return !colliders.some(c=>!c.off&&Math.hypot(x-c.x,z-c.z)<c.r+room)}
-function randomLand(){for(let k=0;k<60;k++){const a=Math.random()*Math.PI*2, r=1+Math.random()*8.5, x=Math.cos(a)*r, z=Math.sin(a)*r; if(height(x,z)>0.15&&rockTop(x,z)<-1e3&&freeSpot(x,z,0.3)) return [x,z]} return [0,0]}
+function randomLand(){for(let k=0;k<60;k++){const a=Math.random()*Math.PI*2, r=1+Math.random()*12, x=Math.cos(a)*r, z=Math.sin(a)*r; if(height(x,z)>0.15&&rockTop(x,z)<-1e3&&freeSpot(x,z,0.3)) return [x,z]} return [0,0]}
 const BUG_COUNT=6; let bugSpawnT=0;
 for(let i=0;i<BUG_COUNT;i++){const [x,z]=randomLand(); spawnBug(x,z,i%bugColors.length)}
-function catchBug(b){ if(!canAdd('bug')){toast('Your pockets are full'); return}
+function catchBug(b){ if(!canAdd('bug')){toast(FULL); return}
   bugs.splice(bugs.indexOf(b),1); reach=0.35; flyToKai(b.g,()=>{addItem('bug'); toast('Caught a bug!')})}
+// ---- butterflies flutter between the bushes and rest on top; walk up gently to catch one
+const butterflies=[]; const flyColors=[[0xf28c28,0xf5b041],[0x4a8fe0,0x8cc4f5],[0xf5d33c,0xfff08a]];
+const flyBodyM=std(0x3b2a1a,0.6);
+function makeButterfly(kind,still=false){const [a,b]=flyColors[kind]; const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.012,0.07,4,8),flyBodyM); body.rotation.x=Math.PI/2; g.add(body);
+  const mA=new THREE.MeshStandardMaterial({color:a,roughness:0.5,side:THREE.DoubleSide}), mB=new THREE.MeshStandardMaterial({color:b,roughness:0.5,side:THREE.DoubleSide});
+  const wings=[]; for(const sx of [1,-1]){const piv=new THREE.Group();
+    const up=new THREE.Mesh(new THREE.CircleGeometry(1,18),mA); up.rotation.x=-Math.PI/2; up.scale.set(0.07,0.055,1); up.position.set(sx*0.065,0,0.025); piv.add(up);
+    const lo=new THREE.Mesh(new THREE.CircleGeometry(1,16),mB); lo.rotation.x=-Math.PI/2; lo.scale.set(0.045,0.04,1); lo.position.set(sx*0.045,0.001,-0.035); piv.add(lo);
+    piv.userData.sx=sx; g.add(piv); wings.push(piv)}
+  if(still) wings.forEach(w=>w.rotation.z=w.userData.sx*1.3);
+  g.traverse(o=>{if(o.isMesh)o.castShadow=true}); g.userData.wings=wings; return g}
+function bushTop(b){return {x:b.x+(Math.random()-0.5)*0.3*b.s,y:height(b.x,b.z)+0.82*b.s,z:b.z+(Math.random()-0.5)*0.3*b.s}}
+function spawnButterfly(kind){const b=bushes[Math.floor(Math.random()*bushes.length)]; const t=bushTop(b); const g=makeButterfly(kind); g.scale.setScalar(1.8); scene.add(g);
+  const f={g,kind,x:t.x,y:t.y+1.5,z:t.z,mode:'fly',to:t,bush:b,t:0,ph:Math.random()*6}; g.position.set(f.x,f.y,f.z); butterflies.push(f); return f}
+const FLY_COUNT=4; let flySpawnT=0;
+for(let i=0;i<FLY_COUNT;i++) spawnButterfly(i%flyColors.length);
+function flyOff(f,away){ let b=f.bush; for(let k=0;k<6&&b===f.bush;k++) b=bushes[Math.floor(Math.random()*bushes.length)];
+  f.bush=b; f.to=bushTop(b); f.mode='fly'; f.t=0; f.fast=!!away }
+function catchButterfly(f){ if(!canAdd('butterfly')){toast(FULL); return}
+  butterflies.splice(butterflies.indexOf(f),1); reach=0.35; flyToKai(f.g,()=>{addItem('butterfly'); toast('Caught a butterfly!')})}
+function updateButterflies(dt,t){
+  for(const f of butterflies){ f.ph+=dt;
+    const dk=Math.hypot(pos.x-f.x,pos.z-f.z);
+    if(f.mode==='rest'){ f.t-=dt; if(f.t<=0||(dk<1.6&&speed>4.2)) flyOff(f,f.t>0) }
+    if(f.mode==='fly'){ const dx=f.to.x-f.x, dy=f.to.y+0.5*Math.min(1,Math.hypot(f.to.x-f.x,f.to.z-f.z)/2)-f.y, dz=f.to.z-f.z, d=Math.hypot(dx,dz);
+      const v=f.fast?2.2:1.1; if(d<0.05&&Math.abs(f.to.y-f.y)<0.06){ f.mode='rest'; f.t=4+Math.random()*6; f.fast=false; f.x=f.to.x; f.y=f.to.y; f.z=f.to.z }
+      else { const k=Math.min(1,v*dt/Math.max(d,0.001)); f.x+=dx*k; f.z+=dz*k; f.y+=dy*Math.min(1,dt*2.5)+Math.sin(f.ph*7)*0.012; f.g.rotation.y=Math.atan2(dx,dz)+Math.sin(f.ph*3)*0.3 } }
+    f.g.position.set(f.x,f.y,f.z);
+    const flap=f.mode==='fly'?0.25+Math.abs(Math.sin(f.ph*(f.fast?26:18)))*1.15:1.25+Math.sin(f.ph*2.2)*0.2;
+    f.g.userData.wings.forEach(w=>w.rotation.z=w.userData.sx*(reduced&&f.mode==='fly'?0.8:flap));
+  }
+  if(butterflies.length<FLY_COUNT){ flySpawnT-=dt; if(flySpawnT<=0){ flySpawnT=40; spawnButterfly(Math.floor(Math.random()*flyColors.length)) } }
+}
 // ---- putting a box or bed down
 const placed=[];
 function makeBox(){const g=new THREE.Group(); const body=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.36,0.42),woodMat); body.position.y=0.18; g.add(body);
@@ -582,9 +665,10 @@ function startSleep(bed){ sleep={t:0,bed,zz:0}; keys.clear(); stickEnd(); speed=
 // what can Kai do right here? Picks the right tool by itself.
 function findAction(){
   let best=null, bd=1e9; const has=id=>countOf(id)>0;
-  for(const p of pickups){ if(!p.active) continue; const d=Math.hypot(pos.x-p.x,pos.z-p.z); if(d<1.0&&d<bd&&Math.abs(pos.y-p.obj.position.y)<0.8){bd=d;best={kind:'grab',p,label:`Pick up the ${ITEMS[p.id].name.toLowerCase()}`,short:'Grab',icon:p.id}} }
+  for(const p of pickups){ if(!p.active) continue; const d=Math.hypot(pos.x-p.x,pos.z-p.z); if(d<1.0&&d<bd&&Math.abs(pos.y-p.obj.position.y)<0.8){bd=d;best={kind:'grab',p,label:p.count>1?`Pick up ${p.count} ${plural(p.id,p.count)}`:`Pick up the ${ITEMS[p.id].name.toLowerCase()}`,short:'Grab',icon:p.id}} }
   if(best) return best;
   for(const b of bugs){ const d=Math.hypot(pos.x-b.x,pos.z-b.z); if(d<1.0&&d<bd){bd=d;best={kind:'bug',b,label:'Catch the bug',short:'Catch',icon:'bug'}} }
+  for(const f of butterflies){ const d=Math.hypot(pos.x-f.x,pos.z-f.z); if(d<1.1&&f.y-pos.y<1.5&&d<bd){bd=d;best={kind:'fly',f,label:'Catch the butterfly',short:'Catch',icon:'butterfly'}} }
   if(best) return best;
   for(const o of placed){ const d=Math.hypot(pos.x-o.x,pos.z-o.z); if(d<(o.kind==='bed'?1.2:1.05)&&d<bd){bd=d;best=o.kind==='box'?{kind:'open',o,label:'Open the box',short:'Open',icon:'box'}:{kind:'sleep',o,label:'Sleep in the bed',short:'Sleep',icon:'bed'}} }
   if(best) return best;
@@ -604,7 +688,7 @@ function findAction(){
 }
 
 // ---------- player state
-const pos=new THREE.Vector3(4.6,0,-5.6); pos.y=height(pos.x,pos.z);
+const pos=new THREE.Vector3(4.6*S,0,-5.6*S); pos.y=height(pos.x,pos.z);
 let vy=0, grounded=true, facing=-0.69, speed=0, phase=0;
 const camTarget=new THREE.Vector3(); const camPos=new THREE.Vector3(); const camDir=new THREE.Vector3(); const ray=new THREE.Raycaster();
 
@@ -638,12 +722,13 @@ addEventListener('resize',resize); resize();
 
 // ---------- saving: pockets, food, water and anything put down are kept on the tablet
 const SAVE_KEY='upgrade-island-save-v1'; let noSave=false, saveT=0;
-function saveGame(){ if(noSave||!started) return; try{ localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,inv,food,water,placed:placed.map(o=>({kind:o.kind,x:o.x,z:o.z,yaw:o.yaw,slots:o.slots}))})) }catch(e){} }
+function saveGame(){ if(noSave||!started) return; try{ localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,inv,food,water,placed:placed.map(o=>({kind:o.kind,x:o.x,z:o.z,yaw:o.yaw,slots:o.slots})),drops:pickups.filter(p=>p.active&&!p.keep).map(p=>({id:p.id,x:p.x,z:p.z,count:p.count||1}))})) }catch(e){} }
 function saveSoon(){ saveT=0.5 }
 function loadGame(){ try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(!s||s.v!==1) return false;
     s.inv.forEach((x,i)=>{ if(i<SLOTS) inv[i]=x&&ITEMS[x.id]?{id:x.id,count:Math.min(x.count,ITEMS[x.id].max)}:null });
     food=Math.max(30,+s.food||0); water=Math.max(30,+s.water||0);   // coming back is never a bad start
     (s.placed||[]).forEach(o=>{ if(o.kind==='box'||o.kind==='bed') placeAt(o.kind,o.x,o.z,o.yaw,o.slots) });
+    (s.drops||[]).slice(0,80).forEach(d=>{ if(ITEMS[d.id]&&isFinite(d.x)&&isFinite(d.z)) groundItem(d.id,d.x,d.z,Math.max(1,Math.min(+d.count||1,99))) });
     return true }catch(e){ return false } }
 setInterval(saveGame,5000);
 addEventListener('visibilitychange',()=>{ if(document.hidden) saveGame() });
@@ -734,7 +819,7 @@ function tick(){
   for(let i=falling.length-1;i>=0;i--){const f=falling[i]; f.vy-=14*dt; f.m.position.x+=f.vx*dt; f.m.position.z+=f.vz*dt; f.m.position.y+=f.vy*dt; if(f.spin!==false) f.m.rotation.x+=dt*6;
     const g=surface(f.m.position.x,f.m.position.z)+f.r;
     if(f.m.position.y<=g){f.m.position.y=g; if(f.bounces<1&&f.vy<-2){f.vy*=-0.35;f.vx*=0.5;f.vz*=0.5;f.bounces++} else {falling.splice(i,1); scene.remove(f.m);
-      const x=f.m.position.x, z=f.m.position.z, grp=new THREE.Group(); f.m.position.set(0,f.r,0); f.m.rotation.set(0,Math.random()*6,0); grp.add(f.m); placePickup(f.id,grp,x,z,{keep:false})}}}
+      const x=f.m.position.x, z=f.m.position.z, grp=new THREE.Group(); f.m.position.set(0,f.r,0); f.m.rotation.set(0,Math.random()*6,0); grp.add(f.m); placePickup(f.id,grp,x,z,{keep:false,count:f.count,noAuto:f.noAuto}); if(f.count>1) saveSoon()}}}
   // logs wobble when chopped, dug holes fill back in
   for(const l of logs){ l.shake=Math.max(0,l.shake-dt*3); l.g.rotation.x=Math.sin(t*40)*0.06*l.shake }
   for(let i=holes.length-1;i>=0;i--){const h=holes[i]; h.t-=dt; h.m.material.opacity=0.6*Math.min(1,h.t/5); if(h.t<=0){scene.remove(h.m); holes.splice(i,1)}}
@@ -749,20 +834,22 @@ function tick(){
     b.g.userData.legs.forEach((l,i)=>l.rotation.x=v>0?Math.sin(t*(b.flee?50:30)+i*2)*0.7:0);
   }
   if(bugs.length<BUG_COUNT){ bugSpawnT-=dt; if(bugSpawnT<=0){ bugSpawnT=30; const [x,z]=randomLand(); spawnBug(x,z,Math.floor(Math.random()*bugColors.length)) } }
+  updateButterflies(dt,t);
   // things flying into Kai's pockets
   for(let i=flying.length-1;i>=0;i--){const f=flying[i]; f.t+=dt/0.35; const to=new THREE.Vector3(pos.x,pos.y+0.45,pos.z);
     f.obj.position.lerpVectors(f.from,to,Math.min(1,f.t)); f.obj.position.y+=Math.sin(Math.min(1,f.t)*Math.PI)*0.35; f.obj.scale.setScalar(1-Math.min(1,f.t)*0.5);
     if(f.t>=1){scene.remove(f.obj); flying.splice(i,1); f.onArrive()}}
 
   // walking over sticks, rocks and shells picks them up
-  if(started&&!crafting&&!storeOpen&&!sleep) for(const p of pickups){ if(p.active&&Math.hypot(pos.x-p.x,pos.z-p.z)<0.6&&Math.abs(pos.y-p.obj.position.y)<0.8&&canAdd(p.id)){grab(p); break} }
+  for(const p of pickups) if(p.noAuto&&Math.hypot(pos.x-p.x,pos.z-p.z)>1.1) p.noAuto=false;
+  if(started&&!crafting&&!storeOpen&&!sleep) for(const p of pickups){ if(p.active&&!p.noAuto&&Math.hypot(pos.x-p.x,pos.z-p.z)<0.6&&Math.abs(pos.y-p.obj.position.y)<0.8&&canAdd(p.id)){grab(p); break} }
   // context action: one big button that changes to fit what is nearby
   const act=(!started||crafting||storeOpen||sleep||eating||swingT>=0)?null:findAction();
   const label=act?act.label+'|'+(act.short||''):'';
   if(label!==lastPrompt){lastPrompt=label; promptEl.hidden=!act; if(act) promptText.textContent=act.label; setActBtn(act)}
   if(actionQueued&&swingT<0&&!eating){actionQueued=false; if(act&&act.short){ const k=act.kind; if(act.tool) equip(act.tool);
     if(k==='grab') grab(act.p); else if(k==='berry') pickBerry(act.b); else if(k==='swing') startSwing('swing'); else if(k==='dig') startSwing('dig');
-    else if(k==='bug') catchBug(act.b); else if(k==='open') openStore(act.o); else if(k==='sleep') startSleep(act.o) }}
+    else if(k==='bug') catchBug(act.b); else if(k==='fly') catchButterfly(act.f); else if(k==='open') openStore(act.o); else if(k==='sleep') startSleep(act.o) }}
   if(swingT>=0){const before=swingT; swingT+=dt; if(before<0.2&&swingT>=0.2) onSwingHit(swingTarget); if(swingT>0.45){swingT=-1;swingTarget=null;swingTool=null}}
 
   // needs slowly drop
@@ -819,4 +906,4 @@ camTarget.set(pos.x,pos.y+0.75,pos.z);
 requestAnimationFrame(tick);
 window.__game={setNeeds(f,w){food=f;water=w},get mood(){return mood},keys,get pos(){return pos},get ready(){return ready},inv,get food(){return food},get water(){return water},get sel(){return sel},palms,pickups,bushes,surface,
   teleport(x,z,f){pos.set(x,surface(x,z),z);if(f!==undefined){facing=f;camYaw=f+Math.PI}},cam(yaw,pitch,dist){camYaw=yaw;camPitch=pitch;camDist=dist},addItem,
-  bugs,logs,placed,get sleeping(){return !!sleep},get store(){return storeOpen},tapSlot,act(){actionQueued=true},get started(){return started}};
+  bugs,butterflies,logs,placed,dropSlot,swapSlots,get sleeping(){return !!sleep},get store(){return storeOpen},tapSlot,act(){actionQueued=true},get started(){return started}};

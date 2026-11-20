@@ -21,7 +21,7 @@
   --font:ui-rounded,"SF Pro Rounded","Nunito","Trebuchet MS",system-ui,sans-serif;
   --l:max(20px,env(safe-area-inset-left,0px)); --r:max(20px,env(safe-area-inset-right,0px));
   --t:max(14px,env(safe-area-inset-top,0px)); --b:max(16px,env(safe-area-inset-bottom,0px));
-  --slot:clamp(48px,calc((100vw - 500px) / 8.8),76px);
+  --slot:clamp(36px,calc((100vw - 420px) / 10),76px);
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -56,6 +56,13 @@ button{font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color
 .slot:active{transform:scale(.94)}
 .slot .count{position:absolute;right:5px;bottom:1px;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;text-shadow:0 0 3px #fff}
 .slot.bump{animation:bump .35s ease}
+.hotbar .slot{touch-action:none}
+.slot.lifted{opacity:.35}
+.dragGhost{position:fixed;left:0;top:0;width:var(--slot);height:var(--slot);margin:calc(var(--slot) / -2) 0 0 calc(var(--slot) / -2);border-radius:14px;background:rgba(255,255,255,.9);border:3px solid var(--sun);display:grid;place-items:center;pointer-events:none;z-index:20;box-shadow:0 6px 18px rgba(33,50,61,.3)}
+.dragGhost svg{width:70%;height:70%}
+.dragGhost .count{position:absolute;right:5px;bottom:1px;font-weight:800;font-size:16px}
+.dragGhost.drop{border-color:var(--berry);transform-origin:center}
+.dragGhost.drop::after{content:'Drop';position:absolute;top:-30px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff8ea;border-radius:999px;padding:3px 10px;font-size:14px;white-space:nowrap}
 @keyframes bump{40%{transform:scale(1.18)}}
 .selName{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--b) + var(--slot) + 30px);font-size:18px;color:var(--ink);text-shadow:0 1px 0 rgba(255,251,240,.9);pointer-events:none;white-space:nowrap;transition:opacity .5s;opacity:0}
 .prompt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--b) + var(--slot) + 62px);background:rgba(33,50,61,.55);color:#fff8ea;border-radius:999px;padding:5px 14px;font-size:16px;pointer-events:none;white-space:nowrap}
@@ -138,6 +145,7 @@ button{font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color
 <div class="prompt" id="prompt" hidden><span id="promptText"></span></div>
 <div class="selName" id="selName"></div>
 <div class="hotbar card" id="hotbar" aria-label="Pockets"></div>
+<div class="dragGhost" id="dragGhost" hidden aria-hidden="true"></div>
 <div id="stick" aria-hidden="true"><div id="knob"></div></div>
 <button id="jumpBtn" class="round" type="button" aria-label="Jump"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 5l10 11h-6v10h-8V16H6z" fill="#21323d"/></svg></button>
 <button id="actBtn" class="round idle" type="button"></button>
