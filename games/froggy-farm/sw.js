@@ -3,7 +3,7 @@
  * offline, it answers from the saved copy. It only ever touches its own caches, because
  * it can share a website with other games. */
 const PREFIX = 'froggy-farm-';
-const CACHE = PREFIX + 'v9';
+const CACHE = PREFIX + 'v10';
 const ASSETS = [
   './', './index.html', './style.css', './js/audio.js', './js/app.js', './js/kit.js', './js/games/frog.js', './js/games/icecream.js',
   './js/games/pumpkin.js',

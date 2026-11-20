@@ -32,18 +32,30 @@
       { name: 'Triangle eyes!', d: 'M-30 18 L0 -26 L30 18Z' },
       { name: 'Heart eyes!', d: shapes.heart(26), fx: 'hearts' },
       { name: 'Star eyes!', d: starPath(34, 15), fx: 'stars' },
+      { name: 'Sleepy eyes!', d: 'M-30 -6 Q0 34 30 -6Z' },
+      { name: 'Square eyes!', d: 'M-22 -22 H22 V22 H-22Z' },
+      { name: 'Moon eyes!', d: 'M6 -28 A28 28 0 0 0 6 28 A9 28 0 0 1 6 -28Z', fx: 'stars' },
+      { name: 'Diamond eyes!', d: 'M0 -30 L24 0 L0 30 L-24 0Z' },
     ],
     nose: [
       { name: 'Triangle nose!', d: 'M-18 14 L0 -16 L18 14Z' },
       { name: 'Round nose!', d: shapes.dot(15) },
       { name: 'Heart nose!', d: shapes.heart(17), fx: 'hearts' },
       { name: 'Star nose!', d: starPath(22, 10), fx: 'stars' },
+      { name: 'Piggy nose!', d: 'M-21 0 a8 10 0 1 0 16 0 a8 10 0 1 0 -16 0Z M5 0 a8 10 0 1 0 16 0 a8 10 0 1 0 -16 0Z' },
+      { name: 'Square nose!', d: 'M-13 -13 H13 V13 H-13Z' },
+      { name: 'Upside down nose!', d: 'M-18 -14 L18 -14 L0 16Z' },
+      { name: 'Moon nose!', d: 'M4 -17 A17 17 0 0 0 4 17 A6 17 0 0 1 4 -17Z', fx: 'stars' },
     ],
     mouth: [
       { name: 'Big smile!', d: 'M-80 -14 Q0 62 80 -14 Q0 22 -80 -14Z', line: 'Happy Halloween!' },
       { name: 'Toothy grin!', d: 'M-84 -18 L-62 -2 L-44 -16 L-22 0 L0 -14 L22 0 L44 -16 L62 -2 L84 -18 Q0 70 -84 -18Z', line: 'Ha ha ha!' },
       { name: 'Ooh mouth!', d: 'M-30 0 a30 34 0 1 0 60 0 a30 34 0 1 0 -60 0Z', line: 'Ooooooh!' },
       { name: 'Silly tongue!', d: 'M-72 -12 Q0 52 72 -12 Q0 18 -72 -12Z', tongue: true, line: 'Bleh! Hee hee!' },
+      { name: 'Vampire smile!', d: 'M-80 -14 Q0 62 80 -14 Q0 22 -80 -14Z', fangs: true, line: 'I want candy! Ha ha!' },
+      { name: 'Wiggly mouth!', d: 'M-80 -4 Q-60 -22 -40 -4 Q-20 14 0 -4 Q20 -22 40 -4 Q60 14 80 -4 Q60 34 0 36 Q-60 34 -80 -4Z', line: 'Wibble wobble!' },
+      { name: 'Grumpy mouth!', d: 'M-70 22 Q0 -42 70 22 Q0 -8 -70 22Z', line: 'Hmph! Just kidding! Hee hee!' },
+      { name: 'One tooth smile!', d: 'M-80 -14 Q0 62 80 -14 Q0 22 -80 -14Z', tooth: true, line: 'Cheese!' },
     ],
   };
   const ROWS = ['eyes', 'nose', 'mouth'];
@@ -52,6 +64,9 @@
     const P = PARTS[kind][i];
     const g = el('g', {}, parent);
     el('path', { d: P.d, style: 'fill:var(--hole);stroke:var(--pkd);stroke-width:4;stroke-linejoin:round' }, g);
+    const teeth = 'fill:var(--pk,#ffd9a0);stroke:var(--pkd);stroke-width:3;stroke-linejoin:round';
+    if (P.fangs) { el('path', { d: 'M-50 0 L-40 28 L-30 6Z', style: teeth }, g); el('path', { d: 'M30 6 L40 28 L50 0Z', style: teeth }, g); }
+    if (P.tooth) el('rect', { x: -12, y: 8, width: 24, height: 20, rx: 4, style: teeth }, g);
     if (P.tongue) el('ellipse', { cx: 18, cy: 22, rx: 22, ry: 15, fill: '#ff6f91', stroke: '#d9466e', 'stroke-width': 4 }, g);
     if (scale) g.setAttribute('transform', `scale(${scale})`);
     return g;
@@ -103,14 +118,33 @@
   PATCH.forEach((_, i) => grow(i, shuffled[i]));
 
   /* ---------- the carving board ---------- */
-  ROWS.forEach((kind, r) => PARTS[kind].forEach((_, i) => {
+  // there are more shapes than fit on the board, so each visit shows a new mix of four per row
+  const PER_ROW = 4;
+  let shown = {};
+  function newBoard(animate) {
+    const pickRow = kind => {
+      const all = PARTS[kind].map((_, i) => i), old = shown[kind] || [];
+      const fresh = all.filter(i => !old.includes(i)).sort(() => Math.random() - 0.5);
+      const keep = old.slice().sort(() => Math.random() - 0.5);
+      return fresh.slice(0, 2).concat(keep.slice(0, 2)).concat(fresh.slice(2)).slice(0, PER_ROW).sort(() => Math.random() - 0.5);
+    };
+    ROWS.forEach(k => { shown[k] = pickRow(k); });
+    board.querySelectorAll('.pk-btn').forEach(b => b.remove());
+    ROWS.forEach((kind, r) => shown[kind].forEach((pi, i) => {
+      const b = makeBtn(kind, r, pi, i);
+      if (animate) anim(b.querySelector('.anim'), [{ transform: 'scale(0) rotate(-30deg)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], 380, { delay: (r * PER_ROW + i) * 40, fill: 'backwards' });
+    }));
+    markButtons();
+  }
+  function makeBtn(kind, r, pi, i) {
     const b = el('g', { class: 'tap pk-btn', transform: `translate(${580 + i * 120},${110 + r * 85})` }, board);
-    b.dataset.act = 'part'; b.dataset.kind = kind; b.dataset.i = i;
+    b.dataset.act = 'part'; b.dataset.kind = kind; b.dataset.i = pi;
     const a = el('g', { class: 'anim' }, b);
     el('circle', { r: 38, class: 'pk-btn-bg' }, a);
     const art = el('g', { style: '--hole:#ff9a2e;--pkd:#d96a00' }, a);
-    drawPart(art, kind, i, kind === 'mouth' ? 0.4 : kind === 'eyes' ? 0.8 : 1.15);
-  }));
+    drawPart(art, kind, pi, kind === 'mouth' ? 0.4 : kind === 'eyes' ? 0.8 : 1.15);
+    return b;
+  }
   function markButtons() {
     board.querySelectorAll('.pk-btn').forEach(b => b.classList.toggle('chosen', !!table && table.parts[b.dataset.kind] === +b.dataset.i));
   }
@@ -200,7 +234,8 @@
     Sound.play('cheer');
     sparkles(P.x, P.y - 60, { n: 16, colors: [C.glow, '#fff', '#ffb347'], spread: 230, up: 40 });
     // matching shapes everywhere get an extra surprise
-    if (P.parts.eyes === P.parts.nose && P.parts.eyes >= 2) partFx(P, PARTS.eyes[P.parts.eyes].fx);
+    const fxE = PARTS.eyes[P.parts.eyes].fx;
+    if (fxE && fxE === PARTS.nose[P.parts.nose].fx) partFx(P, fxE);
     await wait(500);
     pumpkinTalk(P);
     setTimeout(() => { if (table === P) ghostSay(pick(['Ooh, spooky-cute!', 'It glows!', 'Put it on the house!'])); }, 2400);
@@ -236,6 +271,7 @@
     if (!P.lit) await light(P);
     else rings(P.x, P.y, [COLORS[P.ci].glow, '#fff'], { scale: 4 });
     windows();
+    setTimeout(() => { if (!table) newBoard(true); }, 900);
     if (state.porch.filter(Boolean).length >= 4) setTimeout(party, 500);
     else ghostSay(pick(['On the house!', 'So glowy!', 'Make another one!']));
   }
@@ -425,12 +461,16 @@
     anim(sk.querySelector('.skull'), [{ transform: 'rotate(0)' }, { transform: 'rotate(-8deg)' }, { transform: 'rotate(8deg)' }, { transform: 'rotate(0)' }], 700);
   }, 3000);
 
+  let visits = 0;
+  newBoard(false);
+
   App.register({
     id: 'pumpkin',
     screen: svg,
     enter() {
       lastInput = performance.now(); hints = 0;
       Sound.setMood('spooky');
+      if (visits++ && !table) newBoard(false);
       setTimeout(() => { ghostSay(table ? 'Boo! Welcome back!' : "Let's make a pumpkin!"); if (!table) patch.forEach((P, i) => P && hop(P.a, 30, i * 120)); }, 500);
     },
     leave() { drag = null; if (table && !busy) place(table, TABLE.x, TABLE.y, TABLE.s); },
@@ -443,5 +483,5 @@
     },
   });
 
-  window.__pumpkin = { state, patch, pickPumpkin, carve, toPorch, party, dance, bats, PARTS };
+  window.__pumpkin = { state, newBoard, shown: () => shown, patch, pickPumpkin, carve, toPorch, party, dance, bats, PARTS };
 })();
