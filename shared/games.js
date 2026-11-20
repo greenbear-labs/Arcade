@@ -1,8 +1,11 @@
 // The list of cabinets on the arcade floor. Add a game here and it shows up in the Den.
+// `added` is the day the game joined the Den (YYYY-MM-DD). The floor shows the newest first;
+// games added the same day keep the newest (lowest in this list) first.
 // A game hosted elsewhere sets `url` (and `meta`, the text shown instead of the best score).
 window.ARCADE_GAMES = [
   {
     slug: "honey-dash",
+    added: "2026-10-17",
     title: "Honey Dash",
     tagline: "Jump the hives, grab the honey, don't stop running.",
     controls: "One button",
@@ -10,6 +13,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "whack-a-raccoon",
+    added: "2026-10-17",
     title: "Whack-a-Raccoon",
     tagline: "Trash bandits incoming. Punch fast, spare the cubs.",
     controls: "Tap or 1–9",
@@ -17,6 +21,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "berry-snake",
+    added: "2026-10-17",
     title: "Berry Snake",
     tagline: "Eat berries, grow long, don't bite your own tail.",
     controls: "Arrows or swipe",
@@ -24,6 +29,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow",
+    added: "2026-10-23",
     title: "Chow Pow - Street Brawl",
     tagline: "Spicy Punch vs Haunted Noodle Row. Smash, dodge, take down Madam Pirogi.",
     controls: "Keys or touch",
@@ -33,6 +39,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-rock",
+    added: "2026-10-23",
     title: "Chow Pow - Battle of the Bands",
     tagline: "Sour Bomb Sandy battles a band from every faction. Hit the notes, win the crowd.",
     controls: "Keys or tap",
@@ -42,6 +49,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-pirates",
+    added: "2026-10-24",
     title: "Chow Pow - Pizza Pirates",
     tagline: "The Burgers are firing their lunch at you. Swipe the cutlass, slash it all.",
     controls: "Swipe or mouse",
@@ -51,6 +59,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-cereal",
+    added: "2026-10-25",
     title: "Chow Pow - Breakfast Conquest",
     tagline: "Soggy Mastermind vs the Citrus Cyborgs. Drag your cereal armies across the map and take every city.",
     controls: "Drag or mouse",
@@ -60,6 +69,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "chow-pow-castle",
+    added: "2026-10-25",
     title: "Chow Pow - Brain Freeze Fortress",
     tagline: "Madame Mint Chip vs the Barbaric Burgers. Pull back, let fly, and hold the ice cream castle's gate.",
     controls: "Drag or mouse",
@@ -69,6 +79,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "mythica-sanctuary",
+    added: "2026-10-21",
     title: "Mythica Sanctuary",
     tagline: "Rescue hurt creatures, heal them and earn their trust.",
     controls: "Tap",
@@ -79,6 +90,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "singing-mythica",
+    added: "2026-10-27",
     title: "Singing Mythica",
     tagline: "Hatch Mythica's creatures on a singing island. Each one sings its part; breed them to find every magic.",
     controls: "Tap or mouse",
@@ -88,6 +100,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "mythica-farmer",
+    added: "2026-10-28",
     title: "Mythica Farmer",
     tagline: "Grow crops through the seasons, raise chickens, make friends, and dig for gems in the mine.",
     controls: "Keys or touch",
@@ -97,6 +110,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "dwarves-vs-orcs",
+    added: "2026-11-11",
     title: "Dwarves vs Orcs",
     tagline: "Play as dwarves, men or orcs. Gather, build and march to war against the enemy stronghold.",
     controls: "Mouse or touch",
@@ -106,6 +120,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "leukocyte",
+    added: "2026-11-16",
     title: "Leukocyte",
     tagline: "You're a white blood cell. Hold the artery, take the lungs back from the germs.",
     controls: "Mouse or touch",
@@ -115,6 +130,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "froggy-farm",
+    added: "2026-11-19",
     title: "Froggy Farm",
     tagline: "For little ones: feed the frog bugs, wave the magic wand, build silly ice creams, carve glowing pumpkins, wash muddy trucks. No reading, no losing.",
     controls: "Tap and drag",
@@ -124,6 +140,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "upgrade-island",
+    added: "2026-11-19",
     title: "Upgrade Island",
     tagline: "The plane went down. Help Kai find berries and coconuts, make tools, and build a camp on the island.",
     controls: "Tablet touch",
@@ -133,6 +150,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "fossil-fury",
+    added: "2026-11-19",
     title: "Fossil Fury",
     tagline: "A stone age roguelike. Throw rocks, dodge dinos, dig through three cave floors and topple the beast.",
     controls: "Keys, mouse or touch",
@@ -142,6 +160,7 @@ window.ARCADE_GAMES = [
   },
   {
     slug: "full-moon-drive-thru",
+    added: "2026-11-20",
     title: "Full Moon Drive-Thru",
     tagline: "A werewolf is loose in the Mega Moonburger. Slam doors on it, grease its path, finish tasks, survive till closing. Play online with friends.",
     controls: "Keys or touch",

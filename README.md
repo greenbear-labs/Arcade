@@ -63,7 +63,7 @@ Then open http://localhost:8000.
 
 1. Copy one of the folders in `games/` to `games/your-game/`.
 2. Write the game in its `game.js`, using the helpers in `shared/arcade.js` (`Arcade.setupCanvas`, `Arcade.overlay`, `Arcade.saveBest`, `Arcade.sfx`, `Arcade.drawBear`).
-3. Add an entry to `shared/games.js`.
+3. Add an entry to `shared/games.js` with `added` set to today's date (YYYY-MM-DD). The Den lists games newest first, so it shows up at the top.
 4. Add an attract-mode loop for its cabinet screen in `hub.js` (the `attract` object, keyed by slug).
 
 ## Deploy
