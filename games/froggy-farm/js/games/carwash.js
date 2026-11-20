@@ -257,6 +257,12 @@
     setStage('decorate');
     setTimeout(() => { elSay(pick(['Hooray! So shiny! Now paint it!', 'All clean! Paint it and add stickers!'])); hopRow('paint'); updateGuide(); }, 700);
   }
+  // rubbing a lot after the scrub is done: the elephant rinses it for you
+  function extraRub(C, amount) {
+    if (C !== V || !C.done.scrub || C.done.rinse || busy) return;
+    C.extra = (C.extra || 0) + amount;
+    if (C.extra > 1500) { C.extra = -99999; elSay('Splash time!'); setTimeout(() => { if (V === C && !busy) water(); }, 500); }
+  }
   function addScrub(C, amount) {
     if (C !== V || C.done.scrub) return;
     C.scrub += amount;
@@ -616,19 +622,28 @@
     spin(C, true, 400);
     await tween(1300, t => place(C, lerp(-400, SPOT.x, 1 - Math.pow(1 - t, 3)), SPOT.y, 1));
     spin(C, false);
+    if (V !== C) return;
     Sound.play('land'); bounce(C, 14);
-    V = C; busy = false;
+    busy = false;
     if (muddy) { setStage('wash'); elSay(pick(['Oops! Muddy again!', 'Oh no! A mud puddle!'])); }
     else { Sound.play(C.T.horn); talkVehicle(C, pick(['That was fun!', 'Again! Again!', 'Wheee!'])); }
     updateGuide();
   }
 
+  let leaving = false;
   async function newCar() {
     anim(PANELS.newcar.querySelector('.anim'), [{ transform: 'scale(1)' }, { transform: 'scale(.85)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], 350);
-    if (!V || busy) return;
+    if (!V || leaving) return;
+    leaving = true;
+    // let a running step finish (up to a moment), then this always wins
+    for (let i = 0; i < 15 && busy; i++) await wait(100);
+    if (tdrag) { tdrag.ghost.remove(); tdrag = null; }
+    rub = null;
     busy = true;
     hideHand();
     const C = V;
+    V = null;
+    if (!C) { busy = false; leaving = false; return; }
     Sound.play(C.T.horn);
     talkVehicle(C, pick(['Bye bye!', 'See you later!', 'Thank you!']));
     await wait(600);
@@ -637,7 +652,7 @@
     await tween(1000, t => place(C, SPOT.x + t * t * 1100, SPOT.y, 1));
     spin(C, false);
     C.g.remove();
-    V = null; busy = false;
+    busy = false; leaving = false;
     spawnChooser();
   }
 
@@ -707,6 +722,11 @@
   let rub = null, sdrag = null, tdrag = null, lastInput = performance.now(), hints = 0, lastScrub = 0;
   svg.addEventListener('pointerdown', e => {
     lastInput = performance.now(); hints = 0;
+    if (e.isPrimary) {
+      if (tdrag && tdrag.id !== e.pointerId) { tdrag.ghost.remove(); tdrag = null; }
+      if (sdrag && sdrag.id !== e.pointerId) { sdrag.ghost.remove(); sdrag = null; }
+      if (rub && rub.id !== e.pointerId) rub = null;
+    }
     const hit = e.target.closest('[data-act]');
     if (!hit) return;
     const act = hit.dataset.act;
@@ -775,11 +795,11 @@
     }
     if (!V || busy || stage !== 'wash') return;
     const l = toLocal(V, p);
-    scrubAt(V, l.x, l.y, 40);
-    if (rub.l && overVehicle(V, p)) addScrub(V, Math.hypot(l.x - rub.l.x, l.y - rub.l.y));
+    scrubAt(V, l.x, l.y, V.done.scrub ? 80 : 40);
+    if (rub.l && overVehicle(V, p)) { addScrub(V, Math.hypot(l.x - rub.l.x, l.y - rub.l.y)); extraRub(V, Math.hypot(l.x - rub.l.x, l.y - rub.l.y)); }
     rub.l = l;
     const now = performance.now();
-    if (now - lastScrub > 140 && overVehicle(V, p)) { lastScrub = now; Sound.play('scrub'); if (bubblesLeft(V).length < 30 && Math.random() < 0.3) addBubbles(V, 1); }
+    if (now - lastScrub > 140 && overVehicle(V, p)) { lastScrub = now; Sound.play('scrub'); if (!V.done.scrub && bubblesLeft(V).length < 30 && Math.random() < 0.3) addBubbles(V, 1); }
   });
   function moveTool(e) {
     const d = tdrag;
@@ -796,10 +816,10 @@
       if (now - d.snd > 260) { d.snd = now; Sound.play('bubbles'); }
       if (bubblesLeft(V).length >= 8) stepDone(V, 'soap');
     } else {
-      scrubAt(V, l.x, l.y, 55);
-      if (d.l) addScrub(V, Math.hypot(l.x - d.l.x, l.y - d.l.y));
+      scrubAt(V, l.x, l.y, V.done.scrub ? 90 : 55);
+      if (d.l) { addScrub(V, Math.hypot(l.x - d.l.x, l.y - d.l.y)); extraRub(V, Math.hypot(l.x - d.l.x, l.y - d.l.y)); }
       d.l = l;
-      if (now - d.snd > 140) { d.snd = now; Sound.play('scrub'); if (Math.random() < 0.4) addBubbles(V, 1, l.x, l.y); }
+      if (now - d.snd > 140) { d.snd = now; Sound.play('scrub'); if (!V.done.scrub && Math.random() < 0.4) addBubbles(V, 1, l.x, l.y); }
     }
   }
   function endTool(e) {
@@ -843,6 +863,26 @@
     if (!V.decorated) { elSay('Paint it! Add stickers!'); hopRow('paint'); }
     else if (hints === 3) { elSay('Want a new car? Tap here!'); hop(PANELS.newcar.querySelector('.anim'), 20); }
     else { elSay('Tap the light to go!'); anim(light, [{ opacity: 1 }, { opacity: 0.4 }, { opacity: 1 }], 400, { iterations: 3 }); }
+  }, 1000);
+  // safety net: nothing in this game takes 8 seconds, so a longer "busy" means something went wrong
+  let busyAt = 0;
+  setInterval(() => {
+    if (!busy || leaving) { busyAt = 0; return; }
+    if (!busyAt) busyAt = performance.now();
+    else if (performance.now() - busyAt > 8000) { busy = false; busyAt = 0; if (V) { spin(V, false); place(V, SPOT.x, SPOT.y, 1); } updateGuide(); }
+  }, 500);
+  // the elephant helps out if a wash step is taking a long time
+  let stepKey = '', stepAt = 0;
+  setInterval(() => {
+    if (App.current !== 'carwash' || stage !== 'wash' || !V || busy || tdrag) { stepAt = performance.now(); return; }
+    const st = nextStep(V), key = V.type + (st ? st.k : '');
+    if (key !== stepKey) { stepKey = key; stepAt = performance.now(); return; }
+    if (st && performance.now() - stepAt > 20000) {
+      stepAt = performance.now();
+      elSay("Let me help!");
+      flapEar(2);
+      setTimeout(() => { if (!busy && V) ({ water, soap, sponge, fan: dryer })[st.tool](); }, 900);
+    }
   }, 1000);
   // the elephant flaps an ear now and then
   setInterval(() => { if (App.current === 'carwash' && Math.random() < 0.5) flapEar(1); }, 3500);
