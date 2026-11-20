@@ -25,7 +25,7 @@ function buildGraph(role) {
   fwd.forEach((list, i) => list.forEach((j) => rev[j].push(i)));
   return { fwd, rev };
 }
-const graphs = { wolf: buildGraph("wolf"), surv: buildGraph("surv") };
+const graphs = { wolf: buildGraph("wolf"), surv: buildGraph("surv"), survNoVent: buildGraph("wolf") };
 
 // Distance field. With reverse=true it is "distance to reach `from`".
 function field(role, from, reverse, maxD = 9999) {
@@ -59,10 +59,23 @@ export class Bot {
     this.last = null;
     this.known = null;     // werewolf's memory of a survivor
     this.sniff = 4;
+    this.doing = null;
+    this.taskGoal = null;
   }
 
   input(s, me, dt) {
+    if (s.phase !== "play" || !me.alive || me.role === "wolf") this.doing = null;
     if (s.phase !== "play") return { mx: 0, my: 0, useSeq: this.useSeq };
+    if (this.doing) {
+      // Standing at a station playing its mini game
+      const wolf = s.players.find((p) => p.role === "wolf");
+      if (wolf && wolf.fx.hold <= 0 && dist(wolf, me) < 260) { this.doing = null; this.think = 0; }
+      else {
+        this.doing.t -= dt;
+        if (this.doing.t <= 0) { const id = this.doing.id; this.doing = null; this.taskGoal = null; return { mx: 0, my: 0, useSeq: this.useSeq, task: id }; }
+        return { mx: 0, my: 0, useSeq: this.useSeq };
+      }
+    }
     this.think -= dt;
     if (this.think <= 0) { this.think = 0.25 + Math.random() * 0.1; this.plan(s, me, dt); }
     let mx = 0, my = 0;
@@ -71,12 +84,16 @@ export class Bot {
       let next = here;
       let best = this.toGoal[here];
       if (best > 0) {
-        for (const j of (me.role === "wolf" ? graphs.wolf : graphs.surv).fwd[here]) {
+        for (const j of graphs[this.graph || "surv"].fwd[here]) {
           if (this.toGoal[j] >= 0 && this.toGoal[j] < best) { best = this.toGoal[j]; next = j; }
         }
       }
       const c = next === here ? tileCenter(this.goal === here ? here : here) : tileCenter(next);
       if (next !== here || dist(me, c) > 6) { mx = c.x - me.x; my = c.y - me.y; }
+    }
+    // Close in on a survivor we can see: go straight for them instead of tile centers.
+    if (me.role === "wolf" && this.prey && this.prey.alive && dist(this.prey, me) < 90) {
+      mx = this.prey.x - me.x; my = this.prey.y - me.y;
     }
     // Unstick: if we're trying to move but not getting anywhere, wiggle a bit.
     if (this.last && (mx || my) && dist(me, this.last) < 0.4 && !me.fx.stun && !me.fx.hold) this.stuck += dt;
@@ -95,6 +112,7 @@ export class Bot {
   }
 
   plan(s, me) {
+    this.graph = me.role === "surv" && me.fx.ventCd > 0 ? "survNoVent" : me.role === "wolf" ? "wolf" : "surv";
     const wolf = s.players.find((p) => p.role === "wolf");
     if (!me.alive) { this.wander(s, me, "surv"); return; }
     if (me.role === "wolf") this.planWolf(s, me);
@@ -118,12 +136,12 @@ export class Bot {
       if (d < 0) continue;
       const hidden = tileAt(Math.floor(p.x / TILE), Math.floor(p.y / TILE)) === "b" && dist(p, me) > 80;
       const smoked = s.smokes.some((c) => dist(c, p) < c.r);
-      const seen = me.fx.howl > 0 || (!hidden && !smoked && dist(p, me) < 300);
+      const seen = me.fx.howl > 0 || (!hidden && !smoked && dist(p, me) < 380);
       if (seen && d < best) { best = d; target = p; }
     }
     if (!target && this.sniff <= 0) {
       // Every few seconds the werewolf catches a whiff of the closest survivor.
-      this.sniff = 5 + Math.random() * 3;
+      this.sniff = 3 + Math.random() * 2;
       for (const p of s.players) {
         if (p.role !== "surv" || !p.alive) continue;
         const d = mine[tileOf(p)];
@@ -131,22 +149,42 @@ export class Bot {
       }
       if (target) this.known = tileOf(target);
     }
+    if (!target && s.pings.length) {
+      // Someone just finished a task: go check it out
+      const pg = s.pings[s.pings.length - 1];
+      this.known = tileOf(pg);
+    }
+    if (!target && me.fx.sniff > 0) {
+      for (const p of s.players) {
+        if (p.role !== "surv" || !p.alive) continue;
+        const d = mine[tileOf(p)];
+        if (d >= 0 && d < best) { best = d; target = p; }
+      }
+    }
+    this.prey = target;
     if (target) { this.known = tileOf(target); this.setGoal("wolf", this.known); }
     else if (this.known !== null && tileOf(me) !== this.known) this.setGoal("wolf", this.known);
     else { this.known = null; this.wander(s, me, "wolf"); }
 
     if (me.item) {
       const close = target && dist(target, me) < 260;
-      if ((me.item === "soda" && close) || (me.item === "moon" && !target) || (me.item === "grease" && Math.random() < 0.05)) this.useSeq++;
+      if (((me.item === "soda" || me.item === "pepper") && close) || (me.item === "moon" && !target) ||
+          ((me.item === "grease" || me.item === "syrup") && Math.random() < 0.05)) this.useSeq++;
     }
   }
 
   planSurvivor(s, me, wolf) {
     if (!wolf) return;
     const wolfD = field("wolf", tileOf(wolf), false);
-    const myD = field("surv", tileOf(me), false, 10);
+    const myD = field(this.graph, tileOf(me), false, 10);
     const near = dist(wolf, me);
-    const threat = wolf.fx.hold > 0 ? 99 : wolfD[tileOf(me)];
+    // Survivors only know where the werewolf is when they can see or hear it (like a person would),
+    // or while it is still waiting at the start.
+    const aware = wolf.fx.hold <= 0 && near < 400;
+    if (aware) this.lastWolf = { x: wolf.x, y: wolf.y, t: 3 };
+    else if (this.lastWolf) this.lastWolf.t -= 0.3;
+    const remembered = this.lastWolf && this.lastWolf.t > 0;
+    const threat = wolf.fx.hold > 0 ? 99 : aware || remembered ? wolfD[tileOf(me)] : 99;
 
     if (me.item) {
       if (me.item === "garlic" && near < 130) this.useSeq++;
@@ -154,16 +192,29 @@ export class Bot {
     }
 
     if (threat > 14 || threat < 0) {
-      // Safe for now: go shopping for a pickup, or mosey around.
+      // Safe for now: do a task, go shopping for a pickup, or mosey around.
+      const st = this.taskGoal !== null && this.taskGoal !== undefined ? s.stations.find((x) => x.id === this.taskGoal && x.cd <= 0) : null;
+      if (st) {
+        if (dist(st, me) < 30) { this.doing = { id: st.id, t: 3.5 + Math.random() * 1.5 }; return; }
+        this.setGoal(this.graph, tileOf(st));
+        return;
+      }
+      this.taskGoal = null;
+      if (Math.random() < 0.12) {
+        const open = s.stations.filter((x) => x.cd <= 0);
+        const full = field(this.graph, tileOf(me), false);
+        open.sort((a, b) => full[tileOf(a)] - full[tileOf(b)]);
+        if (open.length && full[tileOf(open[0])] >= 0 && full[tileOf(open[0])] < 25) { this.taskGoal = open[0].id; this.setGoal(this.graph, tileOf(open[0])); return; }
+      }
       if (!me.item && s.items.length) {
         let bestI = -1, bestD = 1e9;
-        const full = field("surv", tileOf(me), false);
+        const full = field(this.graph, tileOf(me), false);
         for (const it of s.items) {
           if (it.kind === "moon") continue;
           const d = full[tileOf(it)];
           if (d >= 0 && d < bestD) { bestD = d; bestI = tileOf(it); }
         }
-        if (bestI >= 0) { this.setGoal("surv", bestI); return; }
+        if (bestI >= 0) { this.setGoal(this.graph, bestI); return; }
       }
       this.wander(s, me, "surv");
       return;
@@ -178,6 +229,6 @@ export class Bot {
       if (wolfD[i] <= myD[i]) score -= 20; // the wolf would get there first
       if (score > bestScore) { bestScore = score; bestT = i; }
     }
-    if (bestT >= 0) this.setGoal("surv", bestT);
+    if (bestT >= 0) this.setGoal(this.graph, bestT);
   }
 }

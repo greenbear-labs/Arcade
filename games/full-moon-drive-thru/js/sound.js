@@ -16,6 +16,7 @@ const tones = {
   tick: [[660, .03]],
   over: [[392, .14], [330, .14], [262, .3]],
   win: [[784, .06], [988, .06], [1175, .06], [1568, .14]],
+  growl: [[90, .35, 60, "sawtooth"], [70, .3, 50, "sawtooth"]],
 };
 
 export function sfx(name) {

@@ -97,3 +97,21 @@ input, select {
   .join { grid-template-columns: 1fr; }
   .join .btn { margin-bottom: 0; }
 }
+
+.scoring { margin: 12px 0; background: #11131c; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.scoring summary { cursor: pointer; font-weight: 700; }
+.score-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.score-cols h3 { margin: 8px 0 4px; font: 14px var(--display); color: var(--yellow); }
+.score-cols ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.score-cols li { display: flex; justify-content: space-between; gap: 8px; }
+.score-cols li b { color: var(--green); white-space: nowrap; }
+@media (max-width: 520px) { .score-cols { grid-template-columns: 1fr; } }
+.task {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(400px, 92%);
+  background: rgba(16,18,28,.95); border: 3px solid var(--green); border-radius: 14px; padding: 10px 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.6); touch-action: none;
+}
+.task-head { display: flex; align-items: center; justify-content: space-between; font: 16px var(--display); color: var(--green); }
+.task-close { background: none; border: 1px solid var(--line); color: var(--text); border-radius: 8px; font-size: 16px; width: 34px; height: 34px; cursor: pointer; }
+.task canvas { display: block; width: 100%; height: auto; margin: 8px 0; border-radius: 8px; cursor: pointer; }
+.task-hint { margin: 0; font-size: 13px; color: var(--muted); text-align: center; }

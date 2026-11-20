@@ -143,7 +143,7 @@ window.ARCADE_GAMES = [
   {
     slug: "full-moon-drive-thru",
     title: "Full Moon Drive-Thru",
-    tagline: "A werewolf is loose in the Mega Moonburger. Hide in the ball pit, slip through vents, survive till closing. Play online with friends.",
+    tagline: "A werewolf is loose in the Mega Moonburger. Slam doors on it, grease its path, finish tasks, survive till closing. Play online with friends.",
     controls: "Keys or touch",
     color: "#ffcf3a",
     // Peer-to-peer multiplayer (2-6 players, room codes) or practice with bots; it doesn't report scores to the Den.

@@ -1,6 +1,8 @@
 // Drawing: the restaurant (pre-rendered once), characters, pickups, lighting and HUD.
 import { TILE, COLS, ROWS, WORLD_W, WORLD_H, map, tileAt, rooms, doors, links } from "./map.js";
 import { ITEMS } from "./sim.js";
+import { stations as STATION_DEFS, center as tileCenter } from "./map.js";
+const STATIONS = STATION_DEFS.map((d) => ({ ...d, ...tileCenter(...d.tile) }));
 
 export const VIEW_W = 960;
 export const VIEW_H = 600;
@@ -211,6 +213,46 @@ export function drawItem(g, kind, x, y, s = 1, t = 0) {
     g.fillStyle = "#c58a4a"; g.beginPath(); g.arc(0, 0, 11, 0, 7); g.fill();
     g.fillStyle = "#fff6c8"; g.beginPath(); g.arc(0, 0, 7, 0, 7); g.fill();
     g.fillStyle = "#c58a4a"; g.beginPath(); g.arc(3, -2, 6, 0, 7); g.fill();
+  } else if (kind === "pepper") {
+    g.rotate(-.5);
+    g.fillStyle = "#ff2a1a"; g.beginPath(); g.ellipse(0, 2, 6, 12, 0, 0, 7); g.fill();
+    g.fillStyle = "#ff8a6a"; g.beginPath(); g.ellipse(-2, -2, 2, 5, 0, 0, 7); g.fill();
+    g.fillStyle = "#3fa34d"; g.fillRect(-2, -14, 4, 5);
+  } else if (kind === "syrup") {
+    g.fillStyle = "#c86a1a"; g.beginPath(); g.moveTo(-7, -4); g.lineTo(7, -4); g.lineTo(8, 11); g.lineTo(-8, 11); g.fill();
+    g.fillStyle = "#e8a04a"; g.fillRect(-5, 0, 10, 7);
+    g.fillStyle = "#f6e7c8"; g.fillRect(-3, -12, 6, 8);
+    g.fillStyle = "#e63b2e"; g.fillRect(-4, -14, 8, 3);
+  }
+  g.restore();
+}
+
+function edgeArrow(g, sx, sy, color, size = 1) {
+  const a = Math.atan2(sy - VIEW_H / 2, sx - VIEW_W / 2);
+  const ex = VIEW_W / 2 + Math.cos(a) * (VIEW_W / 2 - 34), ey = VIEW_H / 2 + Math.sin(a) * (VIEW_H / 2 - 34);
+  g.save(); g.translate(ex, ey); g.rotate(a); g.scale(size, size); g.fillStyle = color;
+  g.strokeStyle = "#14161b"; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(16, 0); g.lineTo(-8, -10); g.lineTo(-8, 10); g.closePath(); g.fill(); g.stroke(); g.restore();
+}
+
+function drawStation(g, st, cd, t, mine) {
+  const ready = cd <= 0;
+  g.save(); g.translate(st.x, st.y);
+  g.fillStyle = ready ? "rgba(123,224,90,.25)" : "rgba(0,0,0,.25)";
+  g.beginPath(); g.arc(0, 0, 22, 0, 7); g.fill();
+  g.strokeStyle = ready ? "#7be05a" : "#555"; g.lineWidth = 3; g.setLineDash([6, 5]); g.lineDashOffset = -t * 20;
+  g.beginPath(); g.arc(0, 0, 22, 0, 7); g.stroke(); g.setLineDash([]);
+  // little workstation: a tray with a bell
+  g.fillStyle = "#c9cfd4"; g.fillRect(-12, -2, 24, 10);
+  g.fillStyle = "#ffcf3a"; g.beginPath(); g.arc(0, -3, 7, Math.PI, 0); g.fill(); g.fillRect(-1, -12, 2, 3);
+  if (ready) {
+    const b = Math.sin(t * 5) * 3;
+    g.fillStyle = mine ? "#fff" : "#7be05a";
+    g.font = "18px Bungee, Impact, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText("!", 0, -26 + b);
+  } else {
+    g.fillStyle = "#9aa58e"; g.font = "10px 'Press Start 2P', monospace"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(String(cd), 0, -26);
   }
   g.restore();
 }
@@ -254,13 +296,29 @@ function drawGhost(g, p, t) {
   g.restore();
 }
 
+let frenzyNow = false;
 function drawWolf(g, p, t) {
   const moving = Math.hypot(p.vx, p.vy) > 20;
   const bob = moving ? Math.sin(t * 18) * 2.5 : 0;
   const f = p.face || 1;
+  const angry = p.fx.rage || frenzyNow;
   g.save(); g.translate(p.x, p.y + bob);
+  g.scale(1.3, 1.3);
   if (p.fx.slip) g.rotate(t * 12);
+  if (p.fx.rage) { // fiery aura
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * Math.PI * 2 + t * 4, r = 20 + Math.sin(t * 20 + i) * 3;
+      g.fillStyle = i % 2 ? "rgba(255,90,20,.6)" : "rgba(255,200,40,.5)";
+      g.beginPath(); g.arc(Math.cos(a) * r, Math.sin(a) * r, 6, 0, 7); g.fill();
+    }
+  }
   g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(0, 17 - bob, 17, 6, 0, 0, 7); g.fill();
+  // claws
+  g.fillStyle = "#f6e7c8";
+  for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
+    const cx = side * 17, cy = 6 + i * 4 + (moving ? Math.sin(t * 18 + side) * 2 : 0);
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + side * 7, cy + 2); g.lineTo(cx, cy + 3); g.fill();
+  }
   // ears
   g.fillStyle = "#3b3346";
   g.beginPath(); g.moveTo(-14, -8); g.lineTo(-9, -26); g.lineTo(-2, -12); g.fill();
@@ -284,11 +342,14 @@ function drawWolf(g, p, t) {
   g.beginPath(); g.moveTo(f * 3, 9); g.lineTo(f * 5, 15); g.lineTo(f * 7, 9); g.fill();
   g.beginPath(); g.moveTo(f * 8, 9); g.lineTo(f * 10, 14); g.lineTo(f * 12, 9); g.fill();
   // glowing eyes
-  const glow = p.fx.stun ? "#9aa58e" : "#ffe03a";
+  const glow = p.fx.stun ? "#9aa58e" : angry ? "#ff2a1a" : "#ffe03a";
   g.fillStyle = glow; g.shadowColor = glow; g.shadowBlur = p.fx.stun ? 0 : 10;
   g.beginPath(); g.ellipse(f * 3 - 6, -5, 4, 3, 0, 0, 7); g.ellipse(f * 3 + 5, -5, 4, 3, 0, 0, 7); g.fill();
   g.shadowBlur = 0;
   g.fillStyle = "#14161b"; g.fillRect(f * 3 - 6, -7, 2, 4); g.fillRect(f * 3 + 5, -7, 2, 4);
+  // angry brows
+  g.strokeStyle = "#14161b"; g.lineWidth = 2.5;
+  g.beginPath(); g.moveTo(f * 3 - 11, -11); g.lineTo(f * 3 - 2, -8); g.moveTo(f * 3 + 10, -11); g.lineTo(f * 3 + 1, -8); g.stroke();
   // little crew apron so you know he works here
   g.fillStyle = p.color; g.fillRect(-8, 11, 16, 6);
   if (p.fx.stun) { // dizzy stars
@@ -306,7 +367,7 @@ function drawNameTag(g, p, alpha = 1) {
   g.save(); g.globalAlpha = alpha;
   g.font = "bold 12px Rubik, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "bottom";
   const w = g.measureText(p.name).width + 10;
-  const y = p.y - (p.role === "wolf" && p.alive ? 30 : 22);
+  const y = p.y - (p.role === "wolf" && p.alive ? 38 : 22);
   g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(p.x - w / 2, y - 15, w, 15);
   g.fillStyle = p.role === "wolf" && p.alive ? "#ffe03a" : "#fff"; g.fillText(p.name, p.x, y - 1);
   g.restore();
@@ -437,12 +498,23 @@ export function makeRenderer(canvas) {
     }
 
     // puddles and smoke
-    for (const [x, y, life] of view.puddles) {
+    frenzyNow = view.phase === "play" && view.timer < 20;
+    const meP = view.players.find((p) => p.id === view.meId);
+    for (const [x, y, life, team, kind] of view.puddles) {
       g.globalAlpha = Math.min(1, life / 2);
-      g.fillStyle = "#b3801c"; g.beginPath(); g.ellipse(x, y, 30, 20, 0, 0, 7); g.fill();
-      g.fillStyle = "rgba(255,240,180,.5)"; g.beginPath(); g.ellipse(x - 8, y - 6, 9, 4, -.4, 0, 7); g.fill();
+      if (kind === "syrup") {
+        // sneaky: survivors can barely see a syrup trap
+        if (meP && meP.role === "surv" && meP.alive) g.globalAlpha *= .3;
+        g.fillStyle = "#a8521a"; g.beginPath(); g.ellipse(x, y, 26, 18, 0, 0, 7); g.fill();
+        g.fillStyle = "rgba(255,200,120,.5)"; g.beginPath(); g.ellipse(x + 6, y - 5, 7, 3, .4, 0, 7); g.fill();
+      } else {
+        g.fillStyle = "#b3801c"; g.beginPath(); g.ellipse(x, y, 30, 20, 0, 0, 7); g.fill();
+        g.fillStyle = "rgba(255,240,180,.5)"; g.beginPath(); g.ellipse(x - 8, y - 6, 9, 4, -.4, 0, 7); g.fill();
+      }
       g.globalAlpha = 1;
     }
+    const cds = new Map((view.stations || []).map(([id, cd]) => [id, cd]));
+    for (const st of STATIONS) drawStation(g, st, cds.get(st.id) || 0, t, view.prompt && view.prompt.id === st.id);
     const doorState = new Map(view.doors.map((d) => [d[0], d]));
     drawDoors(g, doorState, t);
     for (const [, x, y, kind] of view.items) {
@@ -524,11 +596,47 @@ export function makeRenderer(canvas) {
         if (p.role !== "surv" || !p.alive) continue;
         const sx = p.x - ox, sy = p.y - oy;
         if (sx > 0 && sx < VIEW_W && sy > 0 && sy < VIEW_H) continue;
-        const a = Math.atan2(sy - VIEW_H / 2, sx - VIEW_W / 2);
-        const ex = VIEW_W / 2 + Math.cos(a) * (VIEW_W / 2 - 30), ey = VIEW_H / 2 + Math.sin(a) * (VIEW_H / 2 - 30);
-        g.save(); g.translate(ex, ey); g.rotate(a); g.fillStyle = p.color;
-        g.beginPath(); g.moveTo(16, 0); g.lineTo(-8, -10); g.lineTo(-8, 10); g.fill(); g.restore();
+        edgeArrow(g, sx, sy, p.color);
       }
+    }
+    // the werewolf's nose: points at the closest survivor for a moment
+    if (amWolf && me.fx.sniff) {
+      let best = null, bd = 1e9;
+      for (const p of view.players) {
+        if (p.role !== "surv" || !p.alive) continue;
+        const d = Math.hypot(p.x - me.x, p.y - me.y);
+        if (d < bd) { bd = d; best = p; }
+      }
+      if (best) {
+        const a = Math.atan2(best.y - me.y, best.x - me.x);
+        g.save(); g.translate(me.x - ox + Math.cos(a) * 54, me.y - oy + Math.sin(a) * 54); g.rotate(a);
+        g.globalAlpha = .6 + .4 * Math.sin(t * 10);
+        g.fillStyle = "#ff5a4a"; g.beginPath(); g.moveTo(18, 0); g.lineTo(-8, -11); g.lineTo(-8, 11); g.fill();
+        g.restore();
+        g.font = "11px 'Press Start 2P', monospace"; g.textAlign = "center"; g.fillStyle = "#ff5a4a";
+        g.fillText("SNIFF SNIFF", me.x - ox, me.y - oy - 58);
+      }
+    }
+    // task pings: the werewolf sees where survivors finished a task
+    if (amWolf || !me) {
+      for (const [x, y, life] of view.pings || []) {
+        const sx = x - ox, sy = y - oy;
+        g.strokeStyle = "#ff5a4a"; g.lineWidth = 3;
+        for (let i = 0; i < 2; i++) {
+          const r = ((t * 60 + i * 30) % 60) + 10;
+          g.globalAlpha = Math.min(1, life) * (1 - (r - 10) / 60);
+          g.beginPath(); g.arc(sx, sy, r, 0, 7); g.stroke();
+        }
+        g.globalAlpha = 1;
+        if (sx < 0 || sx > VIEW_W || sy < 0 || sy > VIEW_H) edgeArrow(g, sx, sy, "#ff5a4a", 1.2);
+      }
+    }
+    // midnight frenzy: the edges of the screen glow red
+    if (frenzyNow) {
+      const k = .25 + .15 * Math.sin(t * 6);
+      const vg = g.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * .45, VIEW_W / 2, VIEW_H / 2, VIEW_W * .7);
+      vg.addColorStop(0, "rgba(120,0,0,0)"); vg.addColorStop(1, `rgba(150,0,20,${k})`);
+      g.fillStyle = vg; g.fillRect(0, 0, VIEW_W, VIEW_H);
     }
 
     // heartbeat when the werewolf is close
@@ -581,6 +689,9 @@ export function makeRenderer(canvas) {
       if (me.fx.speed) effects.push("ZOOM");
       if (me.fx.shield) effects.push("GARLIC SHIELD");
       if (me.fx.howl) effects.push("HOWL");
+      if (me.fx.rage) effects.push("RAGE");
+      if (me.fx.stuck) effects.push("STUCK IN SYRUP");
+      if (me.fx.ventCd && me.role === "surv" && me.alive) effects.push(`VENTS IN ${Math.ceil(me.fx.ventCd)}`);
       if (me.fx.stun) effects.push("DIZZY");
       if (me.fx.slip) effects.push("SLIPPING");
       if (me.hidden && me.alive) effects.push("HIDDEN");
@@ -589,6 +700,16 @@ export function makeRenderer(canvas) {
     }
 
     drawMinimap(g, view, me);
+
+    // "press space" hint at a task station
+    if (view.prompt && view.phase === "play") {
+      const txt = `${view.touch ? "Tap USE" : "SPACE"}: ${view.prompt.name}  (+10, but the werewolf will know)`;
+      g.font = "14px Rubik, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      const w = g.measureText(txt).width + 24;
+      g.fillStyle = "rgba(10,10,20,.8)"; g.fillRect(VIEW_W / 2 - w / 2, VIEW_H - 112, w, 30);
+      g.strokeStyle = "#7be05a"; g.lineWidth = 2; g.strokeRect(VIEW_W / 2 - w / 2, VIEW_H - 112, w, 30);
+      g.fillStyle = "#fff"; g.fillText(txt, VIEW_W / 2, VIEW_H - 97);
+    }
 
     // center banners
     if (view.banner && view.banner.t > 0) banner(g, view.banner.title, view.banner.sub, view.banner.color);
