@@ -1,6 +1,8 @@
 // Menus, lobby and the game loop for host, client and solo practice.
 import { TILE, tileAtPx } from "./map.js";
-import { CFG, ITEMS, COLORS, newPlayer, createGame, startRound, step, snapshot, removePlayer, movePlayer } from "./sim.js";
+import { CFG, ITEMS, COLORS, SCORING, newPlayer, createGame, startRound, step, snapshot, removePlayer, movePlayer, stationNear } from "./sim.js";
+import { stations as STATION_DEFS, center } from "./map.js";
+import { TaskUI } from "./tasks.js";
 import { Bot } from "./bots.js";
 import { HostNet, ClientNet, cleanCode } from "./net.js";
 import { makeRenderer, burst, floatText } from "./render.js";
@@ -54,7 +56,55 @@ function fitCanvas() {
 }
 addEventListener("resize", fitCanvas);
 
-const ui = { banner: null, roundTitle: "", roundSub: "", lastSecond: -1 };
+const ui = { banner: null, roundTitle: "", roundSub: "", lastSecond: -1, growl: 0, view: null };
+
+// How to score, shown in the lobby
+for (const [team, list] of [["surv", "score-surv"], ["wolf", "score-wolf"]]) {
+  for (const [what, pts] of SCORING[team]) {
+    const li = document.createElement("li");
+    const a = document.createElement("span"); a.textContent = what;
+    const b = document.createElement("b"); b.textContent = pts;
+    li.append(a, b);
+    $(list).append(li);
+  }
+}
+
+// ---------------------------------------------------------------- mini games
+const STATIONS = STATION_DEFS.map((d) => ({ ...d, ...center(...d.tile) }));
+const task = new TaskUI($("task"), (st) => {
+  input.frozen = false;
+  if (session) session.finishTask(st.id);
+}, () => { input.frozen = false; });
+let moveHeld = 0;
+
+function myView() {
+  const v = ui.view;
+  return v ? v.players.find((p) => p.id === v.meId) : null;
+}
+function currentPrompt() {
+  const v = ui.view;
+  if (!v || v.phase !== "play" || task.open) return null;
+  const me = myView();
+  const cds = new Map((v.stations || []).map(([id, cd]) => [id, cd]));
+  return stationNear(STATIONS.map((st) => ({ ...st, cd: cds.get(st.id) || 0 })), me);
+}
+input.onPress = (down) => {
+  if (task.open) { task.press(down); return true; }
+  if (!down) return false;
+  const st = currentPrompt();
+  if (st) { task.start(st); input.frozen = true; moveHeld = 0; return true; }
+  return false;
+};
+input.onEscape = () => task.close();
+function updateTask(dt) {
+  if (!task.open) return;
+  const v = ui.view, me = myView();
+  if (!v || v.phase !== "play" || !me || !me.alive) { task.close(); return; }
+  // moving the stick or keys for a moment quits the task, so you can always run
+  if (Math.hypot(input.mx, input.my) > 0.5) moveHeld += dt; else moveHeld = 0;
+  if (moveHeld > 0.15) { task.close(); return; }
+  task.update(dt);
+}
 let session = null; // the active Host, Client or null
 
 function nameOf(players, id) {
@@ -104,11 +154,35 @@ function handleEvents(events, players, meId) {
         burst(ev.x, ev.y, ["#9aa4ad", "#fff"], 8, 90); burst(ev.x2, ev.y2, ["#9aa4ad", "#fff"], 8, 90);
         if (mine) sfx("whoosh");
         break;
+      case "points":
+        if (ev.why !== "DAREDEVIL" || ev.who === meId) floatText(ev.x, ev.y - 34, `+${ev.n} ${ev.why}`, ev.who === meId ? "#7be05a" : "#cfe8ff");
+        if (ev.who === meId && ev.why !== "DAREDEVIL") sfx("coin");
+        break;
+      case "task": {
+        const wolfP = players.find((p) => p.role === "wolf");
+        if (wolfP && wolfP.id === meId) { setBanner("TASK ALERT!", `Someone finished "${ev.name}". Follow the red rings!`, "#ff5a4a", 2); sfx("howl"); }
+        else toast(`${ev.who === meId ? "You" : nameOf(players, ev.who)} finished "${ev.name}"! Closing time is ${CFG.taskClock}s sooner.`);
+        break;
+      }
+      case "frenzy":
+        setBanner("MIDNIGHT FRENZY!", "The werewolf is getting faster. Hang on!", "#ff5a4a", 2.5);
+        sfx("howl"); renderer.shake(.4);
+        break;
+      case "sniff":
+        if (ev.who === meId) sfx("whoosh");
+        break;
+      case "stuck":
+        floatText(ev.x, ev.y - 24, "STUCK!", "#e8a04a"); burst(ev.x, ev.y, ["#c86a1a", "#e8a04a"], 10, 80); sfx("slip");
+        break;
+      case "smash":
+        floatText(ev.x, ev.y - 24, "SMASH!", "#ff5a4a"); burst(ev.x, ev.y, ["#8a5a2b", "#ffcf3a"], 14, 180); sfx("bonk"); renderer.shake(.2);
+        break;
       case "pickup":
         if (mine) { sfx("coin"); toast(`Got ${ITEMS[ev.kind].name}! ${ITEMS[ev.kind].desc}`); }
         break;
       case "use":
-        if (ev.kind === "moon") {
+        if (ev.kind === "pepper") { sfx("howl"); burst(ev.x, ev.y, ["#ff2a1a", "#ffcf3a"], 20, 200); if (!mine) toast("The werewolf ate a Ghost Pepper. RUN!"); }
+        else if (ev.kind === "moon") {
           sfx("howl"); renderer.shake(.4);
           if (!mine) setBanner("AWOOOOO!", "The werewolf howled and can see everyone!", "#ff5a4a", 2.5);
         } else if (ev.kind === "smoke") { burst(ev.x, ev.y, ["#9ec27a", "#b9d99b"], 20, 140); sfx("whoosh"); }
@@ -144,6 +218,14 @@ function decorate(view) {
   view.roundTitle = ui.roundTitle;
   view.roundSub = ui.roundSub;
   view.touch = input.touch || document.body.classList.contains("touch");
+  ui.view = view;
+  view.prompt = currentPrompt();
+  // the werewolf growls when it's close to you
+  const me = view.players.find((p) => p.id === view.meId);
+  if (me && me.alive && me.role === "surv" && wolf && view.phase === "play" && !wolf.fx.hold) {
+    ui.growl -= 1 / 60;
+    if (ui.growl <= 0 && Math.hypot(wolf.x - me.x, wolf.y - me.y) < 240) { sfx("growl"); ui.growl = 2.5; }
+  }
   if (view.phase === "play") {
     const s = Math.ceil(view.timer);
     if (s !== ui.lastSecond && s <= 5 && s > 0) sfx("tick");
@@ -160,7 +242,7 @@ function renderLoop(now) {
   if (session && !$("game").hidden) {
     fitCanvas();
     const view = session.view(dt, now);
-    if (view) renderer.frame(decorate(view), dt, now / 1000);
+    if (view) { renderer.frame(decorate(view), dt, now / 1000); updateTask(dt); }
   }
   requestAnimationFrame(renderLoop);
 }
@@ -209,6 +291,7 @@ class Host {
     this.acc = 0;
     this.steps = 0;
     this.pending = [];
+    this.pendingTask = {};
     this.last = performance.now();
     if (offline) { this.addBot(); this.addBot(); }
     else {
@@ -272,6 +355,8 @@ class Host {
       this.paint();
     } else if (msg.t === "in") {
       this.inputs[id] = { mx: +msg.mx || 0, my: +msg.my || 0, useSeq: msg.useSeq | 0 };
+    } else if (msg.t === "task") {
+      this.pendingTask[id] = msg.id | 0;
     } else if (msg.t === "ping") {
       this.net.send(id, { t: "pong", c: msg.c });
     }
@@ -319,6 +404,9 @@ class Host {
     while (this.acc >= DT) {
       this.acc -= DT;
       this.inputs.host = input.read();
+      for (const id in this.inputs) if (this.inputs[id]) this.inputs[id].task = null;
+      for (const id in this.pendingTask) if (this.inputs[id]) this.inputs[id].task = this.pendingTask[id];
+      this.pendingTask = {};
       for (const p of g.players) {
         const bot = this.bots.get(p.id);
         if (bot) this.inputs[p.id] = bot.input(g, p, DT);
@@ -340,6 +428,8 @@ class Host {
   view() {
     return this.game ? { ...snapshot(this.game), meId: this.myId } : null;
   }
+
+  finishTask(id) { this.pendingTask[this.myId] = id; }
 
   leave() {
     clearInterval(this.timer);
@@ -373,6 +463,8 @@ class Client {
       if (this.myId && performance.now() - this.heard > 8000 && session === this) goMenu("Lost the connection to the host.");
     }, 1000);
   }
+
+  finishTask(id) { this.net.send({ t: "task", id }); }
 
   sendInput() {
     if (!this.inGame) return;
@@ -446,7 +538,7 @@ class Client {
       const me = this.me;
       for (const k in me.fx) me.fx[k] = Math.max(0, me.fx[k] - dt);
       const i = input.read();
-      movePlayer(me, i, dt, { smokes: base.smokes.map(([x, y, , r]) => ({ x, y, r })) });
+      movePlayer(me, i, dt, { smokes: base.smokes.map(([x, y, , r]) => ({ x, y, r })), timer: base.timer });
       this.history.push({ at: now, x: me.x, y: me.y });
       while (this.history.length && this.history[0].at < now - 1500) this.history.shift();
       players = players.map((p) => (p.id === me.id ? { ...p, x: me.x, y: me.y, vx: me.vx, vy: me.vy, face: me.face, fx: me.fx } : p));

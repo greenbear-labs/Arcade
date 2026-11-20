@@ -154,3 +154,14 @@ export const itemSpots = [
   [8, 18], [30, 17], [46, 18], [11, 28], [26, 24], [16, 33],
   [35, 24], [46, 21], [51, 31], [44, 30], [3, 12], [56, 30], [28, 38], [45, 1],
 ];
+
+// Mini-game stations: finishing one scores points and shortens the clock,
+// but the werewolf gets a ping on where you are.
+export const stations = [
+  { id: 0, tile: [17, 14], kind: "timing", name: "Flip the patties", room: "Kitchen" },
+  { id: 1, tile: [25, 10], kind: "mash", name: "Scoop the ice cream", room: "Freezer" },
+  { id: 2, tile: [34, 11], kind: "mash", name: "Blow up the balloons", room: "Party Room" },
+  { id: 3, tile: [16, 24], kind: "hold", name: "Fill the sodas", room: "Dining Hall" },
+  { id: 4, tile: [46, 30], kind: "timing", name: "Catch the bouncy balls", room: "Playland" },
+  { id: 5, tile: [13, 4], kind: "hold", name: "Pour the milkshakes", room: "Drive-Thru" },
+];

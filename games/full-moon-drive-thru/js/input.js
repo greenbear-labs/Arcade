@@ -3,15 +3,22 @@ export function makeInput(canvas, useBtn, stickEl) {
   const keys = new Set();
   const st = { mx: 0, my: 0, useSeq: 0, touch: false };
   let stick = null; // { id, ox, oy, x, y }
-  const use = () => { st.useSeq++; };
+  // main.js can take over the action button (for mini games) with st.onPress(down) -> true
+  const use = () => { if (st.onPress && st.onPress(true)) return; st.useSeq++; };
+  const release = () => { if (st.onPress) st.onPress(false); };
 
   addEventListener("keydown", (e) => {
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
     const k = e.key.toLowerCase();
     if ([" ", "e", "enter", "shift"].includes(k)) { if (!e.repeat) use(); e.preventDefault(); return; }
+    if (k === "escape" && st.onEscape) { st.onEscape(); return; }
     if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(k)) { keys.add(k); e.preventDefault(); }
   });
-  addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
+  addEventListener("keyup", (e) => {
+    const k = e.key.toLowerCase();
+    keys.delete(k);
+    if ([" ", "e", "enter", "shift"].includes(k)) release();
+  });
   addEventListener("blur", () => keys.clear());
 
   const area = canvas.parentElement;
@@ -37,7 +44,9 @@ export function makeInput(canvas, useBtn, stickEl) {
   area.addEventListener("touchend", end);
   area.addEventListener("touchcancel", end);
   useBtn.addEventListener("touchstart", (e) => { use(); e.preventDefault(); e.stopPropagation(); }, { passive: false });
-  useBtn.addEventListener("click", use);
+  useBtn.addEventListener("touchend", (e) => { release(); e.preventDefault(); e.stopPropagation(); }, { passive: false });
+  useBtn.addEventListener("mousedown", use);
+  useBtn.addEventListener("mouseup", release);
 
   function paintStick() {
     if (!stick) { stickEl.style.display = "none"; return; }
@@ -63,6 +72,7 @@ export function makeInput(canvas, useBtn, stickEl) {
     const len = Math.hypot(mx, my);
     if (len > 1) { mx /= len; my /= len; }
     st.mx = mx; st.my = my;
+    if (st.frozen) { mx = 0; my = 0; } // busy with a mini game
     return { mx, my, useSeq: st.useSeq };
   };
   return st;

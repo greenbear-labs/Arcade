@@ -52,7 +52,10 @@
           <li><b>Vents</b> (grey grates) are survivor-only shortcuts. <b>Tubes</b> and <b>slides</b> in the Playland work for everyone. Hide in the <b>ball pit</b>!</li>
           <li><b>Swinging doors</b> swing back after you run through. Anyone right behind you gets BONKED.</li>
           <li>The <b>drive-thru lane</b> outside is a conveyor belt. Ride it, or fight against it.</li>
-          <li><b>Pickups:</b> 🥤 Turbo Soda (speed), 🪣 Grease Bucket (drop a slick), 🍟 Garlic Fries (survivor shield; werewolves sneeze), 🧅 Onion Bomb (hide in the stink), 🌕 Moon Pie (werewolf howl reveals everyone).</li>
+          <li><b>Survivor pickups:</b> 🥤 Turbo Soda (speed), 🪣 Grease Bucket (drop a slick), 🍟 Garlic Fries (shield; werewolves sneeze), 🧅 Onion Bomb (hide in the stink).</li>
+          <li><b>Werewolf pickups:</b> 🌕 Moon Pie (howl: see everyone), 🌶️ Ghost Pepper (rage: super fast, smashes doors), 🍁 Syrup Trap (survivors get stuck), plus Turbo Soda and Grease.</li>
+          <li><b>Tasks:</b> stand at a glowing <b>!</b> station and press Space to play a quick mini game. You score points and closing time comes sooner, but the werewolf sees where you are.</li>
+          <li>The werewolf can sniff out the nearest survivor every so often, and gets even faster in the last 20 seconds: <b>midnight frenzy</b>.</li>
         </ul>
       </details>
     </section>
@@ -63,6 +66,13 @@
       <p class="code" id="room-code">····</p>
       <p class="lead" id="lobby-hint"></p>
       <ul class="players" id="players"></ul>
+      <details class="scoring" open>
+        <summary>How to score</summary>
+        <div class="score-cols">
+          <div><h3>Survivors</h3><ul id="score-surv"></ul></div>
+          <div><h3>Werewolf</h3><ul id="score-wolf"></ul></div>
+        </div>
+      </details>
       <div class="host-only" id="host-controls">
         <div class="buttons">
           <button class="btn" id="add-bot" type="button">+ Add bot</button>
@@ -93,6 +103,11 @@
           <button class="btn ghost" id="end-leave" type="button">Leave</button>
         </div>
         <p class="toast" id="toast" role="status" aria-live="polite"></p>
+        <div class="task" id="task" hidden>
+          <div class="task-head"><b class="task-title"></b><button class="task-close" type="button" aria-label="Quit task">✕</button></div>
+          <canvas width="360" height="130" aria-label="Mini game"></canvas>
+          <p class="task-hint"></p>
+        </div>
       </div>
     </section>
   </main>
