@@ -35,8 +35,9 @@ const Kit = (svg, layer) => {
     return new Promise(res => {
       const t0 = performance.now();
       const tick = now => {
-        const t = Math.min(1, (now - t0) / ms);
-        fn(t);
+        const t = Math.max(0, Math.min(1, (now - t0) / ms));
+        // a mistake in one frame must never leave the game waiting forever
+        try { fn(t); } catch (e) { console.error(e); res(); return; }
         if (t < 1) requestAnimationFrame(tick); else res();
       };
       requestAnimationFrame(tick);
