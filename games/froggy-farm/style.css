@@ -129,3 +129,15 @@ html, body {
 #cw-light.red .lt-r { fill: #ff4d4d; }
 #cw-light.yellow .lt-y { fill: #ffd93b; }
 #cw-light.green .lt-g { fill: #5cdc4a; }
+#carwash [data-act=tool] .glow { fill: none; stroke: #ffd93b; stroke-width: 10; opacity: 0; }
+#carwash [data-act=tool].cw-next .glow { animation: nextglow 1s ease-in-out infinite; }
+@keyframes nextglow { 0%, 100% { opacity: .35; transform: scale(.95); } 50% { opacity: 1; transform: scale(1.12); } }
+#carwash [data-act=tool].cw-next .anim { animation: nextbob 1s ease-in-out infinite; }
+@keyframes nextbob { 50% { transform: scale(1.1); } }
+#carwash [data-act=tool].dim .anim { opacity: .45; }
+#carwash [data-act=tool] .check { display: none; }
+#carwash [data-act=tool].done .check { display: inline; }
+#cw-light.cw-next { animation: nextbob 1s ease-in-out infinite; transform-origin: 800px 344px; }
+#cw-hand .hand-bob { animation: handbob .8s ease-in-out infinite; }
+@keyframes handbob { 50% { transform: translateY(14px); } }
+#cw-light.cw-next .lt-g { fill: #5cdc4a; }

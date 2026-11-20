@@ -94,7 +94,7 @@
     const V = {
       type, T, g, a, body, glit, wheels, x: 0, y: 0, s: 1,
       stk: el('g', {}, a), mud: el('g', {}, a), bub: el('g', {}, a), drips: el('g', {}, a),
-      paint: 'base', wet: false, cleanSaid: false, shinySaid: false, stickers: [],
+      paint: 'base', wet: false, cleanSaid: false, shinySaid: false, stickers: [], done: {}, scrub: 0, decorated: false,
     };
     g._V = V;
     return V;
@@ -193,11 +193,84 @@
       }
     }
   }
+  /* The wash is five steps, always in this order. The tool for the next step glows, the
+   * others fade back, a hand points at it, and each finished step gets a check mark. */
+  const STEPS = [
+    { k: 'spray', tool: 'water', say: 'Spray it with water!' },
+    { k: 'soap', tool: 'soap', say: 'Now the soap!' },
+    { k: 'scrub', tool: 'sponge', say: 'Scrub scrub scrub!' },
+    { k: 'rinse', tool: 'water', say: 'Spray it again!' },
+    { k: 'dry', tool: 'fan', say: 'Dry it with the fan!' },
+  ];
+  const nextStep = C => STEPS.find(st => !C.done[st.k]);
+  const SCRUB_NEED = 1400;
+  const hand = el('g', { id: 'cw-hand', 'pointer-events': 'none', style: 'display:none' }, svg);
+  {
+    const b = el('g', { class: 'hand-bob' }, hand);
+    el('rect', { x: -11, y: 0, width: 22, height: 54, rx: 11, fill: '#fff', stroke: '#26323d', 'stroke-width': 5 }, b);
+    el('path', { d: 'M-30 50 Q-32 34 -16 34 L28 34 Q42 34 40 52 L38 80 Q36 98 16 98 L-12 98 Q-30 98 -30 80 Z', fill: '#fff', stroke: '#26323d', 'stroke-width': 5, 'stroke-linejoin': 'round' }, b);
+    el('path', { d: 'M8 36 V50 M22 36 V50', stroke: '#26323d', 'stroke-width': 4, 'stroke-linecap': 'round' }, b);
+  }
+  let handAt = '';
+  function pointAt(x, y) {
+    const key = x + ',' + y;
+    if (key === handAt) return;
+    handAt = key;
+    hand.style.display = '';
+    hand.setAttribute('transform', `translate(${x},${y})`);
+    anim(hand.firstChild, [{ opacity: 0 }, { opacity: 1 }], 300);
+  }
+  function hideHand() { hand.style.display = 'none'; handAt = ''; }
+  const toolBtn = t => toolsG.querySelector(`[data-tool=${t}]`);
+  function updateGuide() {
+    toolsG.querySelectorAll('[data-act=tool]').forEach(b => {
+      const t = b.dataset.tool, st = nextStep(V || { done: {} });
+      b.classList.toggle('cw-next', stage === 'wash' && !!V && !!st && st.tool === t);
+      b.classList.toggle('dim', stage === 'wash' && !!V && !!st && st.tool !== t);
+      b.classList.toggle('done', !!V && (t === 'water' ? !!V.done.rinse : !!V.done[STEPS.find(x => x.tool === t).k]));
+    });
+    light.classList.toggle('cw-next', stage === 'decorate' && !!V && V.decorated);
+    if (busy || App.current !== 'carwash') return hideHand();
+    if (stage === 'pick' && choices.length) return pointAt(800, 735);
+    if (stage === 'wash' && V) { const st = nextStep(V); if (st) { const b = toolBtn(st.tool); return pointAt(+b.dataset.x + 6, 146); } }
+    if (stage === 'decorate' && V) return V.decorated ? pointAt(806, 376) : pointAt(806, 150);
+    hideHand();
+  }
+  function stepDone(C, k) {
+    if (C !== V || C.done[k]) return;
+    C.done[k] = true;
+    const i = STEPS.findIndex(st => st.k === k), b = toolBtn(STEPS[i].tool);
+    Sound.play('chime', i + 1);
+    sparkles(+b.dataset.x, +b.dataset.y, { n: 8, colors: ['#5cdc4a', '#ffe14d', '#fff'], spread: 90 });
+    updateGuide();
+    const nx = nextStep(C);
+    if (nx && k !== 'rinse') setTimeout(() => { if (V === C && nextStep(C) === nx) elSay(nx.say); }, 900);
+  }
   function maybeFinish(C) {
-    if (C !== V || stage !== 'wash' || mudLeft(C).length || C.wet) return;
-    Sound.play('cheer');
+    if (C !== V || stage !== 'wash' || !C.done.dry) return;
+    // all five steps done: a big hooray, then the paint and stickers come in
+    Sound.play('cheer'); Sound.play('trumpet');
+    flapEar(3);
+    anim(elAnim, [{ transform: 'translateY(0)' }, { transform: 'translateY(-30px)' }, { transform: 'translateY(0)' }], 400, { iterations: 2 });
+    const box = K.visibleBox(40);
+    for (let i = 0; i < 4; i++) setTimeout(() => sparkles(rand(box.x0, box.x1), rand(150, 450), { n: 14, colors: ['#ff5c6c', '#ffe14d', '#5cb3ff', '#6fdc6a', '#fff'], spread: 200 }), i * 250);
     setStage('decorate');
-    setTimeout(() => { elSay(pick(['So shiny! Now paint it!', 'All clean! Paint it and add stickers!'])); hopRow('paint'); }, 600);
+    setTimeout(() => { elSay(pick(['Hooray! So shiny! Now paint it!', 'All clean! Paint it and add stickers!'])); hopRow('paint'); updateGuide(); }, 700);
+  }
+  function addScrub(C, amount) {
+    if (C !== V || C.done.scrub) return;
+    C.scrub += amount;
+    const left = mudLeft(C);
+    // the mud fades as you scrub, so you can see it working
+    const f = Math.max(0.3, 1 - 0.7 * C.scrub / SCRUB_NEED);
+    left.forEach(m => { m.firstChild.style.opacity = f; });
+    if (C.scrub >= SCRUB_NEED || !left.length) {
+      // the last of the mud turns into suds, ready to rinse off
+      [...left].forEach((m, i) => { removeMud(C, m, i * 40); addBubbles(C, 2, m._x, m._y); });
+      Sound.play('bubbles');
+      talkVehicle(C, pick(['That tickles!', 'Hee hee! Bubbly!']));
+      stepDone(C, 'scrub');
+    }
   }
 
   /* ---------- the chooser: three muddy vehicles wait in the bay ---------- */
@@ -216,6 +289,7 @@
       return C;
     });
     Sound.play('putt');
+    hideHand();
     await Promise.all(choices.map((C, i) => {
       spin(C, false);
       const ws = C.wheels.map(w => anim(w, [{ transform: 'rotate(0)' }, { transform: 'rotate(720deg)' }], 1100, { easing: 'ease-out' }));
@@ -223,12 +297,14 @@
       return tween(1100, t => place(C, lerp(x0, x1, 1 - Math.pow(1 - t, 3)), SPOT.y, 0.32)).then(() => ws);
     }));
     busy = false;
+    updateGuide();
     if (App.current === 'carwash') elSay(pick(['Pick a muddy one!', 'Which one should we wash?']));
   }
 
   async function pickVehicle(i) {
     if (busy || V || !choices[i]) return;
     busy = true;
+    hideHand();
     const C = choices[i];
     Sound.play(C.T.horn); bounce(C, 30);
     // the others drive away
@@ -250,15 +326,16 @@
     if (mudLeft(V).length < 9) addMud(V, 9 - mudLeft(V).length);
     busy = false;
     setStage('wash');
+    updateGuide();
     setTimeout(() => talkVehicle(V, V.T.line), 200);
-    setTimeout(() => elSay(pick(["So muddy! Let's spray it!", 'Yucky mud! Wash time!'])), 1600);
+    setTimeout(() => elSay(pick(["So muddy! Let's spray it!", 'Yucky mud! Spray it with water!'])), 1600);
   }
 
   /* ---------- the elephant ---------- */
   const trunk = elephant.querySelector('.trunk'), ear = elephant.querySelector('.ear');
   const rot = ([x, y], a) => ({ transform: `translate(${x}px,${y}px) rotate(${a}deg) translate(${-x}px,${-y}px)` });
   const TRUNK_BASE = [150, -190], EAR_BASE = [80, -230];
-  const EL_TALK = { x: 300, y: 330 };
+  const EL_TALK = { x: 300, y: 236 };
   function elSay(text) {
     anim(elephant.querySelector('.el-smile'), [{ transform: 'scale(1)' }, { transform: 'translate(0,-4px) scale(1,1.6)' }, { transform: 'scale(1)' }, { transform: 'translate(0,-4px) scale(1,1.5)' }, { transform: 'scale(1)' }], 700);
     talk('elephant', EL_TALK.x, EL_TALK.y, text, { pitch: 1.35, rate: 1 });
@@ -299,20 +376,25 @@
     await wait(650);
     Sound.play('splash');
     sparkles(C.x, C.y - 150, { n: 10, colors: ['#5cb3ff', '#bfe9ff', '#fff'], shape: 'drop', spread: 200 });
-    const bubbles = [...bubblesLeft(C)];
-    if (bubbles.length) {
-      // rinse: soap + water washes away all the mud
-      bubbles.forEach((b, i) => popBubble(C, b, i * 40, i % 4));
+    setWet(C, true);
+    if (C.done.scrub && !C.done.rinse) {
+      // rinse: everything washes away
+      [...bubblesLeft(C)].forEach((b, i) => popBubble(C, b, i * 40, i % 4));
       [...mudLeft(C)].forEach((m, i) => removeMud(C, m, 200 + i * 60));
-      await wait(300 + mudLeft(C).length * 60);
-    } else {
+      await wait(500);
+      busy = false;
+      C.done.soap = true;
+      stepDone(C, 'rinse');
+      checkClean(C);
+      return;
+    }
+    if (!C.done.spray) {
       const mud = [...mudLeft(C)].sort(() => Math.random() - 0.5);
       mud.slice(0, Math.max(1, Math.ceil(mud.length * 0.35))).forEach((m, i) => removeMud(C, m, i * 80));
-      if (mud.length > 1) setTimeout(() => elSay(pick(['Splash! Now some soap!', 'Splishy splashy! Soap next!'])), 600);
+      setTimeout(() => talkVehicle(C, pick(['Hee hee! Cold!', 'Splishy splashy!'])), 300);
     }
-    setWet(C, true);
     busy = false;
-    setTimeout(() => checkClean(C), 450);
+    stepDone(C, 'spray');
   }
 
   function soap(btn) {
@@ -321,7 +403,7 @@
     if (btn) sparkles(+btn.dataset.x, +btn.dataset.y + 30, { n: 6, colors: ['#fff', '#ffc4f0', '#bfe9ff'], shape: 'dot', size: 9, spread: 60 });
     addBubbles(V, V.wet ? 22 : 16);
     bounce(V, 8);
-    if (Math.random() < 0.6) setTimeout(() => elSay(pick(['Bubbles! Rub rub rub!', 'So many bubbles!', 'Now scrub it!'])), 500);
+    stepDone(V, 'soap');
   }
 
   async function sponge() {
@@ -342,11 +424,11 @@
       const now = performance.now();
       if (now - last > 130) { last = now; Sound.play('scrub'); if (Math.random() < 0.5) addBubbles(C, 1); }
       scrubAt(C, lx, ly, 60, true);
+      addScrub(C, 0);
     });
     g.remove();
     busy = false;
-    if (mudLeft(C).length) elSay(pick(['Scrub a dub dub!', 'Now spray it again!']));
-    checkClean(C);
+    addScrub(C, SCRUB_NEED);
   }
 
   async function dryer() {
@@ -370,11 +452,12 @@
     await wait(800);
     setWet(C, false);
     busy = false;
-    if (!mudLeft(C).length) {
+    if (C.done.rinse) {
       Sound.play('twinkle');
       shine(C);
-      if (stage === 'wash') maybeFinish(C); else elSay(pick(['All dry!', 'Shiny!']));
-    } else elSay(pick(['Whoosh! Still muddy!', 'All dry, but still muddy!']));
+      stepDone(C, 'dry');
+      maybeFinish(C);
+    } else { const nx = nextStep(C); elSay('Whoosh! ' + (nx ? nx.say : '')); }
   }
   function shine(C) {
     for (let i = 0; i < 5; i++) setTimeout(() => {
@@ -399,10 +482,7 @@
     rainbowArc();
     sparkles(C.x, C.y - 160, { n: 16, colors: ['#fff', '#ffe14d', '#bfe9ff'], spread: 260, up: 40 });
     setTimeout(() => talkVehicle(C, pick(["I'm clean!", 'Yay! No more mud!'])), 300);
-    setTimeout(() => {
-      if (C.wet) { elSay('Sparkly clean! Now dry it with the fan!'); hop(board.querySelector('[data-tool=fan] .anim'), 20); }
-      else maybeFinish(C);
-    }, 2200);
+    setTimeout(() => { if (V === C && !C.done.dry) elSay('Sparkly clean! Now dry it with the fan!'); }, 2000);
   }
 
   function rainbowArc() {
@@ -446,6 +526,7 @@
     if (mix) { color = mix.color; name = mix.name; nid = mix.id; }
     C.paint = nid;
     C.g.classList.remove('sparkly');
+    if (!C.decorated) { C.decorated = true; updateGuide(); }
     Sound.play('splat');
     // a big splat of paint, then the color is on
     const g = el('g', { transform: `translate(${C.x},${C.y - 150 * C.s})` }, layer.fx);
@@ -488,6 +569,7 @@
     const s = el('g', {}, h);
     STICKERS[kind](s);
     C.stickers.push(h);
+    if (!C.decorated) { C.decorated = true; updateGuide(); }
     anim(s, [{ transform: 'scale(1.8)', opacity: 0 }, { transform: 'scale(.85)', opacity: 1 }, { transform: 'scale(1)' }], 300);
     Sound.play('plop');
     const eyes = C.stickers.filter(n => n.dataset.kind === 'googly').length;
@@ -506,6 +588,7 @@
       return;
     }
     busy = true;
+    hideHand(); light.classList.remove('cw-next');
     const C = V;
     const wasClean = !mudLeft(C).length;
     light.setAttribute('class', 'tap red'); Sound.play('chime', 0); await wait(400);
@@ -528,7 +611,7 @@
     await wait(900);
     // around the block and back, sometimes through a mud puddle
     const muddy = wasClean && Math.random() < 0.4;
-    if (muddy) { addMud(C, 9); C.cleanSaid = false; C.shinySaid = false; setWet(C, false); }
+    if (muddy) { addMud(C, 9); C.cleanSaid = false; C.shinySaid = false; C.done = {}; C.scrub = 0; setWet(C, false); }
     place(C, -400, SPOT.y, 1);
     spin(C, true, 400);
     await tween(1300, t => place(C, lerp(-400, SPOT.x, 1 - Math.pow(1 - t, 3)), SPOT.y, 1));
@@ -537,12 +620,14 @@
     V = C; busy = false;
     if (muddy) { setStage('wash'); elSay(pick(['Oops! Muddy again!', 'Oh no! A mud puddle!'])); }
     else { Sound.play(C.T.horn); talkVehicle(C, pick(['That was fun!', 'Again! Again!', 'Wheee!'])); }
+    updateGuide();
   }
 
   async function newCar() {
     anim(PANELS.newcar.querySelector('.anim'), [{ transform: 'scale(1)' }, { transform: 'scale(.85)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], 350);
     if (!V || busy) return;
     busy = true;
+    hideHand();
     const C = V;
     Sound.play(C.T.horn);
     talkVehicle(C, pick(['Bye bye!', 'See you later!', 'Thank you!']));
@@ -592,9 +677,13 @@
     const x = 605 + i * 130, y = 94;
     const b = el('g', { class: 'tap', transform: `translate(${x},${y})` }, toolsG);
     b.dataset.act = 'tool'; b.dataset.tool = k; b.dataset.x = x; b.dataset.y = y;
+    el('circle', { r: 50, class: 'glow' }, b);
     const a = el('g', { class: 'anim' }, b);
     el('circle', { r: 44, fill: '#fff', stroke: '#4cb8e6', 'stroke-width': 5 }, a);
     TOOLS[k](a);
+    const ck = el('g', { class: 'check', transform: 'translate(32,-32)' }, b);
+    el('circle', { r: 16, fill: '#5cdc4a', stroke: '#fff', 'stroke-width': 4 }, ck);
+    el('path', { d: 'M-7 0 L-2 6 L8 -6', fill: 'none', stroke: '#fff', 'stroke-width': 5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, ck);
   });
   Object.keys(PAINTS).forEach((k, i) => {
     const x = 580 + i * 110, y = 100;
@@ -625,8 +714,9 @@
     if (act === 'veh') {
       if (busy || hit._V !== V || rub || sdrag) return;
       const bub = e.target.closest('.cw-bubble');
-      if (bub) { popBubble(V, bub); Sound.play('chime', Math.floor(rand(0, 6))); return; }
-      const stk = e.target.closest('.cw-stk');
+      // popping a bubble still starts a scrub, so a soapy car can always be rubbed clean
+      if (bub) { popBubble(V, bub); Sound.play('chime', Math.floor(rand(0, 6))); }
+      const stk = !bub && e.target.closest('.cw-stk');
       if (stk) {
         anim(stk.firstChild, [{ transform: 'scale(1) rotate(0)' }, { transform: 'scale(1.3) rotate(-15deg)' }, { transform: 'scale(1) rotate(10deg)' }, { transform: 'scale(1)' }], 400);
         Sound.play(stk.dataset.kind === 'googly' ? 'boing' : 'squeak', 1);
@@ -635,7 +725,7 @@
       }
       e.preventDefault();
       try { svg.setPointerCapture(e.pointerId); } catch (err) {}
-      rub = { id: e.pointerId, cx: e.clientX, cy: e.clientY, moved: false };
+      rub = { id: e.pointerId, cx: e.clientX, cy: e.clientY, moved: false, bub: !!bub };
       return;
     }
     if (act === 'sticker') {
@@ -683,12 +773,13 @@
       sdrag.p = p;
       return;
     }
-    if (!V || busy) return;
+    if (!V || busy || stage !== 'wash') return;
     const l = toLocal(V, p);
-    const hit = scrubAt(V, l.x, l.y, 40);
+    scrubAt(V, l.x, l.y, 40);
+    if (rub.l && overVehicle(V, p)) addScrub(V, Math.hypot(l.x - rub.l.x, l.y - rub.l.y));
+    rub.l = l;
     const now = performance.now();
     if (now - lastScrub > 140 && overVehicle(V, p)) { lastScrub = now; Sound.play('scrub'); if (bubblesLeft(V).length < 30 && Math.random() < 0.3) addBubbles(V, 1); }
-    if (hit) setTimeout(() => checkClean(V), 420);
   });
   function moveTool(e) {
     const d = tdrag;
@@ -703,10 +794,12 @@
     if (d.tool === 'soap') {
       if (now - d.last > 70 && bubblesLeft(V).length < 45) { d.last = now; addBubbles(V, 1, l.x + rand(-25, 25), l.y + rand(-20, 20)); }
       if (now - d.snd > 260) { d.snd = now; Sound.play('bubbles'); }
+      if (bubblesLeft(V).length >= 8) stepDone(V, 'soap');
     } else {
-      const hit = scrubAt(V, l.x, l.y, 55);
+      scrubAt(V, l.x, l.y, 55);
+      if (d.l) addScrub(V, Math.hypot(l.x - d.l.x, l.y - d.l.y));
+      d.l = l;
       if (now - d.snd > 140) { d.snd = now; Sound.play('scrub'); if (Math.random() < 0.4) addBubbles(V, 1, l.x, l.y); }
-      if (hit) setTimeout(() => checkClean(V), 420);
     }
   }
   function endTool(e) {
@@ -716,13 +809,13 @@
     const m = d.ghost.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);
     const x0 = +m[1], y0 = +m[2], x1 = +d.btn.dataset.x, y1 = +d.btn.dataset.y;
     tween(300, t => d.ghost.setAttribute('transform', `translate(${lerp(x0, x1, t).toFixed(0)},${lerp(y0, y1, t).toFixed(0)}) scale(${lerp(1.5, 1, t).toFixed(2)})`)).then(() => d.ghost.remove());
-    if (V && d.tool === 'soap' && Math.random() < 0.5) elSay(pick(['Bubbles! Now spray it!', 'So soapy!']));
+
   }
   function endInput(e) {
     if (tdrag && e.pointerId === tdrag.id) { endTool(e); return; }
     if (rub && e.pointerId === rub.id) {
       const r = rub; rub = null;
-      if (!r.moved && V) {
+      if (!r.moved && V && !r.bub) {
         Sound.play(V.T.horn);
         talkVehicle(V, V.g.classList.contains('alive') ? pick(['Hee hee!', 'Wash me!', 'Make me shiny!', V.T.line]) : V.T.line);
       }
@@ -743,14 +836,11 @@
 
   /* ---------- gentle hints when nobody is tapping ---------- */
   setInterval(() => {
-    if (App.current !== 'carwash' || busy || rub || sdrag || tdrag || performance.now() - lastInput < 9000 || hints >= 3) return;
+    if (App.current !== 'carwash' || busy || rub || sdrag || tdrag || performance.now() - lastInput < 7000 || hints >= 3) return;
     lastInput = performance.now(); hints++;
     if (!V) { elSay('Pick a muddy one!'); choices.forEach((C, i) => hop(C.a, 24, i * 120)); return; }
-    if (mudLeft(V).length) {
-      if (bubblesLeft(V).length) { elSay('Rub rub rub! Or spray it!'); hop(board.querySelector('[data-tool=water] .anim'), 16); }
-      else { elSay(pick(["Let's spray it!", 'Try the soap!'])); hop(board.querySelector(`[data-tool=${pick(['water', 'soap'])}] .anim`), 16); }
-    } else if (V.wet) { elSay('Dry it with the fan!'); hop(board.querySelector('[data-tool=fan] .anim'), 16); }
-    else if (V.paint === 'base' && !V.stickers.length) { elSay('Paint it! Add stickers!'); hopRow('paint'); }
+    if (stage === 'wash') { const st = nextStep(V); if (st) { elSay(st.say); hop(toolBtn(st.tool).querySelector('.anim'), 18); } return; }
+    if (!V.decorated) { elSay('Paint it! Add stickers!'); hopRow('paint'); }
     else if (hints === 3) { elSay('Want a new car? Tap here!'); hop(PANELS.newcar.querySelector('.anim'), 20); }
     else { elSay('Tap the light to go!'); anim(light, [{ opacity: 1 }, { opacity: 0.4 }, { opacity: 1 }], 400, { iterations: 3 }); }
   }, 1000);
@@ -766,9 +856,10 @@
     enter() {
       lastInput = performance.now(); hints = 0;
       Sound.setMood('wash');
+      setTimeout(updateGuide, 50);
       setTimeout(() => elSay(V ? 'Welcome back!' : "Let's wash a car!"), 500);
     },
-    leave() { rub = null; if (sdrag) { sdrag.ghost.remove(); sdrag = null; } if (tdrag) { tdrag.ghost.remove(); tdrag = null; } },
+    leave() { hideHand(); rub = null; if (sdrag) { sdrag.ghost.remove(); sdrag = null; } if (tdrag) { tdrag.ghost.remove(); tdrag = null; } },
     clear() {
       if (busy) return;
       if (V) { V.g.remove(); V = null; }
@@ -777,5 +868,5 @@
     },
   });
 
-  window.__carwash = { state, pickVehicle, water, soap, sponge, dryer, paint, stick, go, TYPES, mudLeft };
+  window.__carwash = { state, nextStep, updateGuide, pickVehicle, water, soap, sponge, dryer, paint, stick, go, TYPES, mudLeft };
 })();
