@@ -72,7 +72,63 @@
         el('circle', { cx: 204, cy: -84, r: 8, fill: '#fff6a0' }, g);
       },
     },
+    fire: {
+      color: '#ff3b30', horn: 'clang', siren: true, line: 'Wee woo! Fire truck!',
+      wheels: [[-130, -46, 46], [140, -46, 46]],
+      area: [[-205, -160, 30, -64], [54, -146, 205, -64]],
+      draw(g, P) {
+        P('rect', { x: -215, y: -172, width: 265, height: 118, rx: 12 });
+        P('path', { d: 'M44 -54 L44 -214 Q44 -230 60 -230 L150 -230 Q166 -230 174 -214 L208 -150 Q216 -138 216 -120 L216 -54 Z' });
+        el('path', { d: 'M64 -210 L144 -210 L176 -152 L64 -152 Z', fill: WIN, stroke: LINE, 'stroke-width': 5, 'stroke-linejoin': 'round' }, g);
+        [-200, -128, -56].forEach(x => el('rect', { x, y: -158, width: 62, height: 62, rx: 8, fill: 'rgba(255,255,255,.2)', stroke: LINE, 'stroke-width': 4 }, g));
+        el('rect', { x: -215, y: -92, width: 431, height: 12, fill: '#fff', opacity: 0.85 }, g);
+        // the ladder on top
+        el('rect', { x: -34, y: -186, width: 16, height: 16, fill: '#9aa5ae' }, g);
+        el('rect', { x: -206, y: -210, width: 236, height: 9, rx: 4, fill: '#e6e9ec', stroke: LINE, 'stroke-width': 3 }, g);
+        el('rect', { x: -206, y: -190, width: 236, height: 9, rx: 4, fill: '#e6e9ec', stroke: LINE, 'stroke-width': 3 }, g);
+        for (let i = 0; i < 8; i++) el('rect', { x: -198 + i * 30, y: -204, width: 7, height: 18, fill: '#e6e9ec', stroke: LINE, 'stroke-width': 2 }, g);
+        el('rect', { x: 84, y: -250, width: 50, height: 22, rx: 9, fill: '#ff2d2d', stroke: LINE, 'stroke-width': 3, class: 'cw-siren' }, g);
+        el('circle', { cx: 204, cy: -112, r: 10, fill: '#fff6a0', stroke: LINE, 'stroke-width': 3 }, g);
+      },
+    },
+    police: {
+      color: '#2a5fd8', horn: 'weewoo', siren: true, line: 'Police car! Wee woo!',
+      wheels: [[-130, -42, 42], [130, -42, 42]],
+      area: [[-205, -124, -96, -64], [106, -124, 205, -64], [-80, -122, 90, -70]],
+      draw(g, P) {
+        P('path', { d: 'M-216 -56 L-216 -112 Q-214 -132 -192 -134 L-112 -138 L-72 -192 Q-64 -202 -50 -202 L66 -202 Q80 -202 88 -192 L128 -138 L196 -130 Q216 -126 216 -106 L216 -56 Z' });
+        el('path', { d: 'M-98 -140 L-64 -184 L2 -184 L2 -140 Z', fill: WIN, stroke: LINE, 'stroke-width': 4, 'stroke-linejoin': 'round' }, g);
+        el('path', { d: 'M14 -140 L14 -184 L66 -184 L104 -140 Z', fill: WIN, stroke: LINE, 'stroke-width': 4, 'stroke-linejoin': 'round' }, g);
+        el('path', { d: 'M-90 -128 L100 -128 L100 -60 L-90 -60 Z', fill: '#fff', opacity: 0.92, stroke: LINE, 'stroke-width': 4 }, g);
+        el('path', { d: starPath(22, 10), transform: 'translate(6,-94)', fill: '#ffd93b', stroke: '#e0a800', 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+        el('rect', { x: -44, y: -222, width: 44, height: 22, rx: 9, fill: '#ff2d2d', stroke: LINE, 'stroke-width': 3, class: 'cw-siren' }, g);
+        el('rect', { x: 0, y: -222, width: 44, height: 22, rx: 9, fill: '#2d7bff', stroke: LINE, 'stroke-width': 3, class: 'cw-siren b' }, g);
+        el('circle', { cx: 206, cy: -100, r: 9, fill: '#fff6a0', stroke: LINE, 'stroke-width': 3 }, g);
+      },
+    },
+    ambulance: {
+      color: '#f4f6f8', horn: 'siren', siren: true, line: 'Wee woo! Ambulance!',
+      wheels: [[-130, -44, 44], [140, -44, 44]],
+      area: [[-200, -236, 56, -66], [90, -130, 205, -66]],
+      draw(g, P) {
+        P('rect', { x: -216, y: -250, width: 296, height: 196, rx: 18 });
+        P('path', { d: 'M70 -54 L70 -196 Q70 -206 82 -206 L140 -206 Q156 -206 164 -192 L206 -136 Q216 -124 216 -106 L216 -54 Z' });
+        el('path', { d: 'M90 -188 L136 -188 L176 -136 L90 -136 Z', fill: WIN, stroke: LINE, 'stroke-width': 4, 'stroke-linejoin': 'round' }, g);
+        el('rect', { x: -216, y: -86, width: 432, height: 14, fill: '#ff3b3b' }, g);
+        el('path', { d: 'M-90 -214 h36 v36 h36 v36 h-36 v36 h-36 v-36 h-36 v-36 h36 Z', fill: '#ff3b3b', stroke: '#fff', 'stroke-width': 4, 'stroke-linejoin': 'round' }, g);
+        el('rect', { x: -50, y: -270, width: 56, height: 22, rx: 9, fill: '#ff2d2d', stroke: LINE, 'stroke-width': 3, class: 'cw-siren' }, g);
+        el('circle', { cx: 206, cy: -100, r: 9, fill: '#fff6a0', stroke: LINE, 'stroke-width': 3 }, g);
+      },
+    },
   };
+  // emergency vehicles flash their lights whenever they honk
+  function honk(C, ms = 1600) {
+    Sound.play(C.T.horn);
+    if (!C.T.siren) return;
+    C.g.classList.add('siren-on');
+    clearTimeout(C.sirT);
+    C.sirT = setTimeout(() => C.g.classList.remove('siren-on'), ms);
+  }
 
   function makeVehicle(type, parent) {
     const T = TYPES[type];
@@ -312,7 +368,7 @@
     busy = true;
     hideHand();
     const C = choices[i];
-    Sound.play(C.T.horn); bounce(C, 30);
+    honk(C); bounce(C, 30);
     // the others drive away
     choices.forEach((O, j) => {
       if (O === C) return;
@@ -384,14 +440,9 @@
     sparkles(C.x, C.y - 150, { n: 10, colors: ['#5cb3ff', '#bfe9ff', '#fff'], shape: 'drop', spread: 200 });
     setWet(C, true);
     if (C.done.scrub && !C.done.rinse) {
-      // rinse: everything washes away
-      [...bubblesLeft(C)].forEach((b, i) => popBubble(C, b, i * 40, i % 4));
-      [...mudLeft(C)].forEach((m, i) => removeMud(C, m, 200 + i * 60));
+      finishRinse(C);
       await wait(500);
       busy = false;
-      C.done.soap = true;
-      stepDone(C, 'rinse');
-      checkClean(C);
       return;
     }
     if (!C.done.spray) {
@@ -401,6 +452,106 @@
     }
     busy = false;
     stepDone(C, 'spray');
+  }
+
+  // rinse: everything washes away
+  function finishRinse(C) {
+    if (C !== V || C.done.rinse) return;
+    [...bubblesLeft(C)].forEach((b, i) => popBubble(C, b, i * 40, i % 4));
+    [...mudLeft(C)].forEach((m, i) => removeMud(C, m, 200 + i * 60));
+    C.done.soap = true;
+    setTimeout(() => { if (V === C) { stepDone(C, 'rinse'); checkClean(C); } }, 500);
+  }
+
+  /* ---------- the trunk hose: grab the elephant and pull, and the trunk stretches like a
+   * hose that sprays wherever you point it. Works any time, even with no car. ---------- */
+  const TRUNK_ROOT = { x: EL.x + 150 * EL.s, y: EL.y - 190 * EL.s };
+  const hoseG = el('g', { class: 'cw-hose', 'pointer-events': 'none', style: 'display:none' });
+  elephant.after(hoseG);
+  const hoseOut = el('path', { fill: 'none', stroke: '#7f93a8', 'stroke-width': 40, 'stroke-linecap': 'round' }, hoseG);
+  const hoseIn = el('path', { fill: 'none', stroke: '#a9bccf', 'stroke-width': 30, 'stroke-linecap': 'round' }, hoseG);
+  const hoseTip = el('ellipse', { rx: 13, ry: 19, fill: '#7f93a8' }, hoseG);
+  const hose = { on: false, tip: { ...TRUNK_TIP }, dir: { x: 1, y: -0.3 }, timer: 0, ticks: 0, lastTalk: 0, lastSnd: 0 };
+  function drawHose() {
+    const r = TRUNK_ROOT, t = hose.tip;
+    const dist = Math.hypot(t.x - r.x, t.y - r.y);
+    const cx = (r.x + t.x) / 2, cy = (r.y + t.y) / 2 + 40 + dist * 0.18;
+    const d = `M${r.x.toFixed(0)} ${r.y.toFixed(0)} Q${cx.toFixed(0)} ${cy.toFixed(0)} ${t.x.toFixed(0)} ${t.y.toFixed(0)}`;
+    hoseOut.setAttribute('d', d); hoseIn.setAttribute('d', d);
+    let dx = t.x - cx, dy = t.y - cy;
+    const n = Math.hypot(dx, dy) || 1;
+    dx /= n; dy /= n;
+    hose.dir = { x: dx, y: dy };
+    hoseTip.setAttribute('transform', `translate(${t.x.toFixed(0)},${t.y.toFixed(0)}) rotate(${(Math.atan2(dy, dx) * 180 / Math.PI + 90).toFixed(0)})`);
+  }
+  function hoseStart(p) {
+    hose.on = true; hose.ticks = 0;
+    hose.tip = { x: p.x, y: p.y };
+    trunk.style.visibility = 'hidden';
+    hoseG.style.display = '';
+    drawHose();
+    Sound.play('trumpet'); flapEar(2);
+    clearInterval(hose.timer);
+    hose.timer = setInterval(hoseTick, 45);
+  }
+  function hoseMove(p) { hose.tip = { x: p.x, y: p.y }; drawHose(); }
+  function hoseTick() {
+    if (!hose.on) return;
+    const { tip, dir } = hose;
+    // water shoots out of the end of the trunk
+    for (let k = 0; k < 2; k++) {
+      const g = el('g', { transform: `translate(${tip.x.toFixed(0)},${tip.y.toFixed(0)})` }, layer.fx);
+      const d = el('path', { d: shapes.drop(rand(7, 12)), fill: pick(['#5cb3ff', '#7cc8ff', '#bfe9ff']) }, g);
+      const len = rand(90, 170), sx = dir.x + rand(-0.3, 0.3), sy = dir.y + rand(-0.3, 0.3);
+      const frames = [0, 0.5, 1].map(t => ({ transform: `translate(${(sx * len * t).toFixed(0)}px,${(sy * len * t + t * t * 40).toFixed(0)}px) rotate(${(Math.atan2(sy, sx) * 180 / Math.PI - 90).toFixed(0)}deg)`, opacity: t > 0.8 ? 0.3 : 1 }));
+      const a = anim(d, frames, 380, { easing: 'linear' });
+      if (a) a.onfinish = () => g.remove(); else g.remove();
+    }
+    const now = performance.now();
+    if (now - hose.lastSnd > 280) { hose.lastSnd = now; Sound.play('hose'); }
+    if (++hose.ticks % 2) return;
+    hoseHit({ x: tip.x + dir.x * 90, y: tip.y + dir.y * 90 }, tip);
+  }
+  function hoseHit(p, tip) {
+    if (Math.hypot(p.x - 480, p.y - 790) < 110 && Math.random() < 0.15) tapDuck(svg.querySelector('[data-act=duck]'));
+    if (!V || busy || leaving) return;
+    const C = V;
+    if (!overVehicle(C, p) && !overVehicle(C, tip)) return;
+    const l = toLocal(C, overVehicle(C, p) ? p : tip);
+    if (!C.wet) setWet(C, true);
+    C.hoseT = (C.hoseT || 0) + 1;
+    const now = performance.now();
+    if (now - hose.lastTalk > 5000 && Math.random() < 0.08) { hose.lastTalk = now; talkVehicle(C, pick(['Hee hee! Cold!', 'Splishy splashy!', 'Wheee!'])); }
+    if (stage !== 'wash') { C.dryLater = true; return; }
+    if (!C.done.spray) {
+      // the first spray knocks off some of the mud, but leaves plenty to scrub
+      C.sprayed = C.sprayed || 0;
+      const cap = Math.ceil((mudLeft(C).length + C.sprayed) * 0.4);
+      mudLeft(C).forEach(m => { if (C.sprayed < cap && Math.hypot(m._x - l.x, m._y - l.y) < 90) { removeMud(C, m); C.sprayed++; } });
+      if (C.hoseT >= 8) { stepDone(C, 'spray'); Sound.play('splash'); }
+    } else if (C.done.scrub && !C.done.rinse) {
+      // the rinse: the hose washes off the suds wherever it points
+      bubblesLeft(C).forEach(b => { if (Math.hypot(b._x - l.x, b._y - l.y) < 110) popBubble(C, b, 0, Math.random() < 0.6); });
+      mudLeft(C).forEach(m => { if (Math.hypot(m._x - l.x, m._y - l.y) < 110) removeMud(C, m); });
+      C.rinseT = (C.rinseT || 0) + 1;
+      if (C.rinseT >= 22 || bubblesLeft(C).length <= 2) { Sound.play('splash'); finishRinse(C); }
+    }
+  }
+  function hoseEnd() {
+    if (!hose.on) return;
+    hose.on = false;
+    clearInterval(hose.timer);
+    // the trunk springs back
+    const t0 = { ...hose.tip };
+    Sound.play('boing');
+    tween(320, t => { const e = 1 - Math.pow(1 - t, 3); hose.tip = { x: lerp(t0.x, TRUNK_TIP.x, e), y: lerp(t0.y, TRUNK_TIP.y, e) }; drawHose(); }).then(() => {
+      if (hose.on) return;
+      hoseG.style.display = 'none';
+      trunk.style.visibility = '';
+    });
+    // a car that only got splashed while being decorated dries off by itself
+    const C = V;
+    if (C && C.dryLater) { C.dryLater = false; setTimeout(() => { if (V === C && stage !== 'wash') setWet(C, false); }, 2500); }
   }
 
   function soap(btn) {
@@ -570,7 +721,9 @@
       anim(old, [{ opacity: 1 }, { opacity: 0, transform: 'scale(1.5)' }], 250, { fill: 'forwards' });
       setTimeout(() => old.remove(), 260);
     }
-    const h = el('g', { transform: `translate(${lx.toFixed(0)},${ly.toFixed(0)}) rotate(${rand(-15, 15).toFixed(0)})`, class: 'cw-stk' }, C.stk);
+    const h = el('g', { class: 'cw-stk' }, C.stk);
+    h._rot = rand(-15, 15).toFixed(0);
+    setStk(h, lx, ly);
     h.dataset.kind = kind;
     const s = el('g', {}, h);
     STICKERS[kind](s);
@@ -600,7 +753,7 @@
     light.setAttribute('class', 'tap red'); Sound.play('chime', 0); await wait(400);
     light.setAttribute('class', 'tap yellow'); Sound.play('chime', 2); await wait(400);
     light.setAttribute('class', 'tap green'); Sound.play('chime', 4);
-    Sound.play(C.T.horn);
+    honk(C, 6000);
     talkVehicle(C, C.g.classList.contains('alive') ? pick(['Bye bye!', 'Wheee!', 'See you soon!']) : C.T.line);
     await wait(500);
     const fast = C.stickers.some(n => /flame|bolt/.test(n.dataset.kind));
@@ -626,7 +779,7 @@
     Sound.play('land'); bounce(C, 14);
     busy = false;
     if (muddy) { setStage('wash'); elSay(pick(['Oops! Muddy again!', 'Oh no! A mud puddle!'])); }
-    else { Sound.play(C.T.horn); talkVehicle(C, pick(['That was fun!', 'Again! Again!', 'Wheee!'])); }
+    else { honk(C); talkVehicle(C, pick(['That was fun!', 'Again! Again!', 'Wheee!'])); }
     updateGuide();
   }
 
@@ -638,13 +791,14 @@
     // let a running step finish (up to a moment), then this always wins
     for (let i = 0; i < 15 && busy; i++) await wait(100);
     if (tdrag) { tdrag.ghost.remove(); tdrag = null; }
+    if (mdrag) dropSticker(mdrag, null);
     rub = null;
     busy = true;
     hideHand();
     const C = V;
     V = null;
     if (!C) { busy = false; leaving = false; return; }
-    Sound.play(C.T.horn);
+    honk(C, 2600);
     talkVehicle(C, pick(['Bye bye!', 'See you later!', 'Thank you!']));
     await wait(600);
     spin(C, true, 350);
@@ -719,13 +873,15 @@
   }
 
   /* ---------- input ---------- */
-  let rub = null, sdrag = null, tdrag = null, lastInput = performance.now(), hints = 0, lastScrub = 0;
+  let rub = null, sdrag = null, tdrag = null, hdrag = null, mdrag = null, lastInput = performance.now(), hints = 0, lastScrub = 0;
   svg.addEventListener('pointerdown', e => {
     lastInput = performance.now(); hints = 0;
     if (e.isPrimary) {
       if (tdrag && tdrag.id !== e.pointerId) { tdrag.ghost.remove(); tdrag = null; }
       if (sdrag && sdrag.id !== e.pointerId) { sdrag.ghost.remove(); sdrag = null; }
       if (rub && rub.id !== e.pointerId) rub = null;
+      if (hdrag && hdrag.id !== e.pointerId) { hdrag = null; hoseEnd(); }
+      if (mdrag && mdrag.id !== e.pointerId) dropSticker(mdrag, null);
     }
     const hit = e.target.closest('[data-act]');
     if (!hit) return;
@@ -738,9 +894,11 @@
       if (bub) { popBubble(V, bub); Sound.play('chime', Math.floor(rand(0, 6))); }
       const stk = !bub && e.target.closest('.cw-stk');
       if (stk) {
-        anim(stk.firstChild, [{ transform: 'scale(1) rotate(0)' }, { transform: 'scale(1.3) rotate(-15deg)' }, { transform: 'scale(1) rotate(10deg)' }, { transform: 'scale(1)' }], 400);
-        Sound.play(stk.dataset.kind === 'googly' ? 'boing' : 'squeak', 1);
-        if (stk.dataset.kind === 'googly' && V.g.classList.contains('alive')) talkVehicle(V, pick(['Hee hee!', 'I see you!', 'Wash me!']));
+        // press a sticker to wiggle it, or drag it somewhere else (drag it off to peel it away)
+        if (mdrag) return;
+        e.preventDefault();
+        try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+        mdrag = { id: e.pointerId, h: stk, C: V, cx: e.clientX, cy: e.clientY, moved: false, x0: stk._x, y0: stk._y };
         return;
       }
       e.preventDefault();
@@ -770,17 +928,40 @@
       tdrag = { id: e.pointerId, tool: hit.dataset.tool, btn: hit, ghost, gi, cx: e.clientX, cy: e.clientY, moved: false, last: 0, snd: 0 };
       return;
     }
+    if (act === 'elephant') {
+      if (hdrag) return;
+      e.preventDefault();
+      try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      hdrag = { id: e.pointerId, cx: e.clientX, cy: e.clientY, moved: false };
+      return;
+    }
     if (act === 'pick') pickVehicle(+hit.dataset.i);
     else if (act === 'tool') useTool(hit.dataset.tool, hit);
     else if (act === 'paint') paint(hit.dataset.paint, hit);
     else if (act === 'light') go();
     else if (act === 'newcar') newCar();
-    else if (act === 'elephant') tapElephant();
     else if (act === 'duck') tapDuck(hit);
     else if (act === 'sun') tapSun(hit);
   });
   svg.addEventListener('pointermove', e => {
     if (tdrag && e.pointerId === tdrag.id) { moveTool(e); return; }
+    if (hdrag && e.pointerId === hdrag.id) {
+      lastInput = performance.now();
+      const p = toSvg(e.clientX, e.clientY);
+      if (!hdrag.moved && Math.hypot(e.clientX - hdrag.cx, e.clientY - hdrag.cy) > 10) { hdrag.moved = true; hoseStart(p); }
+      if (hdrag.moved) hoseMove(p);
+      return;
+    }
+    if (mdrag && e.pointerId === mdrag.id) {
+      lastInput = performance.now();
+      if (!mdrag.moved && Math.hypot(e.clientX - mdrag.cx, e.clientY - mdrag.cy) > 10) { mdrag.moved = true; Sound.play('pop'); }
+      if (!mdrag.moved) return;
+      const C = mdrag.C, p = toSvg(e.clientX, e.clientY), l = toLocal(C, p);
+      mdrag.p = p;
+      setStk(mdrag.h, l.x, l.y, 1.2);
+      mdrag.h.style.opacity = overVehicle(C, p) ? 1 : 0.55;
+      return;
+    }
     const d = rub || sdrag;
     if (!d || e.pointerId !== d.id) return;
     lastInput = performance.now();
@@ -831,12 +1012,46 @@
     tween(300, t => d.ghost.setAttribute('transform', `translate(${lerp(x0, x1, t).toFixed(0)},${lerp(y0, y1, t).toFixed(0)}) scale(${lerp(1.5, 1, t).toFixed(2)})`)).then(() => d.ghost.remove());
 
   }
+  function setStk(h, x, y, sc = 1) {
+    h._x = x; h._y = y;
+    h.setAttribute('transform', `translate(${x.toFixed(0)},${y.toFixed(0)}) rotate(${h._rot || 0}) scale(${sc})`);
+  }
+  function dropSticker(d, e) {
+    mdrag = null;
+    const { h, C } = d;
+    h.style.opacity = '';
+    if (!d.moved || !e) {
+      if (d.moved) setStk(h, d.x0, d.y0);
+      anim(h.firstChild, [{ transform: 'scale(1) rotate(0)' }, { transform: 'scale(1.3) rotate(-15deg)' }, { transform: 'scale(1) rotate(10deg)' }, { transform: 'scale(1)' }], 400);
+      Sound.play(h.dataset.kind === 'googly' ? 'boing' : 'squeak', 1);
+      if (h.dataset.kind === 'googly' && C.g.classList.contains('alive')) talkVehicle(C, pick(['Hee hee!', 'I see you!', 'Wash me!']));
+      return;
+    }
+    if (d.p && overVehicle(C, d.p)) {
+      setStk(h, h._x, h._y);
+      Sound.play('plop');
+      anim(h.firstChild, [{ transform: 'scale(1.2)' }, { transform: 'scale(.9)' }, { transform: 'scale(1)' }], 250);
+      return;
+    }
+    // dragged off the car: the sticker peels away
+    Sound.play('poof');
+    if (d.p) sparkles(d.p.x, d.p.y, { n: 6, colors: ['#fff', '#bfe9ff'], shape: 'dot', spread: 50 });
+    C.stickers = C.stickers.filter(n => n !== h);
+    h.remove();
+    if (C.stickers.filter(n => n.dataset.kind === 'googly').length < 2) C.g.classList.remove('alive');
+  }
   function endInput(e) {
     if (tdrag && e.pointerId === tdrag.id) { endTool(e); return; }
+    if (hdrag && e.pointerId === hdrag.id) {
+      const d = hdrag; hdrag = null;
+      if (d.moved) hoseEnd(); else tapElephant();
+      return;
+    }
+    if (mdrag && e.pointerId === mdrag.id) { dropSticker(mdrag, e); return; }
     if (rub && e.pointerId === rub.id) {
       const r = rub; rub = null;
       if (!r.moved && V && !r.bub) {
-        Sound.play(V.T.horn);
+        honk(V);
         talkVehicle(V, V.g.classList.contains('alive') ? pick(['Hee hee!', 'Wash me!', 'Make me shiny!', V.T.line]) : V.T.line);
       }
       return;
@@ -856,7 +1071,7 @@
 
   /* ---------- gentle hints when nobody is tapping ---------- */
   setInterval(() => {
-    if (App.current !== 'carwash' || busy || rub || sdrag || tdrag || performance.now() - lastInput < 7000 || hints >= 3) return;
+    if (App.current !== 'carwash' || busy || rub || sdrag || tdrag || hdrag || mdrag || performance.now() - lastInput < 7000 || hints >= 3) return;
     lastInput = performance.now(); hints++;
     if (!V) { elSay('Pick a muddy one!'); choices.forEach((C, i) => hop(C.a, 24, i * 120)); return; }
     if (stage === 'wash') { const st = nextStep(V); if (st) { elSay(st.say); hop(toolBtn(st.tool).querySelector('.anim'), 18); } return; }
@@ -874,7 +1089,7 @@
   // the elephant helps out if a wash step is taking a long time
   let stepKey = '', stepAt = 0;
   setInterval(() => {
-    if (App.current !== 'carwash' || stage !== 'wash' || !V || busy || tdrag) { stepAt = performance.now(); return; }
+    if (App.current !== 'carwash' || stage !== 'wash' || !V || busy || tdrag || hdrag) { stepAt = performance.now(); return; }
     const st = nextStep(V), key = V.type + (st ? st.k : '');
     if (key !== stepKey) { stepKey = key; stepAt = performance.now(); return; }
     if (st && performance.now() - stepAt > 20000) {
@@ -899,7 +1114,7 @@
       setTimeout(updateGuide, 50);
       setTimeout(() => elSay(V ? 'Welcome back!' : "Let's wash a car!"), 500);
     },
-    leave() { hideHand(); rub = null; if (sdrag) { sdrag.ghost.remove(); sdrag = null; } if (tdrag) { tdrag.ghost.remove(); tdrag = null; } },
+    leave() { hideHand(); rub = null; if (hdrag) { hdrag = null; hoseEnd(); } if (mdrag) dropSticker(mdrag, null); if (sdrag) { sdrag.ghost.remove(); sdrag = null; } if (tdrag) { tdrag.ghost.remove(); tdrag = null; } },
     clear() {
       if (busy) return;
       if (V) { V.g.remove(); V = null; }
@@ -908,5 +1123,5 @@
     },
   });
 
-  window.__carwash = { state, nextStep, updateGuide, pickVehicle, water, soap, sponge, dryer, paint, stick, go, TYPES, mudLeft };
+  window.__carwash = { state, hose, hoseStart, hoseMove, hoseEnd, nextStep, updateGuide, pickVehicle, water, soap, sponge, dryer, paint, stick, go, TYPES, mudLeft };
 })();

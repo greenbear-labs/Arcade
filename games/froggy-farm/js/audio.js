@@ -184,6 +184,10 @@ const Sound = (() => {
     scrub() { noise({ type: 'bandpass', f0: r(1800, 2600), f1: r(3000, 4000), dur: 0.1, vol: 0.14, q: 3 }); tone({ type: 'triangle', f0: r(1200, 1500), f1: r(1700, 2100), dur: 0.08, vol: 0.06 }); },
     blow() { noise({ type: 'bandpass', f0: 500, f1: 1400, dur: 1.0, vol: 0.28, q: 0.8, a: 0.1 }); },
     splat() { noise({ type: 'lowpass', f0: 1400, f1: 200, dur: 0.25, vol: 0.4 }); tone({ f0: 240, f1: 90, dur: 0.18, vol: 0.3 }); },
+    siren() { [0, 0.4, 0.8].forEach(at => { tone({ type: 'triangle', f0: 660, f1: 990, dur: 0.2, vol: 0.18, at }); tone({ type: 'triangle', f0: 990, f1: 660, dur: 0.2, vol: 0.18, at: at + 0.2 }); }); },
+    weewoo() { [0, 0.5].forEach(at => { tone({ type: 'triangle', f0: 880, dur: 0.24, vol: 0.18, at }); tone({ type: 'triangle', f0: 660, dur: 0.24, vol: 0.18, at: at + 0.25 }); }); },
+    clang() { [0, 0.3].forEach(at => { tone({ f0: 1760, dur: 0.4, vol: 0.18, at }); tone({ f0: 2640, dur: 0.25, vol: 0.07, at }); }); },
+    hose() { noise({ type: 'highpass', f0: 2200, f1: 3800, dur: 0.3, vol: 0.14, a: 0.02 }); },
     rain() { for (let i = 0; i < 9; i++) tone({ f0: r(1500, 2600), f1: r(700, 1100), dur: 0.05, vol: 0.11, at: i * 0.08 + Math.random() * 0.05 }); },
   };
 
