@@ -2,7 +2,9 @@
 // their screens, and drops a coin before sending you into a game.
 (function () {
   const W = 240, H = 180;
-  const games = window.ARCADE_GAMES;
+  // Newest games first. Reversing before the (stable) sort puts same-day games newest first too.
+  const games = window.ARCADE_GAMES.slice().reverse()
+    .sort((a, b) => (b.added || "").localeCompare(a.added || ""));
   const grid = document.getElementById("cabinets");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
