@@ -660,6 +660,41 @@
       ctx.fillStyle = "#ffcf3a"; ctx.fillText("MEGA MOONBURGER", 100, 14);
       ctx.textAlign = "start";
     },
+    "lane-racer"(ctx, t) {
+      // A top-down three-lane road scrolling past; the race car hops lanes to grab coins and slips around a cone.
+      ctx.fillStyle = "#5cc84a"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#4a4f5c"; ctx.fillRect(48, 0, 144, H);
+      const scroll = (t * 140) % 40;
+      for (let y = -40; y < H + 40; y += 40) {
+        ctx.fillStyle = "#e63b2e"; ctx.fillRect(42, y + scroll, 6, 20); ctx.fillRect(192, y + scroll, 6, 20);
+        ctx.fillStyle = "#fff"; ctx.fillRect(42, y + scroll + 20, 6, 20); ctx.fillRect(192, y + scroll + 20, 6, 20);
+        ctx.fillRect(94, y + scroll + 8, 4, 22); ctx.fillRect(142, y + scroll + 8, 4, 22);
+      }
+      for (let i = 0; i < 4; i++) { // bushes on the grass
+        const by = ((i * 52 + t * 140) % (H + 40)) - 20;
+        ctx.fillStyle = "#3e9b32"; ctx.beginPath(); ctx.arc(i % 2 ? 222 : 20, by, 13, 0, Math.PI * 2); ctx.fill();
+      }
+      const lanes = [72, 120, 168], k = (t * 0.5) % 3, seg = Math.floor(k), f = k - seg;
+      const from = lanes[[1, 0, 2][seg]], to = lanes[[0, 2, 1][seg]];
+      const ease = f < 0.7 ? 0 : (1 - Math.cos((f - 0.7) / 0.3 * Math.PI)) / 2;
+      const cx = from + (to - from) * ease, cy = 140;
+      // coins and a cone rolling down toward the car
+      for (let i = 0; i < 3; i++) {
+        const y = ((t * 140 + i * 70) % (H + 60)) - 30, lx = lanes[(i * 2 + Math.floor((t * 140 + i * 70) / (H + 60))) % 3];
+        if (i === 2) {
+          ctx.fillStyle = "#ff7a1a"; ctx.beginPath(); ctx.moveTo(lx, y - 12); ctx.lineTo(lx + 9, y + 8); ctx.lineTo(lx - 9, y + 8); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#fff"; ctx.fillRect(lx - 5, y - 2, 10, 3);
+        } else if (Math.abs(y - cy) > 18 || Math.abs(lx - cx) > 20) {
+          ctx.fillStyle = "#ffc21a"; ctx.beginPath(); ctx.ellipse(lx, y, 7 * Math.abs(Math.cos(t * 4 + i)) + 2, 9, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      // the car
+      ctx.fillStyle = "#1d1d26"; ctx.fillRect(cx - 17, cy - 12, 6, 12); ctx.fillRect(cx + 11, cy - 12, 6, 12); ctx.fillRect(cx - 17, cy + 10, 6, 12); ctx.fillRect(cx + 11, cy + 10, 6, 12);
+      ctx.fillStyle = "#8a3cf0"; ctx.beginPath(); ctx.moveTo(cx, cy - 26); ctx.quadraticCurveTo(cx + 15, cy - 16, cx + 14, cy + 26); ctx.lineTo(cx - 14, cy + 26); ctx.quadraticCurveTo(cx - 15, cy - 16, cx, cy - 26); ctx.fill();
+      ctx.fillStyle = "#9fe6ff"; ctx.fillRect(cx - 9, cy - 8, 18, 6);
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(cx, cy + 8, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffe066"; ctx.beginPath(); ctx.arc(cx - 6, cy - 20, 2.5, 0, Math.PI * 2); ctx.arc(cx + 6, cy - 20, 2.5, 0, Math.PI * 2); ctx.fill();
+    },
     soon(ctx) {
       const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       const d = img.data;
