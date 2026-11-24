@@ -253,7 +253,7 @@
 
   // ---------------------------------------------------------------- state
   var state = null;
-  var COINS_PER_TROPHY = 20;
+  var RACE_SECONDS = 60; // length of a race at normal speed
 
   function newGame(car, theme, demo) {
     state = {
@@ -263,7 +263,7 @@
       player: { lane: 1, x: laneX(1), y: 0, tilt: 0, bump: 0, spin: 0 },
       things: [], decor: [], parts: [], floaters: [],
       nextSpawn: 0, nextDecor: 0, dashOff: 0,
-      coins: 0, trophies: 0,
+      coins: 0, raceLen: demo ? Infinity : H * 0.6 * RACE_SECONDS, finishSpawned: false, finished: false, finishT: 0,
       star: 0, boost: 0, shield: false, magnet: 0,
       celebrate: 0
     };
@@ -272,7 +272,8 @@
     // pre-fill scenery
     for (var y = -100; y < H + 100; y += 70) addDecor(y);
     state.nextSpawn = H * 0.5;
-    if (!demo) updateHud(true);
+    lastPct = -1;
+    if (!demo) { updateHud(); updateProgress(); paintProgCar(); }
   }
 
   // ---------------------------------------------------------------- spawning
@@ -366,6 +367,7 @@
     s.t += dt;
     s.baseSpeed = H * (0.55 + Math.min(s.t / 240, 0.35)); // speeds up very gently over minutes
     var target = s.boost > 0 ? 1.8 : 1;
+    if (s.finished) target = 0.25;
     if (p.bump > 0) target = 0.45;
     s.speedMul += (target - s.speedMul) * Math.min(1, dt * 3);
     var v = s.baseSpeed * s.speedMul * dt;
@@ -393,8 +395,18 @@
     if (p.bump > 0) { p.bump -= dt; p.spin = Math.sin(p.bump * 22) * 0.35 * (p.bump / 1.0); } else p.spin = 0;
 
     // spawn
+    var left = s.raceLen - s.dist;
     s.nextSpawn -= v;
-    if (s.nextSpawn <= 0) { spawnRow(); s.nextSpawn = carH * rand(2.2, 3.4); }
+    if (s.nextSpawn <= 0 && left > H * 1.4) { spawnRow(); s.nextSpawn = carH * rand(2.2, 3.4); }
+    if (!s.finishSpawned && left < p.y + carH) {
+      s.finishSpawned = true;
+      s.things.push({ kind: 'finish', type: 'finish', lane: 1, x: W / 2, y: p.y - left, s: 0, hit: false, vx: 0, vy: 0, rot: 0, vr: 0, alpha: 1, wob: 0 });
+    }
+    if (s.finished) {
+      s.finishT += dt;
+      if (Math.random() < 0.15) confettiPuff();
+      if (s.finishT > 2.4 && finishEl.classList.contains('hidden')) showFinish();
+    } else if (!s.demo) updateProgress();
     s.nextDecor -= v;
     if (s.nextDecor <= 0) { addDecor(-80); s.nextDecor = rand(35, 80); }
 
@@ -417,6 +429,11 @@
         var mx = p.x - o.x, my = p.y - o.y;
         var d = Math.sqrt(mx * mx + my * my);
         if (d < H * 0.5) { o.x += mx * Math.min(1, dt * 6); o.y += my * Math.min(1, dt * 6); }
+      }
+      if (o.kind === 'finish') {
+        if (!s.finished && o.y > p.y - carH * 0.5) crossFinish();
+        if (o.y > H + 200) s.things.splice(i, 1);
+        continue;
       }
       if (o.y > H + 100) { s.things.splice(i, 1); continue; }
 
@@ -446,6 +463,15 @@
     // trails
     if (s.boost > 0 && Math.random() < 0.9) puff(p.x + rand(-carW * 0.2, carW * 0.2), p.y + carH * 0.5, ['#ffef5a', '#ff9d2e', '#ff4d2e'], 1);
     if (s.star > 0 && Math.random() < 0.7) sparkle(p.x + rand(-carW * 0.5, carW * 0.5), p.y + carH * 0.4, 1);
+  }
+
+  function crossFinish() {
+    var s = state;
+    s.finished = true; s.finishT = 0;
+    s.celebrate = 2.5;
+    if (!s.demo) { Audio.fanfare(); setTimeout(Audio.honk, 900); }
+    confetti();
+    updateProgress(1);
   }
 
   function autopilot(dt) {
@@ -479,13 +505,7 @@
     s.coins++;
     Audio.coin();
     sparkle(x, y, 6);
-    if (s.coins >= COINS_PER_TROPHY) {
-      s.coins = 0; s.trophies++;
-      s.celebrate = 2.5;
-      Audio.fanfare();
-      confetti();
-      updateHud(false, true);
-    } else updateHud();
+    if (!s.demo) updateHud();
   }
 
   function getPower(type, x, y) {
@@ -553,6 +573,9 @@
     for (var i = 0; i < 5; i++) {
       state.parts.push({ orbit: true, a: i / 5 * Math.PI * 2, life: 1.1, max: 1.1, r: 10, c: pick(['#ffe14d', '#fff']), shape: 'star', rot: 0, vr: 5, x: 0, y: 0, vx: 0, vy: 0, fall: true });
     }
+  }
+  function confettiPuff() {
+    for (var i = 0; i < 6; i++) state.parts.push({ x: rand(0, W), y: -10, vx: rand(-60, 60), vy: rand(150, 300), life: 2.5, max: 2.5, r: rand(6, 11), c: pick(['#ff3b4e', '#ffc21f', '#2fc95a', '#2f7bff', '#a55cff', '#ff5aa5']), shape: 'rect', rot: Math.random() * 6, vr: rand(-8, 8), fall: true });
   }
   function confetti() {
     for (var i = 0; i < 120; i++) state.parts.push({ x: rand(0, W), y: rand(-H * 0.3, 0), vx: rand(-60, 60), vy: rand(150, 400), life: rand(1.8, 3), max: 3, r: rand(6, 11), c: pick(['#ff3b4e', '#ffc21f', '#2fc95a', '#2f7bff', '#a55cff', '#ff5aa5']), shape: 'rect', rot: Math.random() * 6, vr: rand(-8, 8), fall: true });
@@ -659,7 +682,8 @@
       c.save();
       c.globalAlpha = Math.max(0, o.alpha);
       c.translate(o.x, o.y); c.rotate(o.rot);
-      if (o.kind === 'coin') drawCoin(c, o.s, o.wob);
+      if (o.kind === 'finish') drawFinish(c, o.y);
+      else if (o.kind === 'coin') drawCoin(c, o.s, o.wob);
       else if (o.kind === 'power') drawPower(c, o.type, o.s, o.wob);
       else drawObstacle(c, o.type, o.s);
       c.restore();
@@ -737,6 +761,30 @@
       drawTrophy(c, Math.min(W, H) * 0.22);
       c.restore();
     }
+  }
+
+  // Checkered finish line across the road with a flag on each side. Drawn in world space.
+  function drawFinish(c, y) {
+    c.setTransform(DPR, 0, 0, DPR, 0, 0); c.globalAlpha = 1;
+    var sq = road.w / 12, rows = 2;
+    for (var r = 0; r < rows; r++) for (var k = 0; k < 12; k++) {
+      c.fillStyle = (r + k) % 2 ? '#222' : '#fff';
+      c.fillRect(road.x + k * sq, y - sq * rows / 2 + r * sq, sq + 0.5, sq + 0.5);
+    }
+    [road.x - sq * 0.4, road.x + road.w + sq * 0.4].forEach(function (px, i) {
+      c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.arc(px + 4, y + 4, sq * 0.35, 0, 7); c.fill();
+      c.fillStyle = '#666'; c.beginPath(); c.arc(px, y, sq * 0.3, 0, 7); c.fill();
+      var wave = Math.sin(state.t * 8 + i) * sq * 0.15, dir = i ? 1 : -1;
+      for (var a = 0; a < 3; a++) for (var b = 0; b < 2; b++) {
+        c.fillStyle = (a + b) % 2 ? '#222' : '#fff';
+        c.fillRect(px + dir * (sq * 0.25 + a * sq * 0.4) - (dir < 0 ? sq * 0.4 : 0), y - sq * 1.2 + b * sq * 0.4 + wave * (a / 3), sq * 0.4, sq * 0.4);
+      }
+    });
+    // arch banner
+    c.fillStyle = '#ff3b4e';
+    rr(c, road.x + road.w * 0.2, y - sq * 2.6, road.w * 0.6, sq * 1.1, sq * 0.3); c.fill();
+    c.fillStyle = '#ffd21f';
+    for (var st = 0; st < 5; st++) { c.save(); c.translate(road.x + road.w * (0.3 + st * 0.1), y - sq * 2.05); c.rotate(state.t * 2 + st); starPath(c, sq * 0.32, sq * 0.14, 5); c.fill(); c.restore(); }
   }
 
   function starPath(c, R, r, n) {
@@ -974,16 +1022,36 @@
 
   // ---------------------------------------------------------------- HUD
   var hud = document.getElementById('hud'), selectEl = document.getElementById('select');
-  var barFill = document.getElementById('bar-fill'), trophiesEl = document.getElementById('trophies');
-  var TROPHY_SVG = '<svg class="tro" viewBox="0 0 24 24"><path fill="#ffc21f" stroke="#e08a00" stroke-width="1.2" d="M6 3h12v3h3a4 4 0 0 1-4 5 6 6 0 0 1-4 3v3h3v3H8v-3h3v-3a6 6 0 0 1-4-3 4 4 0 0 1-4-5h3z"/></svg>';
-  function updateHud(reset, newTrophy) {
-    barFill.style.width = (state.coins / COINS_PER_TROPHY * 100) + '%';
-    if (reset) trophiesEl.innerHTML = '';
-    if (newTrophy) {
-      if (trophiesEl.children.length >= 5) trophiesEl.removeChild(trophiesEl.firstChild);
-      trophiesEl.insertAdjacentHTML('beforeend', TROPHY_SVG);
-    }
+  var barFill = document.getElementById('bar-fill'), progCar = document.getElementById('prog-car'), coinCount = document.getElementById('coin-count');
+  var finishEl = document.getElementById('finish'), finishCoins = document.getElementById('finish-coins');
+  var lastPct = -1;
+  function updateHud() {
+    coinCount.textContent = state.coins;
+    if (!state.finished) updateProgress();
   }
+  function updateProgress(force) {
+    var pct = force || Math.min(1, state.dist / state.raceLen);
+    pct = Math.round(pct * 200) / 2;
+    if (pct === lastPct) return;
+    lastPct = pct;
+    barFill.style.width = pct + '%';
+    progCar.style.left = pct + '%';
+  }
+  var progCtx = progCar.getContext('2d');
+  function paintProgCar() {
+    progCar.width = 80; progCar.height = 80;
+    progCtx.setTransform(1, 0, 0, 1, 0, 0); progCtx.clearRect(0, 0, 80, 80);
+    progCtx.translate(40, 40); progCtx.rotate(Math.PI / 2);
+    drawCar(progCtx, state.car, 36, 63, 0);
+  }
+  function showFinish() {
+    finishCoins.textContent = state.coins;
+    finishEl.classList.remove('hidden');
+    playing = false;
+  }
+  document.getElementById('again').addEventListener('click', function () { startGame(state.car, state.theme); });
+  document.getElementById('places').addEventListener('click', function () { chosenCar = state.car; show('tracks'); });
+  document.getElementById('finish-home').addEventListener('click', function () { show('title'); });
 
   var SOUND_ON = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>';
   var SOUND_OFF = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9zm13.6 3 2.7-2.7-1.3-1.3-2.7 2.7-2.7-2.7-1.3 1.3 2.7 2.7-2.7 2.7 1.3 1.3 2.7-2.7 2.7 2.7 1.3-1.3z"/></svg>';
@@ -1005,6 +1073,7 @@
     selectEl.classList.toggle('hidden', name !== 'cars');
     tracksEl.classList.toggle('hidden', name !== 'tracks');
     hud.classList.toggle('hidden', name !== 'race');
+    finishEl.classList.add('hidden');
     Array.prototype.forEach.call(document.querySelectorAll('.picked'), function (b) { b.classList.remove('picked'); });
     if (name !== 'race') Audio.stopMusic();
     Audio.setQuiet(name === 'title');

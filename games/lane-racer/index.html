@@ -57,13 +57,27 @@
       <svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg>
     </button>
     <div class="meter" aria-hidden="true">
-      <div class="coin-icon"></div>
-      <div class="bar"><div id="bar-fill"></div></div>
-      <div id="trophies" class="trophies"></div>
+      <div class="prog">
+        <div class="prog-track"><div id="bar-fill"></div></div>
+        <canvas id="prog-car"></canvas>
+        <div class="prog-flag"></div>
+      </div>
+      <div class="coins"><div class="coin-icon"></div><span id="coin-count">0</span></div>
     </div>
     <button id="sound" class="round-btn sound-btn" aria-label="Sound on or off"></button>
     <div class="arrow left" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8"/></svg></div>
     <div class="arrow right" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 4 8 8-8 8"/></svg></div>
+  </div>
+
+  <!-- Finish -->
+  <div id="finish" class="finish hidden">
+    <svg class="finish-trophy" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffc21f" stroke="#e08a00" stroke-width="1" d="M6 3h12v3h3a4 4 0 0 1-4 5 6 6 0 0 1-4 3v3h3v3H8v-3h3v-3a6 6 0 0 1-4-3 4 4 0 0 1-4-5h3z"/><path fill="#fff6a8" d="m12 5 1 2.2 2.3.3-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.3z"/></svg>
+    <div class="finish-coins"><div class="coin-icon"></div><span id="finish-coins">0</span></div>
+    <div class="finish-btns">
+      <button id="finish-home" class="round-btn big" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></button>
+      <button id="again" class="round-btn big go" aria-label="Race again"><svg viewBox="0 0 24 24"><path d="M12 4V1L7 5l5 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg></button>
+      <button id="places" class="round-btn big" aria-label="Pick a new place"><svg viewBox="0 0 24 24"><path d="M5 2v20h2v-7h5l1 2h7V5h-6l-1-2H7V2z"/></svg></button>
+    </div>
   </div>
 
   <script src="game.js"></script>
