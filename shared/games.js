@@ -168,4 +168,14 @@ window.ARCADE_GAMES = [
     // Peer-to-peer multiplayer (2-6 players, room codes) or practice with bots; it doesn't report scores to the Den.
     meta: "2-6 PLAYERS",
   },
+  {
+    slug: "lane-racer",
+    added: "2026-11-24",
+    title: "Lane Racer",
+    tagline: "For little drivers: pick a car and a place, tap left or right to switch lanes, grab coins and win trophies. No losing.",
+    controls: "Tap or swipe",
+    color: "#4cc3ff",
+    // Toddler lane racer (plain HTML/canvas, sound made in code). It installs as a tablet app and plays offline; no scores.
+    meta: "AGES 2+",
+  },
 ];
