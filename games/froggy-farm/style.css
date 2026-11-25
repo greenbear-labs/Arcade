@@ -145,3 +145,33 @@ html, body {
 #cw-hand .hand-bob { animation: handbob .8s ease-in-out infinite; }
 @keyframes handbob { 50% { transform: translateY(14px); } }
 #cw-light.cw-next .lt-g { fill: #5cdc4a; }
+
+/* robot repair shop */
+#robot .rb-face .happy { display: none; }
+#robot .rb-gad.fixed .rb-face .happy { display: inline; }
+#robot .rb-gad.fixed .rb-face .sad { display: none; }
+#robot .glow { fill: none; stroke: #ffd93b; stroke-width: 10; opacity: 0; }
+#robot .rb-next .glow { animation: nextglow 1s ease-in-out infinite; }
+#robot .rb-next .anim { animation: nextbob 1s ease-in-out infinite; }
+#robot [data-act=tool].dim .anim { opacity: .45; }
+#robot [data-act=tool] .check { display: none; }
+#robot [data-act=tool].done .check { display: inline; }
+#rb-hand .hand-bob { animation: handbob .8s ease-in-out infinite; }
+#robot .rb-ghost { animation: ghostpulse 1.2s ease-in-out infinite; }
+@keyframes ghostpulse { 50% { opacity: .35; } }
+#robot .rb-old .anim { animation: twitch 2.2s ease-in-out infinite; }
+@keyframes twitch { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-9deg); } 90% { transform: rotate(8deg); } 95% { transform: rotate(-4deg); } }
+#robot .rb-eye { transform-box: fill-box; transform-origin: 50% 50%; }
+#robot .rb-ant { animation: antblink 1.6s steps(1) infinite; }
+#robot .rb-chest circle { animation: antblink 1.2s steps(1) infinite; }
+@keyframes antblink { 50% { fill: #fff6a0; } }
+#robot .rb-blink { animation: blinkc .7s steps(1) infinite; }
+@keyframes blinkc { 50% { opacity: .3; } }
+#robot .rb-gad .pupil { animation: look 2.6s ease-in-out infinite; }
+#rb-shade { opacity: 0; transition: opacity .6s; }
+#robot.dark #rb-shade { opacity: .55; }
+#robot .lamp-light { transition: opacity .6s; }
+#robot.dark .lamp-light { opacity: 0; }
+#robot .rb-gad.fixed .rb-glow { animation: flick 1.4s ease-in-out infinite; }
+#robot .flame { display: none; }
+#robot .rb-gad.zoom .flame { display: inline; animation: flick .15s linear infinite; }
