@@ -23,11 +23,15 @@ canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
 .title .t2 { color: #ffc93c; }
 @keyframes bob { 50% { transform: translateY(-1.2vmin) rotate(-1deg); } }
 
+.screen { justify-content: flex-start; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* centre when it fits, scroll from the top when it does not */
+.screen::before, .screen::after { content: ''; flex: 1 1 0; }
 .cars {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3vmin;
-  width: min(94vw, 900px);
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.4vmin;
+  width: min(94vw, 900px); flex: none;
 }
-@media (orientation: landscape) { .cars { grid-template-columns: repeat(5, 1fr); width: min(96vw, 1200px); } }
+@media (orientation: landscape) { .cars { grid-template-columns: repeat(6, 1fr); width: min(96vw, 1200px); } }
+#select .title { font-size: min(10vmin, 90px); }
 .car-card {
   appearance: none; border: 0; padding: 2vmin 1vmin 1vmin; border-radius: 4vmin; cursor: pointer;
   background: #fff; box-shadow: 0 1.2vmin 0 rgba(0,0,0,.15);
@@ -39,7 +43,32 @@ canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
 .car-card.picked { animation: pick .6s ease-out forwards; }
 @keyframes pick { 30% { transform: scale(1.12) rotate(-4deg); } 100% { transform: scale(1.05) translateY(-60vh); opacity: 0; } }
 .car-card canvas { width: 100%; aspect-ratio: 1 / 1.25; display: block; }
-.car-card .name { font-size: min(3.4vmin, 26px); font-weight: 900; color: #444; }
+.car-card .name { font-size: min(3.2vmin, 24px); font-weight: 900; color: #444; white-space: nowrap; }
+.car-card { position: relative; }
+.car-card.locked canvas { filter: grayscale(.6) brightness(1.05); opacity: .8; }
+.car-card .lock, .car-card .price { display: none; }
+.car-card.locked .lock, .car-card.locked .price { display: flex; }
+.car-card .lock { position: absolute; top: -1.2vmin; right: -1.2vmin; width: min(7vmin, 52px); height: min(7vmin, 52px);
+  border-radius: 50%; background: #6b7385; box-shadow: 0 .6vmin 0 rgba(0,0,0,.2); padding: 1.2vmin; align-items: center; justify-content: center; }
+.car-card .lock svg { width: 100%; height: 100%; fill: #fff; }
+.car-card .price { position: absolute; left: 50%; bottom: 5.4vmin; transform: translateX(-50%);
+  align-items: center; gap: .8vmin; background: #fff; border-radius: 40px; padding: .6vmin 1.6vmin .6vmin .8vmin;
+  font-size: min(3.6vmin, 28px); font-weight: 900; color: #e08a00; box-shadow: 0 .5vmin 0 rgba(0,0,0,.18); }
+.car-card .price .coin-icon, .bank .coin-icon { width: min(4.4vmin, 34px); height: min(4.4vmin, 34px); box-shadow: inset 0 0 0 .5vmin #f0b400; }
+.car-card.can-buy { animation: wiggle 1.6s ease-in-out infinite; }
+.car-card.can-buy .price { background: #2fc95a; color: #fff; }
+.car-card.can-buy .lock { background: #2fc95a; }
+.car-card.can-buy.picked { animation: pick .6s ease-out forwards; }
+@keyframes wiggle { 0%, 70%, 100% { transform: rotate(0); } 76% { transform: rotate(-3deg) scale(1.03); } 84% { transform: rotate(3deg) scale(1.03); } 92% { transform: rotate(-2deg); } }
+
+/* coins saved in the piggy bank */
+.bank { display: flex; align-items: center; gap: 1vmin; flex: none;
+  background: rgba(255,255,255,.92); border-radius: 40px; padding: .8vmin 2.4vmin .8vmin 1vmin;
+  font-size: min(4.6vmin, 36px); font-weight: 900; color: #e08a00; box-shadow: 0 .6vmin 0 rgba(0,0,0,.15); }
+.screen .bank { position: absolute; top: max(20px, calc(env(safe-area-inset-top) + 4px)); right: 104px; }
+#tracks .bank { right: 16px; }
+.bank.big { font-size: min(6vmin, 44px); padding: 1vmin 3vmin 1vmin 1.6vmin; }
+.bank .chest { width: min(8vmin, 56px); height: min(8vmin, 56px); }
 
 /* ---------- Buttons / HUD ---------- */
 .round-btn {
@@ -106,7 +135,7 @@ canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
 .back-btn svg { stroke: #ff8a00; fill: none; }
 .pick-icon { width: min(14vmin, 110px); height: min(14vmin, 110px); animation: bob 2.4s ease-in-out infinite; }
 .pick-icon svg { width: 100%; height: 100%; fill: #fff; filter: drop-shadow(0 .6vmin 0 rgba(0,0,0,.15)); }
-.cars.tracks { grid-template-columns: repeat(2, 1fr); width: min(94vw, 760px); }
+.cars.tracks { grid-template-columns: repeat(3, 1fr); width: min(94vw, 820px); }
 @media (orientation: landscape) { .cars.tracks { grid-template-columns: repeat(4, 1fr); width: min(96vw, 1200px); } }
 .track-card canvas { aspect-ratio: 4 / 3.6; border-radius: 3vmin; }
 
@@ -118,6 +147,41 @@ canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
 .finish-coins { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 60px; padding: 12px 30px;
   font-size: min(9vmin, 64px); font-weight: 900; color: #e08a00; box-shadow: 0 6px 0 rgba(0,0,0,.15); }
 .finish-coins .coin-icon { width: min(9vmin, 64px); height: min(9vmin, 64px); }
+.finish-coins { position: relative; }
+.finish-coins .bonus { position: absolute; right: -2.4em; top: -.9em; font-size: .45em; background: #2fc95a; color: #fff;
+  border-radius: 30px; padding: .2em .55em; box-shadow: 0 4px 0 rgba(0,0,0,.15); animation: pop .6s .4s ease-out both; }
+
+/* ---------- Shop ---------- */
+.shop { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center;
+  background: rgba(20,50,90,.55); animation: fade .25s ease-out; padding: 16px; }
+.shop-card { position: relative; background: #fff; border-radius: 6vmin; padding: 4vmin 5vmin 5vmin;
+  display: flex; flex-direction: column; align-items: center; gap: 2.6vmin; box-shadow: 0 1.6vmin 0 rgba(0,0,0,.2);
+  animation: pop .4s ease-out; max-width: 100%; }
+.shop-view { position: relative; width: min(30vmin, 240px); }
+.shop.wide .shop-view { width: min(50vmin, 420px); }
+.shop-view canvas { width: 100%; aspect-ratio: 1 / 1.25; display: block; border-radius: 3vmin; }
+.shop.wide .shop-view canvas { aspect-ratio: 4 / 3.6; }
+.shop-lock { position: absolute; left: 50%; top: 50%; width: min(14vmin, 110px); height: min(14vmin, 110px); transform: translate(-50%, -50%);
+  background: rgba(107,115,133,.92); border-radius: 50%; padding: 3vmin; display: grid; place-items: center; transition: transform .5s, opacity .5s; }
+.shop-lock svg { width: 100%; height: 100%; fill: #fff; }
+.shop:not(.short) .shop-lock { background: rgba(47,201,90,.92); }
+.shop.bought .shop-lock { transform: translate(-50%, -160%) rotate(-30deg) scale(.6); opacity: 0; }
+.shop-price { display: flex; align-items: center; gap: 1.4vmin; font-size: min(8vmin, 60px); font-weight: 900; color: #e08a00; }
+.shop-price .coin-icon { width: min(8vmin, 60px); height: min(8vmin, 60px); }
+.shop-need { display: none; align-items: center; gap: 1.6vmin; font-size: min(4vmin, 30px); font-weight: 900; color: #8a93a6; }
+.shop.short .shop-need { display: flex; }
+.shop-bar { width: min(34vmin, 260px); height: 2.6vmin; min-height: 16px; border-radius: 20px; background: #e9e4d2; overflow: hidden; }
+#shop-fill { height: 100%; width: 0; background: linear-gradient(90deg, #ffe066, #ffc21f); }
+.close-btn { position: absolute; top: -2vmin; right: -2vmin; width: 60px; height: 60px; padding: 15px; }
+.close-btn svg { stroke: #8a93a6; fill: none; }
+.buy-btn .no { display: none; }
+.shop.short .round-btn.buy-btn { background: #c3c8d2; box-shadow: 0 1.2vmin 0 #9aa0ad; }
+.shop.short .buy-btn .yes { display: none; }
+.shop.short .buy-btn .no { display: block; fill: #fff; }
+.shop.bought .buy-btn { animation: pop .5s ease-out; }
+.buy-btn.shake { animation: shake .4s; }
+@keyframes shake { 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
 .finish-btns { display: flex; gap: 6vmin; align-items: center; }
 .round-btn.big { width: min(20vmin, 130px); height: min(20vmin, 130px); padding: 3.5vmin; }
 .round-btn.big.go { width: min(26vmin, 170px); height: min(26vmin, 170px); background: #2fc95a; box-shadow: 0 1.2vmin 0 #1d8e3c; }

@@ -172,7 +172,7 @@ window.ARCADE_GAMES = [
     slug: "lane-racer",
     added: "2026-11-24",
     title: "Lane Racer",
-    tagline: "For little drivers: pick a car and a place, tap left or right to switch lanes, grab coins and race to the finish line for a trophy. No losing.",
+    tagline: "For little drivers: pick a car and a place, tap left or right to switch lanes, grab coins and race to the finish line for a trophy. Save coins to unlock a police car, fire truck and more, plus new places with jumps. No losing.",
     controls: "Tap or swipe",
     color: "#4cc3ff",
     // Toddler lane racer (plain HTML/canvas, sound made in code). It installs as a tablet app and plays offline; no scores.

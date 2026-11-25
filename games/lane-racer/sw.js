@@ -1,5 +1,5 @@
 // Offline support. Bump VERSION whenever any file changes so devices pick up the update.
-var VERSION = 'lane-racer-v3';
+var VERSION = 'lane-racer-v4';
 var FILES = [
   './',
   'index.html',
