@@ -189,6 +189,35 @@ const Sound = (() => {
     clang() { [0, 0.3].forEach(at => { tone({ f0: 1760, dur: 0.4, vol: 0.18, at }); tone({ f0: 2640, dur: 0.25, vol: 0.07, at }); }); },
     hose() { noise({ type: 'highpass', f0: 2200, f1: 3800, dur: 0.3, vol: 0.14, a: 0.02 }); },
     rain() { for (let i = 0; i < 9; i++) tone({ f0: r(1500, 2600), f1: r(700, 1100), dur: 0.05, vol: 0.11, at: i * 0.08 + Math.random() * 0.05 }); },
+    // robot repair shop
+    ratchet(n = 6) { for (let i = 0; i < n; i++) { noise({ type: 'bandpass', f0: 3200, dur: 0.025, vol: 0.32, q: 6, at: i * 0.07 }); tone({ type: 'square', f0: 1400, dur: 0.02, vol: 0.05, lp: 3000, at: i * 0.07 }); } },
+    unscrew() { fx.ratchet(); tone({ f0: 500, f1: 1300, dur: 0.12, vol: 0.28, at: 0.42 }); },
+    screwin() { fx.ratchet(); tone({ type: 'triangle', f0: 1300, f1: 700, dur: 0.1, vol: 0.22, at: 0.42 }); },
+    clank() {
+      [0, 0.09].forEach((at, i) => {
+        tone({ type: 'square', f0: 620 - i * 140, f1: 380 - i * 80, dur: 0.12, vol: 0.12, lp: 2400, at });
+        tone({ f0: 2100 + i * 300, dur: 0.3, vol: 0.06, at });
+        noise({ type: 'bandpass', f0: 3000, dur: 0.06, vol: 0.2, q: 2, at });
+      });
+    },
+    zap() {
+      for (let i = 0; i < 6; i++) tone({ type: 'sawtooth', f0: r(800, 2400), f1: r(200, 600), dur: 0.05, vol: 0.12, lp: 4000, at: i * 0.05 });
+      noise({ type: 'highpass', f0: 3000, dur: 0.3, vol: 0.16 });
+    },
+    powerup() {
+      tone({ type: 'square', f0: 110, f1: 880, dur: 0.9, vol: 0.12, lp: 2000 });
+      tone({ type: 'sawtooth', f0: 55, f1: 440, dur: 0.9, vol: 0.08, lp: 1200 });
+      [523, 659, 784, 1047].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 0.35, vol: 0.16, at: 0.85 + i * 0.08 }));
+    },
+    vacuum() { noise({ type: 'bandpass', f0: 600, f1: 2400, dur: 1.1, vol: 0.22, q: 1.5, a: 0.12 }); tone({ type: 'sawtooth', f0: 180, f1: 260, dur: 1.1, vol: 0.05, lp: 900, a: 0.12 }); },
+    suck() { tone({ f0: 400, f1: 1600, dur: 0.12, vol: 0.16 }); },
+    beepboop() { [880, 660, 990, 740].forEach((f, i) => tone({ type: 'square', f0: f, dur: 0.07, vol: 0.08, lp: 2500, at: i * 0.09 })); },
+    bark() { [0, 0.25].forEach(at => { tone({ type: 'sawtooth', f0: 420, f1: 260, dur: 0.12, vol: 0.22, lp: 1500, at }); noise({ type: 'bandpass', f0: 900, dur: 0.08, vol: 0.18, q: 1.5, at }); }); },
+    alarm() { for (let i = 0; i < 12; i++) { tone({ f0: 1800, dur: 0.05, vol: 0.16, at: i * 0.07 }); tone({ f0: 2700, dur: 0.04, vol: 0.06, at: i * 0.07 }); } },
+    sneeze() { tone({ f0: 500, f1: 900, dur: 0.35, vol: 0.12, a: 0.2 }); noise({ type: 'lowpass', f0: 3000, f1: 600, dur: 0.3, vol: 0.4, at: 0.38 }); },
+    propeller() { tone({ type: 'square', f0: 60, f1: 70, dur: 1.6, vol: 0.12, lp: 600, vib: 20, vibRate: 30 }); noise({ type: 'bandpass', f0: 800, dur: 1.6, vol: 0.1, q: 3 }); },
+    rocket() { noise({ type: 'lowpass', f0: 400, f1: 3000, dur: 1.5, vol: 0.3, a: 0.1 }); tone({ f0: 200, f1: 1200, dur: 1.5, vol: 0.1 }); },
+    tvtune() { [72, 76, 79, 84, 79, 76, 72, 67].forEach((m, i) => tone({ type: 'square', f0: 440 * Math.pow(2, (m - 69) / 12), dur: 0.1, vol: 0.09, lp: 2600, at: i * 0.11 })); },
   };
 
   /* ---------- music: a tiny looping tune, cheerful by day and a lullaby by night ---------- */
@@ -209,6 +238,11 @@ const Sound = (() => {
       mel: [72, _, 72, 74, 76, _, 72, _, 77, _, 76, _, 74, _, _, _, 74, _, 74, 76, 77, _, 74, _, 79, _, 77, _, 76, _, _, _],
       bass: [48, 53, 55, 48],
     },
+    robot: {
+      dt: 0.22, wave: 'square', vol: 0.3, lp: 1700,
+      mel: [72, _, 79, _, 76, 79, _, 76, 74, _, 77, _, 81, _, 79, _, 72, _, 76, 79, 84, _, 79, _, 77, _, 74, _, 72, _, _, _],
+      bass: [48, 53, 55, 48],
+    },
     spooky: {
       dt: 0.3, wave: 'triangle', vol: 0.42,
       mel: [69, _, 72, _, 76, _, 72, _, 75, _, 74, _, 72, _, _, _, 71, _, 74, _, 77, _, 74, _, 72, _, 71, _, 69, _, _, _],
@@ -221,12 +255,13 @@ const Sound = (() => {
     const song = SONGS[mood];
     while (nextTime < ctx.currentTime + 0.3) {
       const m = song.mel[step % song.mel.length];
-      if (m != null) tone({ type: song.wave, f0: midi(m), dur: song.dt * 1.8, vol: song.vol, a: 0.02, abs: nextTime, out: musicBus });
+      if (m != null) tone({ type: song.wave, f0: midi(m), dur: song.dt * 1.8, vol: song.vol, a: 0.02, abs: nextTime, out: musicBus, lp: song.lp || 0 });
       if (step % 4 === 0) {
         const b = song.bass[Math.floor(step / 8) % song.bass.length];
         tone({ type: 'sine', f0: midi(b), dur: song.dt * 3.5, vol: 0.7, a: 0.02, abs: nextTime, out: musicBus });
       }
       if (mood === 'spooky' && step % 4 === 2) tone({ type: 'square', f0: 330, f1: 300, dur: 0.05, vol: 0.12, lp: 1200, abs: nextTime, out: musicBus });
+      if (mood === 'robot' && step % 4 === 2) tone({ type: 'square', f0: 1568, dur: 0.03, vol: 0.05, lp: 3000, abs: nextTime, out: musicBus });
       if ((mood === 'day' || mood === 'wash') && step % 2 === 1) tone({ type: 'triangle', f0: 2093, dur: 0.04, vol: 0.06, abs: nextTime, out: musicBus });
       nextTime += song.dt;
       step = (step + 1) % 32;
