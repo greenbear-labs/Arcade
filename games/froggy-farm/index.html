@@ -633,11 +633,15 @@
     <path d="M520 94 Q600 40 680 94 T 740 94" stroke="#3a4450" stroke-width="10" fill="none" stroke-linecap="round"/>
     <path d="M860 94 Q940 148 1020 94 T 1080 94" stroke="#3a4450" stroke-width="10" fill="none" stroke-linecap="round"/>
     <g id="rb-power" class="tap" data-act="power" transform="translate(800,94)">
-      <circle r="58" class="glow"/>
-      <g class="anim">
-        <circle r="52" fill="#c9d3dc" stroke="#5b6670" stroke-width="6"/>
-        <circle class="rb-press" r="38" fill="#ff4d4d" stroke="#c23131" stroke-width="5"/>
-        <path d="M6 -26 L-14 4 L0 4 L-8 26 L14 -6 L0 -6 Z" fill="#fff6a0" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="-122" y="-46" width="244" height="92" rx="46" class="glow"/>
+      <rect class="rb-track" x="-100" y="-26" width="200" height="52" rx="26" fill="#c9d3dc" stroke="#5b6670" stroke-width="6"/>
+      <path d="M80 -20 L64 4 L75 4 L69 22 L88 -4 L77 -4 Z" fill="#ffe14d" stroke="#c9a400" stroke-width="3" stroke-linejoin="round"/>
+      <g class="rb-knob" transform="translate(-74,0)">
+        <g class="anim">
+          <circle r="38" fill="#ff4d4d" stroke="#c23131" stroke-width="5"/>
+          <path d="M-9 -16 V16 M9 -16 V16" stroke="#c23131" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="-12" cy="-14" r="7" fill="#fff" opacity=".5"/>
+        </g>
       </g>
     </g>
   </g>

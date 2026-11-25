@@ -160,6 +160,8 @@ html, body {
 #robot .rb-ghost { animation: ghostpulse 1.2s ease-in-out infinite; }
 @keyframes ghostpulse { 50% { opacity: .35; } }
 #robot .rb-old .anim { animation: twitch 2.2s ease-in-out infinite; }
+#robot .rb-lid.rb-pulse > rect:first-child { animation: lidglow 1s ease-in-out infinite; }
+@keyframes lidglow { 50% { stroke: #ffd93b; stroke-width: 16px; } }
 @keyframes twitch { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-9deg); } 90% { transform: rotate(8deg); } 95% { transform: rotate(-4deg); } }
 #robot .rb-eye { transform-box: fill-box; transform-origin: 50% 50%; }
 #robot .rb-ant { animation: antblink 1.6s steps(1) infinite; }

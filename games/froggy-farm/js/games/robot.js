@@ -1,8 +1,9 @@
 /* The robot repair shop: pick a broken gadget (radio, alarm clock, TV, robot dog, toaster or
- * music box). Unscrew the four screws and the cover pops off, vacuum out the dust (something
- * silly is always hiding in there), pull out the broken parts with the grabber, put in shiny new
- * ones from the parts box, then screw it back together. Press the big red button and it comes
- * back to life. Then give it silly add-ons (propeller hat, rocket, googly eyes, mustache, arms,
+ * music box). Everything is done by dragging: drag the screwdriver onto the screws and the
+ * cover pops off, drag the vacuum over the dust (something silly is always hiding in there),
+ * pull the broken parts out and drag them into the junk bin, drag shiny new parts in from the
+ * parts box, drag the cover back on and screw it shut. Slide the power switch and it comes
+ * back to life. Then drag on silly add-ons (propeller hat, rocket, googly eyes, mustache, arms,
  * party lights) and tap it to see them all at once. Nothing can go wrong. */
 (() => {
   'use strict';
@@ -399,6 +400,7 @@
   function setStage(s) {
     if (s === stage) return;
     stage = s;
+    if (s === 'power') resetSwitch();
     for (const k in PANELS) {
       const n = PANELS[k], on = SHOW[s].includes(k), shown = n.style.display !== 'none';
       if (on && !shown) {
@@ -412,49 +414,30 @@
     }
   }
   /* The repair is five steps, always in this order. The tool for the next step glows, the
-   * others fade back, a hand points at it, and each finished step gets a check mark. */
+   * others fade back, and each finished step gets a check mark. There is no pointing hand:
+   * the robot says what to do, and if you wait it shows a see-through tool being dragged. */
   const STEPS = [
-    { k: 'open', tool: 'driver', say: 'Unscrew the screws!' },
-    { k: 'clean', tool: 'vacuum', say: 'So dusty! Vacuum it up!' },
-    { k: 'out', tool: 'pliers', say: 'Pull out the broken parts!' },
-    { k: 'in', tool: 'box', say: 'Put in shiny new parts!' },
-    { k: 'close', tool: 'driver', say: 'Screw it back together!' },
+    { k: 'open', tool: 'driver', say: 'Drag the screwdriver to the screws!' },
+    { k: 'clean', tool: 'vacuum', say: 'So dusty! Drag the vacuum around!' },
+    { k: 'out', tool: 'pliers', say: 'Pull out the broken parts! Put them in the bin!' },
+    { k: 'in', tool: 'box', say: 'Drag in shiny new parts from the box!' },
+    { k: 'close', tool: 'driver', say: 'Now screw it back together!' },
   ];
+  const sayOf = (G, st) => (st.k === 'close' && G.lidOff ? 'Drag the cover back on!' : st.say);
   const nextStep = G => STEPS.find(st => !G.done[st.k]);
-  const hand = el('g', { id: 'rb-hand', 'pointer-events': 'none', style: 'display:none' }, svg);
-  {
-    const b = el('g', { class: 'hand-bob' }, hand);
-    el('rect', { x: -11, y: 0, width: 22, height: 54, rx: 11, fill: '#fff', stroke: '#26323d', 'stroke-width': 5 }, b);
-    el('path', { d: 'M-30 50 Q-32 34 -16 34 L28 34 Q42 34 40 52 L38 80 Q36 98 16 98 L-12 98 Q-30 98 -30 80 Z', fill: '#fff', stroke: '#26323d', 'stroke-width': 5, 'stroke-linejoin': 'round' }, b);
-    el('path', { d: 'M8 36 V50 M22 36 V50', stroke: '#26323d', 'stroke-width': 4, 'stroke-linecap': 'round' }, b);
-  }
-  let handAt = '';
-  function pointAt(x, y) {
-    const key = x + ',' + y;
-    if (key === handAt) return;
-    handAt = key;
-    hand.style.display = '';
-    hand.setAttribute('transform', `translate(${x},${y})`);
-    anim(hand.firstChild, [{ opacity: 0 }, { opacity: 1 }], 300);
-  }
-  function hideHand() { hand.style.display = 'none'; handAt = ''; }
   const toolBtn = t => toolsG.querySelector(`[data-tool=${t}]`);
   function updateGuide() {
     const st = V && stage === 'fix' ? nextStep(V) : null;
+    const lidFirst = !!st && st.k === 'close' && V.lidOff;
     toolsG.querySelectorAll('[data-act=tool]').forEach(b => {
       const t = b.dataset.tool;
-      b.classList.toggle('rb-next', !!st && st.tool === t);
-      b.classList.toggle('dim', !!st && st.tool !== t);
+      b.classList.toggle('rb-next', !!st && !lidFirst && st.tool === t);
+      b.classList.toggle('dim', !!st && (lidFirst || st.tool !== t));
       b.classList.toggle('done', !!V && (t === 'driver' ? !!V.done.close : !!V.done[STEPS.find(x => x.tool === t).k]));
     });
+    if (V && V.lid) V.lid.classList.toggle('rb-pulse', lidFirst);
     powerBtn.classList.toggle('rb-next', stage === 'power');
     PANELS.next.classList.toggle('rb-next', stage === 'play' && !!V && V.decorated);
-    if (busy || App.current !== 'robot') return hideHand();
-    if (stage === 'pick' && choices.length) return pointAt(800, 735);
-    if (st) { const b = toolBtn(st.tool); return pointAt(+b.dataset.x + 6, 146); }
-    if (stage === 'power') return pointAt(806, 152);
-    if (stage === 'play' && V) return V.decorated ? pointAt(1296, 232) : pointAt(806, 150);
-    hideHand();
   }
   function stepDone(G, k) {
     if (G !== V || G.done[k]) return;
@@ -464,13 +447,13 @@
     sparkles(+b.dataset.x, +b.dataset.y, { n: 8, colors: ['#5cdc4a', '#ffe14d', '#fff'], spread: 90 });
     updateGuide();
     const nx = nextStep(G);
-    if (nx) setTimeout(() => { if (V === G && nextStep(G) === nx && !G.finding) botSay(nx.say); }, 900);
+    if (nx) setTimeout(() => { if (V === G && nextStep(G) === nx && !G.finding) botSay(sayOf(G, nx)); }, 900);
     else maybeFinish(G);
   }
   function maybeFinish(G) {
     if (G !== V || stage !== 'fix' || nextStep(G)) return;
     setStage('power');
-    setTimeout(() => { if (V === G) { botSay(pick(['All fixed! Press the big button!', 'Now press the red button!'])); updateGuide(); } }, 700);
+    setTimeout(() => { if (V === G) { botSay(pick(['All fixed! Slide the power switch!', 'Now slide the red switch!'])); updateGuide(); } }, 700);
   }
 
   /* ---------- the chooser: three broken gadgets wait on the bench ---------- */
@@ -489,7 +472,6 @@
       return G;
     });
     Sound.play('whirr');
-    hideHand();
     await Promise.all(choices.map((G, i) => {
       const x0 = G.x, x1 = 640 + i * 160;
       return tween(1100, t => place(G, lerp(x0, x1, 1 - Math.pow(1 - t, 3)), SPOT.y, 0.32));
@@ -502,7 +484,6 @@
   async function pickGadget(i) {
     if (busy || V || !choices[i]) return;
     busy = true;
-    hideHand();
     const G = choices[i];
     Sound.play('zap'); bounce(G, 30);
     choices.forEach(O => {
@@ -521,7 +502,7 @@
     setStage('fix');
     updateGuide();
     setTimeout(() => gadSay(G, pick(G.T.sad)), 200);
-    setTimeout(() => botSay(pick(["Let's fix it! Unscrew the screws!", 'Beep boop! First, the screwdriver!'])), 1800);
+    setTimeout(() => botSay(pick(["Let's fix it! Drag the screwdriver to a screw!", 'Beep boop! Grab the screwdriver!'])), 1800);
   }
 
   /* ---------- the robot ---------- */
@@ -601,7 +582,9 @@
     const from = L2S(G, 0, -140);
     park.insertBefore(G.lid, park.firstChild);
     G.lid.dataset.act = 'parked';
+    G.lidArc = true;
     await arc(G.lid, from, LID_PARK, 600, 160, G.s, 0.55, -14);
+    G.lidArc = false;
     Sound.play('clank');
     if (G !== V) return;
     stepDone(G, 'open');
@@ -611,18 +594,21 @@
     if (!G.lidOff || G.lidMoving || G !== V) return;
     G.lidMoving = true;
     Sound.play('swish');
-    await arc(G.lid, LID_PARK, L2S(G, 0, -140), 550, 160, 0.55, G.s, 14);
+    await arc(G.lid, ghostPos(G.lid), L2S(G, 0, -140), 300, 30, 0.8, G.s, 0);
     G.lid.setAttribute('transform', 'translate(0,-140)');
     delete G.lid.dataset.act;
     G.lidHolder.appendChild(G.lid);
     G.lidOff = false; G.lidMoving = false;
+    G.lid.classList.remove('rb-pulse');
     Sound.play('clank'); bounce(G, 8);
+    sparkles(G.x, G.y - 140 * G.s, { n: 8, colors: ['#fff', '#ffe14d'], spread: 140 });
+    updateGuide();
+    setTimeout(() => { if (V === G && !G.done.close) botSay('Now drag the screwdriver to each screw!'); }, 500);
   }
   async function screwIn(G, i) {
     const sc = G.screws[i];
     if (!sc || sc.state !== 'out' || !G.done.in || G.done.close || G !== V) return;
-    if (G.lidOff) { await lidOn(G); if (G.lidOff) return; }
-    if (sc.state !== 'out') return;
+    if (G.lidOff || G.lidMoving) return;
     sc.state = 'moving';
     const m = sc.node.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);
     const from = { x: +m[1], y: +m[2] };
@@ -637,35 +623,6 @@
     sc.state = 'in';
     if (G.screws.every(s => s.state === 'in')) { sparkles(G.x, G.y - 140, { n: 10, colors: ['#fff', '#ffe14d'], spread: 160 }); stepDone(G, 'close'); }
   }
-  async function autoDriver() {
-    const G = V;
-    busy = true;
-    const ghost = toolGhost('driver');
-    if (!G.done.open) {
-      for (const sc of G.screws) {
-        if (sc.state !== 'in' || G !== V) continue;
-        const p = L2S(G, sc.hx, sc.hy);
-        await moveGhost(ghost, p.x + 30, p.y - 50, 220);
-        unscrew(G, sc.i);
-        await wait(260);
-      }
-    } else {
-      await lidOn(G);
-      const jobs = [];
-      for (const sc of G.screws) {
-        if (sc.state !== 'out' || G !== V) continue;
-        const p = L2S(G, sc.hx, sc.hy);
-        await moveGhost(ghost, p.x + 30, p.y - 50, 200);
-        jobs.push(screwIn(G, sc.i));
-        await wait(180);
-      }
-      await Promise.all(jobs);
-    }
-    await returnGhost(ghost, 'driver');
-    busy = false;
-    updateGuide();
-  }
-
   /* ---------- step 2: the vacuum ---------- */
   function suck(G, h, to) {
     if (h.classList.contains('gone')) return;
@@ -695,26 +652,6 @@
     G.finding = true;
     stepDone(G, 'clean');
     setTimeout(() => revealFind(G), 400);
-  }
-  async function autoVacuum() {
-    const G = V;
-    busy = true;
-    const ghost = toolGhost('vacuum');
-    Sound.play('vacuum');
-    const pts = [[-110, -200], [110, -200], [110, -150], [-110, -150], [-110, -100], [110, -100], [0, -80]];
-    for (let k = 0; k < pts.length - 1 && G === V; k++) {
-      const a = L2S(G, pts[k][0], pts[k][1]), b = L2S(G, pts[k + 1][0], pts[k + 1][1]);
-      if (k === 3) Sound.play('vacuum');
-      await tween(240, t => {
-        const x = lerp(a.x, b.x, t), y = lerp(a.y, b.y, t);
-        ghost.setAttribute('transform', `translate(${x.toFixed(0)},${(y - 30).toFixed(0)}) scale(1.4)`);
-        dustNear(G, S2L(G, { x, y }), 75).forEach(h => suck(G, h, { x, y }));
-      });
-    }
-    if (G === V) [...dustLeft(G)].forEach(h => suck(G, h, null));
-    await returnGhost(ghost, 'vacuum');
-    busy = false;
-    updateGuide();
   }
   // the silly thing hiding inside comes out
   async function revealFind(G) {
@@ -760,76 +697,107 @@
     }
     n.remove();
     G.finding = false;
-    if (V === G && nextStep(G)) setTimeout(() => { if (V === G) { botSay(nextStep(G).say); updateGuide(); } }, 600);
+    if (V === G && nextStep(G)) setTimeout(() => { if (V === G && nextStep(G)) { botSay(sayOf(G, nextStep(G))); updateGuide(); } }, 600);
   }
 
-  /* ---------- step 3: the grabber pulls out the broken parts ---------- */
-  async function pullPart(G, i) {
-    const S = G.slots[i];
-    if (!S || !S.part || !S.part.broken || S.busy || G !== V || !G.done.clean) return;
-    S.busy = true;
+  /* ---------- steps 3 and 4: carrying parts around ----------
+   * A broken part comes out when you drag it (with a finger or the grabber), and you carry it
+   * to the junk bin. Drop it anywhere else and it lands on the bench, where you can pick it up
+   * again. New parts come out of the parts box when you drag from it, and snap into their
+   * dashed outline when you drop them on the open gadget. */
+  let carry = null;
+  function startCarryOld(G, S, id, by) {
+    if (!S || !S.part || !S.part.broken || G !== V || !G.done.clean || carry) return false;
     const node = S.part.node;
     node.classList.remove('rb-old');
-    Sound.play('grunt');
-    anim(node.firstChild, [{ transform: 'translate(0,0)' }, { transform: 'translate(-5px,-6px)' }, { transform: 'translate(5px,-10px)' }, { transform: 'translate(0,-16px)' }], 260);
-    await wait(260);
-    Sound.play('pop');
-    const from = L2S(G, S.x, S.y);
+    const p = L2S(G, S.x, S.y);
     layer.fx.appendChild(node);
+    node.setAttribute('transform', `translate(${p.x.toFixed(0)},${p.y.toFixed(0)}) scale(1.15)`);
     S.part = null;
     S.ghost.style.display = '';
-    await arc(node, from, BIN, 650, 220, G.s, 0.7, 540);
-    Sound.play('clank');
-    wobbleBin();
-    node.remove();
-    S.busy = false;
-    if (G === V && G.slots.every(s => !s.part || !s.part.broken) && !G.slots.some(s => s.busy)) stepDone(G, 'out');
+    Sound.play('pop'); Sound.play('grunt');
+    sparkles(p.x, p.y, { n: 6, colors: ['#c2c7cc', '#fff'], shape: 'dot', size: 8, spread: 60 });
+    carry = { id, node, kind: 'old', by, p };
+    if (G.slots.every(s => !s.part || !s.part.broken)) stepDone(G, 'out');
+    return true;
   }
-  async function autoPliers() {
-    const G = V;
-    busy = true;
-    const ghost = toolGhost('pliers');
-    for (const S of G.slots) {
-      if (!S.part || !S.part.broken || G !== V) continue;
-      const p = L2S(G, S.x, S.y);
-      await moveGhost(ghost, p.x + 20, p.y - 70, 260);
-      await pullPart(G, S.i);
+  function startCarryJunk(n, id, p) {
+    if (carry) return;
+    layer.fx.appendChild(n);
+    delete n.dataset.act;
+    Sound.play('pop');
+    carry = { id, node: n, kind: 'old', by: 'finger', p };
+    moveCarry(p);
+  }
+  function startCarryNew(G, id, p) {
+    const S = G.slots.find(x => !x.part && !x.busy);
+    if (!S || carry) return false;
+    const node = makePart(S.type, false, layer.fx);
+    node.style.opacity = 0;
+    carry = { id, node, kind: 'new', type: S.type, by: 'box', p, hidden: true };
+    return true;
+  }
+  function moveCarry(p) {
+    const c = carry;
+    c.p = p;
+    if (c.hidden) { c.hidden = false; c.node.style.opacity = 1; Sound.play('pop'); }
+    const dy = c.by === 'pliers' ? 46 : -20, w = Math.sin(performance.now() / 90) * 8;
+    c.node.setAttribute('transform', `translate(${p.x.toFixed(0)},${(p.y + dy).toFixed(0)}) rotate(${w.toFixed(0)}) scale(1.25)`);
+  }
+  const nearBin = p => p && Math.abs(p.x - BIN.x) < 120 && p.y > BIN.y - 160 && p.y < 760;
+  async function dropCarry() {
+    const c = carry;
+    carry = null;
+    if (!c) return;
+    const from = ghostPos(c.node), G = V;
+    if (c.kind === 'old') {
+      if (nearBin(c.p)) {
+        // into the junk bin it goes
+        await arc(c.node, from, BIN, 300, 60, 1.25, 0.7, 300);
+        Sound.play('clank'); wobbleBin();
+        sparkles(BIN.x, BIN.y, { n: 6, colors: ['#ffe14d', '#fff'], spread: 70 });
+        c.node.remove();
+        if (Math.random() < 0.5) botSay(pick(['Into the bin! Clang!', 'Bye bye, old part!']));
+        return;
+      }
+      // dropped somewhere else: it lands on the bench and waits there
+      const x = K.clamp(from.x, 470, 1420);
+      Sound.play('swish');
+      await arc(c.node, from, { x, y: 700 }, 380, 40, 1.25, 0.8, 180);
+      Sound.play('land');
+      park.appendChild(c.node);
+      c.node.dataset.act = 'junk';
+      c.node.classList.add('tap');
+      if (G && G.done.out) setTimeout(() => { if (V === G) gadSay(G, 'Put it in the bin!'); }, 300);
+      return;
     }
-    await returnGhost(ghost, 'pliers');
-    busy = false;
-    updateGuide();
-  }
-
-  /* ---------- step 4: new parts from the parts box ---------- */
-  async function putPart(G, i, from) {
-    const S = G.slots[i];
-    if (!S || S.part || S.busy || G !== V || !G.done.out) return;
-    S.busy = true;
+    // a new part
+    const S = G && stage === 'fix' && G.done.out && c.p && overGadget(G, c.p) ? G.slots.find(x => !x.part && !x.busy && x.type === c.type) : null;
+    if (S) return placePart(G, S, c.node, from);
+    // not on the gadget: it floats back into the box
     const b = toolBtn('box');
-    from = from || { x: +b.dataset.x, y: +b.dataset.y };
-    const n = makePart(S.type, false, layer.fx);
-    Sound.play('toss');
-    await arc(n, from, L2S(G, S.x, S.y), 520, 140, 1.2, G.s, 360);
-    if (G !== V) { n.remove(); return; }
-    n.setAttribute('transform', '');
-    S.holder.appendChild(n);
-    S.part = { broken: false, node: n };
+    Sound.play('poof');
+    await arc(c.node, from, { x: +b.dataset.x, y: +b.dataset.y }, 350, 40, 1.25, 0.3);
+    c.node.remove();
+  }
+  async function placePart(G, S, node, from) {
+    S.busy = true;
+    await arc(node, from, L2S(G, S.x, S.y), 220, 20, 1.25, G.s);
+    if (G !== V) { node.remove(); return; }
+    node.setAttribute('transform', '');
+    S.holder.appendChild(node);
+    S.part = { broken: false, node };
     S.ghost.style.display = 'none';
     S.busy = false;
     Sound.play('plop');
-    hop(n.firstChild, 16);
+    hop(node.firstChild, 16);
     const p = L2S(G, S.x, S.y);
-    sparkles(p.x, p.y, { n: 6, colors: [GOOD[S.type], '#fff'], spread: 70 });
+    sparkles(p.x, p.y, { n: 8, colors: [GOOD[S.type], '#fff'], spread: 80 });
     if (S.type === 'bulb') setTimeout(() => Sound.play('twinkle'), 150);
+    else if (S.type === 'spring') setTimeout(() => Sound.play('boing'), 150);
+    else if (S.type === 'gear') setTimeout(() => Sound.play('ratchet', 3), 150);
+    else setTimeout(() => Sound.play('zap'), 150);
     if (G.slots.every(s => s.part && !s.part.broken)) stepDone(G, 'in');
-  }
-  async function autoBox() {
-    const G = V;
-    busy = true;
-    const empties = G.slots.filter(S => !S.part);
-    await Promise.all(empties.map((S, k) => wait(k * 280).then(() => putPart(G, S.i))));
-    busy = false;
-    updateGuide();
   }
 
   /* ---------- the tool bar ---------- */
@@ -885,26 +853,87 @@
     const a = ghostPos(g), b = toolBtn(tool);
     return tween(280, t => g.setAttribute('transform', `translate(${lerp(a.x, +b.dataset.x, t).toFixed(0)},${lerp(a.y, +b.dataset.y, t).toFixed(0)}) scale(${lerp(1.4, 1, t).toFixed(2)})`)).then(() => g.remove());
   }
-  function useTool(tool, btn) {
-    hop(btn.querySelector('.anim'), 12);
-    if (!V) return needGadget();
+  // tapping a tool never does the job: it does a silly little trick, and the robot shows you how to drag it
+  const TOOL_FUN = {
+    driver(a) { Sound.play('ratchet'); anim(a, [{ transform: 'rotate(0)' }, { transform: 'rotate(360deg)' }], 450, { easing: 'ease-in-out' }); },
+    vacuum(a) { Sound.play('suck'); anim(a, [{ transform: 'translate(0,0)' }, { transform: 'translate(-5px,2px)' }, { transform: 'translate(5px,-2px)' }, { transform: 'translate(0,0)' }], 110, { iterations: 4 }); },
+    pliers(a) { Sound.play('pop'); setTimeout(() => Sound.play('pop'), 150); anim(a, [{ transform: 'scale(1)' }, { transform: 'scale(.75,1.15)' }, { transform: 'scale(1.1,.9)' }, { transform: 'scale(.8,1.1)' }, { transform: 'scale(1)' }], 380); },
+    box(a, b) { Sound.play('plop'); hop(a, 24); sparkles(+b.dataset.x, +b.dataset.y - 30, { n: 6, colors: ['#ffb347', '#ffe14d', '#fff'], spread: 60 }); },
+  };
+  let lastTapHint = 0;
+  function tapTool(tool, btn) {
+    TOOL_FUN[tool](btn.querySelector('.anim'), btn);
+    if (!V) { setTimeout(needGadget, 300); return; }
     if (busy) return;
     if (stage !== 'fix') {
-      Sound.play('beepboop');
-      if (stage === 'power') { botSay('Press the big red button!'); hop(powerBtn.querySelector('.anim'), 20); }
-      else botSay(pick(["It's all fixed! Add something silly!", 'Tap it to see it go!']));
+      setTimeout(() => {
+        if (stage === 'power') { botSay('Slide the switch!'); nudgeSwitch(); }
+        else if (stage === 'play') botSay(pick(["It's all fixed! Add something silly!", 'Tap it to see it go!']));
+      }, 400);
       return;
     }
     const G = V, st = nextStep(G);
-    if (tool === 'driver' && (!G.done.open || (G.done.in && !G.done.close))) return autoDriver();
-    if (tool === 'vacuum' && G.done.open && !G.done.clean) return autoVacuum();
-    if (tool === 'pliers' && G.done.clean && !G.done.out) return autoPliers();
-    if (tool === 'box' && G.done.out && !G.done.in) return autoBox();
-    // not this one yet: something silly, and the robot shows the right tool
-    if (tool === 'vacuum' && !G.lidOff) { Sound.play('vacuum'); gadSay(G, 'Hee hee! That tickles!'); anim(G.a, [{ transform: 'rotate(0)' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(3deg)' }, { transform: 'rotate(0)' }], 300, { iterations: 2 }); }
-    else if (tool === 'box') { Sound.play('boing'); gadSay(G, pick(['Take out the old one first!', 'Not yet!'])); }
-    else { Sound.play('bonk'); }
-    if (st) setTimeout(() => { botSay(st.say); hop(toolBtn(st.tool).querySelector('.anim'), 18); }, 500);
+    if (!st || G.finding) return;
+    const now = performance.now();
+    if (now - lastTapHint < 2500) return;
+    lastTapHint = now;
+    if (st.tool === tool && !(st.k === 'close' && G.lidOff)) {
+      setTimeout(() => { if (V === G && nextStep(G) === st) { botSay(pick(['Drag it!', 'Hold it and drag it!', 'Drag it over here!'])); demo(tool); } }, 350);
+      return;
+    }
+    // not this one yet: something silly, and then the robot shows what to do
+    if (tool === 'vacuum' && !G.lidOff) { gadSay(G, 'Hee hee! That tickles!'); anim(G.a, [{ transform: 'rotate(0)' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(3deg)' }, { transform: 'rotate(0)' }], 300, { iterations: 2 }); }
+    else if (tool === 'box') gadSay(G, pick(['Take out the old one first!', 'Not yet!']));
+    else if (tool === 'pliers' && !G.done.open) gadSay(G, 'Open me up first!');
+    setTimeout(() => { if (V === G && nextStep(G) === st && !G.finding) { botSay(sayOf(G, st)); demo(st.tool); } }, 1000);
+  }
+  /* A see-through tool slides from the tool bar to where it should go, and back. It only shows
+   * the way: it never does the step for you. */
+  let demoing = false;
+  async function demo(tool) {
+    const G = V;
+    if (!G || stage !== 'fix' || demoing || G.finding) return;
+    const st = nextStep(G);
+    if (!st) return;
+    if (st.k === 'close' && G.lidOff) return demoLid(G);
+    if (tool !== st.tool) return;
+    let path = [];
+    if (st.k === 'open' || st.k === 'close') {
+      const sc = G.screws.find(x => x.state === (st.k === 'open' ? 'in' : 'out'));
+      if (sc) path = [L2S(G, sc.hx, sc.hy)];
+    } else if (st.k === 'clean') {
+      path = [...dustLeft(G)].slice(0, 3).map(h => L2S(G, h._x, h._y));
+      if (!path.length) path = [L2S(G, 0, -140)];
+    } else if (st.k === 'out') {
+      const S = G.slots.find(x => x.part && x.part.broken);
+      if (S) path = [L2S(G, S.x, S.y), { x: BIN.x, y: BIN.y - 40 }];
+    } else if (st.k === 'in') {
+      const S = G.slots.find(x => !x.part && !x.busy);
+      if (S) path = [L2S(G, S.x, S.y)];
+    }
+    if (!path.length) return;
+    demoing = true;
+    const g = toolGhost(tool);
+    g.style.opacity = 0.5;
+    for (const q of path) { await moveGhost(g, q.x, q.y, 650); await wait(250); }
+    await returnGhost(g, tool);
+    demoing = false;
+  }
+  async function demoLid(G) {
+    if (!G.lidOff || G.lidMoving || ldrag) return;
+    demoing = true;
+    const c = G.lid.cloneNode(true);
+    delete c.dataset.act;
+    c.classList.remove('rb-pulse', 'tap');
+    c.style.opacity = 0.45;
+    layer.fx.appendChild(c);
+    await arc(c, ghostPos(G.lid), L2S(G, 0, -140), 900, 80, 0.55, G.s);
+    await wait(300);
+    const a = anim(c, [{ opacity: 0.45 }, { opacity: 0 }], 300, { fill: 'forwards' });
+    await wait(320);
+    c.remove();
+    if (!a) c.remove();
+    demoing = false;
   }
 
   /* ---------- power on ---------- */
@@ -917,14 +946,16 @@
     if (a) a.onfinish = () => p.remove(); else setTimeout(() => p.remove(), 360);
   }
   async function powerOn() {
-    anim(powerBtn.querySelector('.rb-press'), [{ transform: 'scale(1)' }, { transform: 'scale(.8)' }, { transform: 'scale(1)' }], 260);
     if (!V || busy || stage !== 'power') {
       Sound.play('bonk');
       if (!V) needGadget();
+      resetSwitch(true);
       return;
     }
     busy = true;
-    hideHand(); powerBtn.classList.remove('rb-next');
+    powerBtn.classList.remove('rb-next');
+    swOn = true;
+    swTrack.setAttribute('fill', '#6fdc6a');
     const G = V;
     for (let k = 0; k < 3; k++) {
       Sound.play('zap');
@@ -950,6 +981,54 @@
     busy = false;
     await trick(G);
     if (V === G) { botSay(pick(['Hooray! Now add something silly!', 'It works! Try a silly hat!'])); hopRow(); updateGuide(); }
+  }
+
+  /* ---------- the power switch: slide the red knob all the way across ---------- */
+  const swKnob = powerBtn.querySelector('.rb-knob'), swTrack = powerBtn.querySelector('.rb-track');
+  const SW0 = -74, SW1 = 74;
+  let sw = null, swX = SW0, swOn = false, lastSwHint = 0;
+  function setKnob(x) { swX = x; swKnob.setAttribute('transform', `translate(${x.toFixed(0)},0)`); }
+  function resetSwitch(spring) {
+    swOn = false;
+    swTrack.setAttribute('fill', '#c9d3dc');
+    if (!spring || swX <= SW0) { setKnob(SW0); return; }
+    const x0 = swX;
+    Sound.play('boing');
+    tween(380, t => setKnob(lerp(x0, SW0, 1 - Math.pow(1 - t, 3)) + Math.sin(t * Math.PI * 3) * (1 - t) * 10));
+  }
+  function nudgeSwitch() {
+    if (sw || swOn || swX > SW0 + 4) return;
+    Sound.play('boing');
+    tween(520, t => setKnob(SW0 + Math.sin(t * Math.PI) * 34));
+  }
+  function startSwitch(e, p) {
+    if (sw || swOn) return;
+    if (!V || busy || stage !== 'power') {
+      Sound.play('bonk');
+      anim(swKnob.querySelector('.anim'), [{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], 200);
+      if (!V) needGadget();
+      return;
+    }
+    sw = { id: e.pointerId, x0: p.x, k0: swX, moved: false, cx: e.clientX };
+    Sound.play('pop');
+  }
+  function moveSwitch(e, p) {
+    if (!sw.moved && Math.abs(e.clientX - sw.cx) > 8) sw.moved = true;
+    if (!sw.moved) return;
+    const was = swX;
+    setKnob(K.clamp(sw.k0 + p.x - sw.x0, SW0, SW1));
+    if (Math.floor(was / 30) !== Math.floor(swX / 30)) Sound.play('ratchet', 1);
+  }
+  function endSwitch() {
+    const d = sw; sw = null;
+    if (!d.moved) {
+      nudgeSwitch();
+      const now = performance.now();
+      if (now - lastSwHint > 2500) { lastSwHint = now; setTimeout(() => botSay(pick(['Slide the switch!', 'Push the red knob all the way over!'])), 300); }
+      return;
+    }
+    if (swX > SW1 - 24) { setKnob(SW1); Sound.play('clank'); powerOn(); }
+    else resetSwitch(true);
   }
 
   /* ---------- silly add-ons, once it works ---------- */
@@ -1042,12 +1121,48 @@
     el('g', {}, g);
     ADDONS[k].put(G, g);
     G.adds[k] = g;
+    g.classList.add('rb-add'); g.dataset.add = k;
     anim(g.firstChild, [{ transform: 'scale(1.8)', opacity: 0 }, { transform: 'scale(.85)', opacity: 1 }, { transform: 'scale(1)' }], 320);
     Sound.play('plop');
     if (!G.decorated) { G.decorated = true; updateGuide(); }
     if (k === 'googly') setTimeout(() => Sound.play('boing'), 150);
     if (k === 'lights') setTimeout(() => Sound.play('twinkle'), 150);
     setTimeout(() => gadSay(G, ADD_LINES[k], k === 'mustache' ? { pitch: 0.7, rate: 0.9 } : null), 250);
+  }
+  // every add-on has its own little show, on the shelf or stuck on the gadget
+  const ADD_FUN = {
+    propeller(a) { Sound.play('propeller'); const b = a.querySelector('.blades'); if (b) anim(b, [{ transform: 'scaleX(1)' }, { transform: 'scaleX(-1)' }, { transform: 'scaleX(1)' }], 160, { iterations: 6, easing: 'linear' }); hop(a, 10); },
+    rocket(a) { Sound.play('rocket'); anim(a, [{ transform: 'translate(0,0)' }, { transform: 'translate(-4px,-6px)' }, { transform: 'translate(4px,-10px)' }, { transform: 'translate(0,0)' }], 120, { iterations: 5 }); },
+    googly(a) { Sound.play('boing'); a.querySelectorAll('.pupil').forEach(p => anim(p, [{ transform: 'translate(0,0)' }, { transform: 'translate(8px,0)' }, { transform: 'translate(0,8px)' }, { transform: 'translate(-8px,0)' }, { transform: 'translate(0,0)' }], 600)); },
+    mustache(a) { Sound.play('squeak', 1); anim(a, [{ transform: 'rotate(0)' }, { transform: 'rotate(-12deg)' }, { transform: 'rotate(12deg)' }, { transform: 'rotate(-6deg)' }, { transform: 'rotate(0)' }], 500); },
+    arms(a) {
+      Sound.play('whirr');
+      const arms = a.querySelectorAll('.arm');
+      (arms.length ? [...arms] : [a]).forEach(n => anim(n, [{ transform: 'rotate(0)' }, { transform: 'rotate(-25deg)' }, { transform: 'rotate(12deg)' }, { transform: 'rotate(0)' }], 420, { iterations: 2 }));
+    },
+    lights(a) { Sound.play('twinkle'); a.querySelectorAll('.rb-blink').forEach((c, i) => anim(c, [{ opacity: 1 }, { opacity: 0.2 }, { opacity: 1 }], 300, { iterations: 2, delay: i * 70 })); hop(a, 8); },
+  };
+  let lastAddHint = 0;
+  function tapAddBtn(btn) {
+    const k = btn.dataset.add;
+    ADD_FUN[k](btn.querySelector('.anim'));
+    if (!V || stage !== 'play') return;
+    const now = performance.now();
+    if (now - lastAddHint < 3000) return;
+    lastAddHint = now;
+    setTimeout(() => { if (V && stage === 'play') botSay(pick(['Drag it onto it!', 'Hold it and drag it on!'])); }, 400);
+  }
+  // pull a stuck-on add-on off with your finger; let go on the gadget to stick it back
+  function peelAdd(G, k, id, p) {
+    const g = G.adds[k];
+    if (!g) return null;
+    delete G.adds[k];
+    g.remove();
+    Sound.play('pop');
+    const btn = addsG.querySelector(`[data-add=${k}]`);
+    const ghost = el('g', { transform: `translate(${p.x.toFixed(0)},${p.y.toFixed(0)}) scale(1.5)` }, layer.fx);
+    ADDONS[k].icon(el('g', {}, ghost));
+    return { id, btn, ghost, add: k, moved: true, peeled: true, p, cx: 0, cy: 0 };
   }
   function removeAdd(G, k) {
     const g = G.adds[k];
@@ -1123,11 +1238,8 @@
     }
     leaving = true;
     for (let i = 0; i < 25 && busy; i++) await wait(100);
-    if (tdrag) { tdrag.ghost.remove(); tdrag = null; }
-    if (adrag) { adrag.ghost.remove(); adrag = null; }
-    rub = null;
+    cancelInput();
     busy = true;
-    hideHand();
     const G = V;
     V = null;
     if (!G) { busy = false; leaving = false; return; }
@@ -1202,54 +1314,93 @@
       gadSay(G, G.fixed ? pick(['Ahh! So smooth!', 'Squeaky clean!']) : pick(['Ahh! Much better!', 'Glug glug! Thank you!']));
     }, 700);
   }
-  function tapGadget(G, target, p) {
+  const shiver = n => anim(n, [{ transform: 'translate(0,0)' }, { transform: 'translate(-4px,0) rotate(-6deg)' }, { transform: 'translate(4px,0) rotate(6deg)' }, { transform: 'translate(0,0)' }], 110, { iterations: 3 });
+  const spin = (n, ms = 420) => anim(n, [{ transform: 'rotate(0)' }, { transform: 'rotate(360deg)' }], ms, { easing: 'ease-in-out' });
+  let lastGadHint = 0;
+  // after a tap, the robot says what to do (not too often) and shows it with a see-through tool
+  function hintSoon(G) {
+    const now = performance.now();
+    if (now - lastGadHint < 4000) return;
+    lastGadHint = now;
+    const st = nextStep(G);
+    if (!st) return;
+    setTimeout(() => { if (V === G && stage === 'fix' && nextStep(G) === st && !G.finding) { botSay(sayOf(G, st)); demo(st.tool); } }, 800);
+  }
+  function tapGadget(G, target) {
     if (G !== V || busy) return;
-    if (stage === 'play') return trick(G);
-    if (stage === 'power') { gadSay(G, 'Press the button!'); hop(powerBtn.querySelector('.anim'), 20); return; }
-    const scEl = target.closest('[data-screw]');
-    if (scEl) {
-      const i = +scEl.dataset.screw;
-      if (!G.done.open) return unscrew(G, i);
+    if (stage === 'play') {
+      const ad = target.closest('.rb-add');
+      if (ad && G.adds[ad.dataset.add] === ad) { ADD_FUN[ad.dataset.add](ad.firstChild); bounce(G, 8); return; }
+      return trick(G);
     }
+    if (stage === 'power') { gadSay(G, 'Slide the switch!'); nudgeSwitch(); return; }
+    const scEl = target.closest('[data-screw]');
+    if (scEl) { spin(scEl.firstChild); Sound.play('chime', Math.floor(rand(0, 6))); hintSoon(G); return; }
     if (G.lidOff) {
-      const l = S2L(G, p);
       const dust = target.closest('.rb-dust');
-      if (dust && !G.done.clean) return wipe(G, dust);
+      if (dust && !dust.classList.contains('gone')) { hop(dust.firstChild, 16); Sound.play('squeak', Math.floor(rand(0, 4))); hintSoon(G); return; }
       const slEl = target.closest('[data-slot]');
       if (slEl) {
         const S = G.slots[+slEl.dataset.slot];
-        if (!G.done.clean) { const near = dustNear(G, l, 60); if (near.length) { near.forEach(h => wipe(G, h)); return; } }
-        if (S.part && S.part.broken && G.done.clean) return pullPart(G, S.i);
-        if (!S.part && G.done.out) return putPart(G, S.i);
-        if (S.part && !S.part.broken) { hop(S.part.node.firstChild, 14); Sound.play('squeak', 1); return; }
+        if (S.part && S.part.broken) { shiver(S.part.node.firstChild); Sound.play('grunt'); hintSoon(G); return; }
+        if (S.part) {
+          hop(S.part.node.firstChild, 16); Sound.play('squeak', 1);
+          const q = L2S(G, S.x, S.y);
+          sparkles(q.x, q.y, { n: 5, colors: [GOOD[S.type], '#fff'], spread: 50 });
+          return;
+        }
+        Sound.play('boing'); hintSoon(G); return;
       }
       if (dustLeft(G).length) {
-        // tickling a dusty gadget makes it sneeze some dust away
+        // tickling a dusty gadget makes it sneeze
         Sound.play('sneeze');
-        setTimeout(() => { if (V === G) { gadSay(G, 'Ah... choo!'); [...dustLeft(G)].slice(0, 2).forEach(h => suck(G, h, null)); } }, 380);
+        setTimeout(() => { if (V === G) gadSay(G, 'Ah... choo!'); }, 380);
+        hintSoon(G);
         return;
       }
-    }
-    if (G.done.in && !G.done.close && !G.lidOff) {
-      const sc = G.screws.find(s => s.state === 'out');
-      if (sc) return screwIn(G, sc.i);
+    } else if (target.closest('.rb-lid')) {
+      Sound.play('clank');
+      anim(G.lid.firstChild, [{ opacity: 1 }, { opacity: 0.7 }, { opacity: 1 }], 200);
+      anim(G.a, [{ transform: 'rotate(0)' }, { transform: 'rotate(-2deg)' }, { transform: 'rotate(2deg)' }, { transform: 'rotate(0)' }], 260);
+      hintSoon(G);
+      return;
     }
     Sound.play('zap');
     sparkles(G.x + rand(-100, 100), G.y - 300, { n: 5, colors: ['#ffe14d', '#fff'], spread: 70 });
     gadSay(G, pick(G.T.sad.concat(['Bzzt! Hee hee!', 'Ouch! Fix me!'])));
+    hintSoon(G);
   }
   function tapParked(n) {
     const G = V;
     if (!G) return;
     if (n === G.lid) {
-      if (G.done.in && !G.done.close) return lidOn(G);
       Sound.play('clank');
-      anim(n.firstChild, [{ transform: 'translateY(0)' }, { transform: 'translateY(-10px)' }, { transform: 'translateY(0)' }], 300);
+      anim(n.firstChild, [{ transform: 'translateY(0)' }, { transform: 'translateY(-14px)' }, { transform: 'translateY(0)' }], 300);
+      if (G.done.in && !G.done.close) {
+        const now = performance.now();
+        if (now - lastGadHint > 3000) { lastGadHint = now; setTimeout(() => { botSay('Drag the cover back on!'); demoLid(G); }, 400); }
+      }
       return;
     }
-    const sc = G.screws.find(s => s.node === n);
-    if (sc && G.done.in && !G.done.close) return screwIn(G, sc.i);
+    spin(n.firstChild);
     Sound.play('chime', Math.floor(rand(0, 6)));
+  }
+  // drag the cover: on the gadget once the new parts are in, otherwise back to the bench
+  let ldrag = null;
+  function moveLid(p) {
+    ldrag.p = p;
+    V.lid.setAttribute('transform', `translate(${p.x.toFixed(0)},${p.y.toFixed(0)}) scale(.8)`);
+  }
+  async function endLid() {
+    const d = ldrag; ldrag = null;
+    const G = V;
+    if (!G || !G.lidOff) return;
+    if (!d.moved) return tapParked(G.lid);
+    if (stage === 'fix' && G.done.in && !G.done.close && overGadget(G, d.p)) return lidOn(G);
+    Sound.play('swish');
+    if (stage === 'fix' && !G.done.in) setTimeout(() => { if (V === G) gadSay(G, pick(['Not yet!', 'Fix my insides first!'])); }, 200);
+    await arc(G.lid, ghostPos(G.lid), LID_PARK, 380, 60, 0.8, 0.55, -14);
+    Sound.play('clank');
   }
 
   // broken gadgets puff a little smoke and spark now and then
@@ -1277,38 +1428,63 @@
 
   /* ---------- input ---------- */
   let rub = null, tdrag = null, adrag = null, lastInput = performance.now(), hints = 0, lastVac = 0;
+  const dragging = () => !!(rub || tdrag || adrag || carry || ldrag || sw);
+  // stop whatever a finger was doing (leaving the game, or sending the gadget home)
+  function cancelInput() {
+    rub = null;
+    if (tdrag) { tdrag.ghost.remove(); tdrag = null; }
+    if (adrag) { adrag.ghost.remove(); adrag = null; }
+    if (carry) { carry.node.remove(); carry = null; }
+    if (ldrag) { ldrag = null; if (V && V.lidOff && !V.lidMoving) V.lid.setAttribute('transform', `translate(${LID_PARK.x},${LID_PARK.y}) rotate(-14) scale(.55)`); }
+    if (sw) { sw = null; if (!swOn) resetSwitch(); }
+  }
+  const capture = e => { e.preventDefault(); try { svg.setPointerCapture(e.pointerId); } catch (err) {} };
   svg.addEventListener('pointerdown', e => {
     lastInput = performance.now(); hints = 0;
-    if (e.isPrimary) {
-      if (tdrag && tdrag.id !== e.pointerId) { tdrag.ghost.remove(); tdrag = null; }
-      if (adrag && adrag.id !== e.pointerId) { adrag.ghost.remove(); adrag = null; }
-      if (rub && rub.id !== e.pointerId) rub = null;
+    // a new finger (not a second one) clears anything a lost finger left hanging
+    if (e.isPrimary && dragging()) {
+      const stale = [rub, tdrag, adrag, carry, ldrag, sw].some(d => d && d.id !== e.pointerId);
+      if (stale) cancelInput();
     }
     const hit = e.target.closest('[data-act]');
     if (!hit) return;
     const act = hit.dataset.act, p = toSvg(e.clientX, e.clientY);
     if (act === 'gad') {
-      if (hit._G !== V || rub) return;
-      e.preventDefault();
-      try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      if (hit._G !== V || rub || carry) return;
+      capture(e);
       rub = { id: e.pointerId, cx: e.clientX, cy: e.clientY, moved: false, target: e.target, p };
       return;
     }
     if (act === 'tool' || act === 'add') {
-      if (tdrag || adrag) return;
-      e.preventDefault();
-      try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      if (tdrag || adrag || carry) return;
+      capture(e);
       const ghost = el('g', { transform: `translate(${p.x},${p.y})` }, layer.fx);
       const gi = el('g', {}, ghost);
       if (act === 'tool') TOOLS[hit.dataset.tool](gi); else ADDONS[hit.dataset.add].icon(gi);
       ghost.style.opacity = 0;
       const d = { id: e.pointerId, btn: hit, ghost, cx: e.clientX, cy: e.clientY, moved: false };
-      if (act === 'tool') { d.tool = hit.dataset.tool; tdrag = d; } else { d.add = hit.dataset.add; adrag = d; }
+      if (act === 'tool') {
+        d.tool = hit.dataset.tool; tdrag = d;
+        // new parts come straight out of the box
+        if (d.tool === 'box' && V && !busy && stage === 'fix' && V.done.out && !V.done.in && startCarryNew(V, e.pointerId, p)) d.hideGhost = true;
+      } else { d.add = hit.dataset.add; adrag = d; }
       return;
     }
+    if (act === 'junk') {
+      if (carry) return;
+      capture(e);
+      startCarryJunk(hit, e.pointerId, p);
+      return;
+    }
+    if (act === 'parked' && V && hit === V.lid) {
+      if (ldrag || V.lidArc || V.lidMoving) return;
+      capture(e);
+      ldrag = { id: e.pointerId, cx: e.clientX, cy: e.clientY, moved: false, p };
+      return;
+    }
+    if (act === 'power') { capture(e); startSwitch(e, p); return; }
     if (act === 'pick') pickGadget(+hit.dataset.i);
     else if (act === 'parked') tapParked(hit);
-    else if (act === 'power') powerOn();
     else if (act === 'next') sendOff();
     else if (act === 'bot') tapBot();
     else if (act === 'peg') tapPeg(hit);
@@ -1317,26 +1493,48 @@
     else if (act === 'oil') tapOil(hit);
   });
   svg.addEventListener('pointermove', e => {
+    const p = toSvg(e.clientX, e.clientY);
+    if (sw && e.pointerId === sw.id) { lastInput = performance.now(); moveSwitch(e, p); return; }
+    if (ldrag && e.pointerId === ldrag.id) {
+      lastInput = performance.now();
+      if (!ldrag.moved && Math.hypot(e.clientX - ldrag.cx, e.clientY - ldrag.cy) > 10) { ldrag.moved = true; Sound.play('pop'); V.lid.classList.remove('rb-pulse'); }
+      if (ldrag.moved && V && V.lidOff && !V.lidMoving) moveLid(p);
+      return;
+    }
     const d = tdrag || adrag;
     if (d && e.pointerId === d.id) {
       lastInput = performance.now();
-      if (!d.moved && Math.hypot(e.clientX - d.cx, e.clientY - d.cy) > 10) { d.moved = true; Sound.play('pop'); }
+      if (!d.moved && Math.hypot(e.clientX - d.cx, e.clientY - d.cy) > 10) { d.moved = true; if (!d.hideGhost) Sound.play('pop'); }
       if (!d.moved) return;
-      const p = toSvg(e.clientX, e.clientY);
       d.p = p;
-      d.ghost.style.opacity = 1;
+      d.ghost.style.opacity = d.hideGhost ? 0 : 1;
       d.ghost.setAttribute('transform', `translate(${p.x.toFixed(0)},${p.y.toFixed(0)}) scale(1.5)`);
       if (tdrag) dragTool(tdrag, p);
+      if (carry && carry.id === d.id) moveCarry(p);
       return;
     }
+    if (carry && e.pointerId === carry.id) { lastInput = performance.now(); moveCarry(p); return; }
     if (!rub || e.pointerId !== rub.id) return;
     lastInput = performance.now();
     if (!rub.moved && Math.hypot(e.clientX - rub.cx, e.clientY - rub.cy) > 10) rub.moved = true;
     if (!rub.moved) return;
     const G = V;
-    if (!G || busy || stage !== 'fix' || !G.lidOff || G.done.clean) return;
+    if (!G || busy) return;
+    // in the play stage, a stuck-on add-on can be pulled back off
+    if (stage === 'play') {
+      const ad = rub.target.closest('.rb-add');
+      if (ad && G.adds[ad.dataset.add] === ad) { const pd = peelAdd(G, ad.dataset.add, rub.id, p); rub = null; if (pd) adrag = pd; }
+      return;
+    }
+    if (stage !== 'fix' || !G.lidOff) return;
     // rub the dust away with a finger
-    dustNear(G, S2L(G, toSvg(e.clientX, e.clientY)), 45).forEach(h => wipe(G, h));
+    if (!G.done.clean) { dustNear(G, S2L(G, p), 45).forEach(h => wipe(G, h)); return; }
+    // grab a broken part with a finger and carry it off
+    if (!G.done.out && !carry) {
+      const slEl = rub.target.closest('[data-slot]');
+      const S = slEl ? G.slots[+slEl.dataset.slot] : null;
+      if (S && startCarryOld(G, S, rub.id, 'finger')) { rub = null; moveCarry(p); }
+    }
   });
   // dragging a tool over the gadget does that tool's job right where you point
   function dragTool(d, p) {
@@ -1345,43 +1543,49 @@
     const l = S2L(G, p), now = performance.now();
     if (d.tool === 'driver') {
       if (!G.done.open) G.screws.forEach(sc => { if (sc.state === 'in' && Math.hypot(sc.hx - l.x, sc.hy - l.y) < 60) unscrew(G, sc.i); });
-      else if (G.done.in && !G.done.close) {
-        if (G.lidOff && overPanel(G, p)) lidOn(G);
-        else if (!G.lidOff) G.screws.forEach(sc => { if (sc.state === 'out' && Math.hypot(sc.hx - l.x, sc.hy - l.y) < 60) screwIn(G, sc.i); });
-      }
+      else if (G.done.in && !G.done.close && !G.lidOff && !G.lidMoving) G.screws.forEach(sc => { if (sc.state === 'out' && Math.hypot(sc.hx - l.x, sc.hy - l.y) < 60) screwIn(G, sc.i); });
     } else if (d.tool === 'vacuum') {
       if (now - lastVac > 1000 && overGadget(G, p)) { lastVac = now; Sound.play('vacuum'); }
       if (G.lidOff && !G.done.clean) dustNear(G, l, 75).forEach(h => suck(G, h, p));
     } else if (d.tool === 'pliers') {
-      if (G.done.clean && !G.done.out) G.slots.forEach(S => { if (S.part && S.part.broken && Math.hypot(S.x - l.x, S.y - l.y) < 60) pullPart(G, S.i); });
-    } else if (d.tool === 'box') {
-      if (G.done.out && !G.done.in) G.slots.forEach(S => { if (!S.part && !S.busy && Math.hypot(S.x - l.x, S.y - l.y) < 60) putPart(G, S.i, p); });
+      // the grabber pinches a broken part, and then it comes along with you
+      if (G.lidOff && G.done.clean && !G.done.out && !carry) {
+        const S = G.slots.find(x => x.part && x.part.broken && (Math.hypot(x.x - l.x, x.y - (l.y + 46 / G.s)) < 75 || Math.hypot(x.x - l.x, x.y - l.y) < 50));
+        if (S) startCarryOld(G, S, d.id, 'pliers');
+      }
     }
   }
   function endDrag(d) {
-    hop(d.btn.querySelector('.anim'), 10);
+    if (d.btn) hop(d.btn.querySelector('.anim'), 10);
+    const mine = carry && carry.id === d.id;
     if (!d.moved) {
       d.ghost.remove();
-      if (d.tool) useTool(d.tool, d.btn);
-      else if (V && stage === 'play') addOn(V, d.add);
-      else { Sound.play('bonk'); if (!V) needGadget(); }
+      if (mine) { carry.node.remove(); carry = null; }
+      if (d.tool) tapTool(d.tool, d.btn);
+      else tapAddBtn(d.btn);
       return;
     }
+    if (mine) dropCarry();
     if (d.add && V && stage === 'play' && d.p && overGadget(V, d.p)) {
       d.ghost.remove();
       if (V.adds[d.add]) { Sound.play('boing'); bounce(V, 12); } else addOn(V, d.add);
       return;
     }
+    if (d.peeled) Sound.play('poof');
+    if (d.hideGhost) { d.ghost.remove(); return; }
     // it floats back to its spot on the board
     const a = ghostPos(d.ghost), x1 = +d.btn.dataset.x, y1 = +d.btn.dataset.y;
     tween(300, t => d.ghost.setAttribute('transform', `translate(${lerp(a.x, x1, t).toFixed(0)},${lerp(a.y, y1, t).toFixed(0)}) scale(${lerp(1.5, 1, t).toFixed(2)})`)).then(() => d.ghost.remove());
   }
   function endInput(e) {
+    if (sw && e.pointerId === sw.id) return endSwitch();
+    if (ldrag && e.pointerId === ldrag.id) return endLid();
     if (tdrag && e.pointerId === tdrag.id) { const d = tdrag; tdrag = null; endDrag(d); return; }
     if (adrag && e.pointerId === adrag.id) { const d = adrag; adrag = null; endDrag(d); return; }
+    if (carry && e.pointerId === carry.id) { dropCarry(); rub = null; return; }
     if (rub && e.pointerId === rub.id) {
       const r = rub; rub = null;
-      if (!r.moved && V) tapGadget(V, r.target, r.p);
+      if (!r.moved && V) tapGadget(V, r.target);
     }
   }
   svg.addEventListener('pointerup', endInput);
@@ -1389,12 +1593,12 @@
 
   /* ---------- gentle hints when nobody is tapping ---------- */
   setInterval(() => {
-    if (App.current !== 'robot' || busy || rub || tdrag || adrag || performance.now() - lastInput < 7000 || hints >= 3) return;
+    if (App.current !== 'robot' || busy || dragging() || performance.now() - lastInput < 7000 || hints >= 3) return;
     lastInput = performance.now(); hints++;
     if (!V) { botSay('Pick a broken one!'); choices.forEach((G, i) => hop(G.a, 24, i * 120)); return; }
-    if (stage === 'fix') { const st = nextStep(V); if (st && !V.finding) { botSay(st.say); hop(toolBtn(st.tool).querySelector('.anim'), 18); } return; }
-    if (stage === 'power') { botSay('Press the big red button!'); hop(powerBtn.querySelector('.anim'), 20); return; }
-    if (!V.decorated) { botSay('Add something silly!'); hopRow(); }
+    if (stage === 'fix') { const st = nextStep(V); if (st && !V.finding) { botSay(sayOf(V, st)); demo(st.tool); } return; }
+    if (stage === 'power') { botSay('Slide the red switch!'); nudgeSwitch(); return; }
+    if (!V.decorated) { botSay('Drag something silly onto it!'); hopRow(); }
     else if (hints === 3) { botSay('Send it home and fix another one!'); hop(PANELS.next.querySelector('.anim'), 20); }
     else { botSay('Tap it to see it go!'); bounce(V, 20); }
   }, 1000);
@@ -1405,17 +1609,17 @@
     if (!busyAt) busyAt = performance.now();
     else if (performance.now() - busyAt > 9000) { busy = false; busyAt = 0; if (V) { place(V, SPOT.x, SPOT.y, 1); V.g.classList.remove('zoom'); } updateGuide(); }
   }, 500);
-  // the robot helps out if a step is taking a long time
+  // if a step is taking a long time, the robot shows how again (it never does it for you)
   let stepKey = '', stepAt = 0;
   setInterval(() => {
-    if (App.current !== 'robot' || stage !== 'fix' || !V || busy || tdrag || rub || V.finding) { stepAt = performance.now(); return; }
-    const st = nextStep(V), key = V.type + (st ? st.k : '');
+    if (App.current !== 'robot' || stage !== 'fix' || !V || busy || dragging() || V.finding) { stepAt = performance.now(); return; }
+    const st = nextStep(V), key = V.type + (st ? st.k : '') + (V.lidOff ? 1 : 0);
     if (key !== stepKey) { stepKey = key; stepAt = performance.now(); return; }
     if (st && performance.now() - stepAt > 20000) {
       stepAt = performance.now();
-      botSay('Let me help!', 'happy');
+      botSay('Let me show you!', 'happy');
       waveArm(1);
-      setTimeout(() => { if (!busy && V && stage === 'fix' && nextStep(V) === st) useTool(st.tool, toolBtn(st.tool)); }, 900);
+      setTimeout(() => { if (V && stage === 'fix' && nextStep(V) === st) demo(st.tool); }, 900);
     }
   }, 1000);
 
@@ -1431,11 +1635,7 @@
       setTimeout(updateGuide, 50);
       setTimeout(() => botSay(V ? 'Welcome back!' : "Beep boop! Let's fix something!"), 500);
     },
-    leave() {
-      hideHand(); rub = null;
-      if (tdrag) { tdrag.ghost.remove(); tdrag = null; }
-      if (adrag) { adrag.ghost.remove(); adrag = null; }
-    },
+    leave() { cancelInput(); },
     clear() {
       if (busy) return;
       if (V) { V.g.remove(); V = null; }
@@ -1446,5 +1646,5 @@
     },
   });
 
-  window.__robot = { state, nextStep, pickGadget, useTool: t => useTool(t, toolBtn(t)), powerOn, addOn: k => addOn(V, k), trick: () => V && trick(V), sendOff, TYPES, dustLeft };
+  window.__robot = { state, nextStep, pickGadget, tapTool: t => tapTool(t, toolBtn(t)), demo, powerOn, get carry() { return carry; }, addOn: k => addOn(V, k), trick: () => V && trick(V), sendOff, TYPES, dustLeft };
 })();
