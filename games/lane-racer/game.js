@@ -417,7 +417,7 @@
     road.x = (W - road.w) / 2;
     laneW = road.w / LANES;
     carW = laneW * 0.52; carH = carW * 1.75;
-    if (state && state.player) state.player.y = H - carH * 0.9 - Math.max(30, H * 0.06);
+    if (state && state.player) { state.player.baseY = H - carH * 0.9 - Math.max(30, H * 0.06); state.player.y = state.player.baseY + state.player.yOff; }
   }
 
   function laneX(i) { return road.x + laneW * (i + 0.5); }
@@ -469,7 +469,8 @@
       car: car, theme: theme, demo: !!demo, splats: [], aiT: 0,
       t: 0, dist: 0,
       baseSpeed: 0, speedMul: 1,
-      player: { lane: 1, x: laneX(1), y: 0, tilt: 0, bump: 0, spin: 0, air: 0, airLen: 0 },
+      player: { lane: 1, x: laneX(1), y: 0, baseY: 0, yOff: 0, tilt: 0, bump: 0, spin: 0, air: 0, airLen: 0,
+        free: false, fx: 0, drag: false, dragY: 0 },
       horn: 0,
       things: [], decor: [], parts: [], floaters: [],
       nextSpawn: 0, nextDecor: 0, dashOff: 0,
@@ -543,35 +544,76 @@
   // ---------------------------------------------------------------- input
   var playing = false, paused = false;
 
+  function nearestLane(x) { return Math.max(0, Math.min(LANES - 1, Math.round((x - road.x) / laneW - 0.5))); }
+
   function moveLane(dir) {
     if (!playing || !state) return;
     var p = state.player;
+    if (p.drag) return;
+    if (p.free) {
+      // after a drag the car can sit between lanes: hop to the next lane centre that way
+      p.free = false;
+      var off = (p.x - laneX(nearestLane(p.x))) * dir;
+      p.lane = off < -laneW * 0.15 ? nearestLane(p.x) : nearestLane(p.x) + dir;
+      p.lane = Math.max(0, Math.min(LANES - 1, p.lane));
+      Audio.swoosh(); flashArrow(dir);
+      return;
+    }
     var nl = Math.max(0, Math.min(LANES - 1, p.lane + dir));
     if (nl !== p.lane) { p.lane = nl; Audio.swoosh(); }
     else { p.tilt = dir * 0.25; } // little nudge at the edge
     flashArrow(dir);
   }
 
+  // Touch: grab the car and drag it anywhere on the road (and a little up or down),
+  // tap the car to honk, or tap / swipe anywhere else to change lanes.
   var touchStart = null;
+  function onCar(x, y) {
+    var pl = state && state.player;
+    return playing && pl && Math.abs(x - pl.x) < carW * 1.1 && Math.abs(y - pl.y) < carH * 0.8;
+  }
+  function dragTo(x, y) {
+    var p = state.player, t = touchStart;
+    p.fx = Math.max(road.x + carW * 0.5, Math.min(road.x + road.w - carW * 0.5, x - t.gx));
+    p.dragY = Math.max(carH * 0.5 + 96 - p.baseY, Math.min(carH * 0.3, y - t.gy - p.baseY)); // anywhere on the road, up to just under the top bar
+  }
   canvas.addEventListener('pointerdown', function (e) {
     Audio.unlock();
-    touchStart = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
+    if (touchStart && touchStart.grab && state && state.player.drag) return; // keep holding the car
+    var grab = onCar(e.clientX, e.clientY);
+    touchStart = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false, grab: grab };
+    if (grab) {
+      var p = state.player;
+      touchStart.gx = e.clientX - p.x; touchStart.gy = e.clientY - p.y;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    }
   });
   canvas.addEventListener('pointermove', function (e) {
-    if (!touchStart || touchStart.id !== e.pointerId || touchStart.moved) return;
-    var dx = e.clientX - touchStart.x;
+    if (!touchStart || touchStart.id !== e.pointerId) return;
+    var dx = e.clientX - touchStart.x, dy = e.clientY - touchStart.y;
+    if (touchStart.grab && playing) {
+      var p = state.player;
+      if (!p.drag && Math.abs(dx) + Math.abs(dy) > 12) { p.drag = true; p.free = true; }
+      if (p.drag) dragTo(e.clientX, e.clientY);
+      return;
+    }
+    if (touchStart.moved) return;
     if (Math.abs(dx) > 40) { touchStart.moved = true; moveLane(dx > 0 ? 1 : -1); }
   });
-  canvas.addEventListener('pointerup', function (e) {
+  function endTouch(e, cancel) {
     if (!touchStart || touchStart.id !== e.pointerId) return;
-    if (!touchStart.moved) {
-      var pl = state && state.player;
-      if (playing && pl && Math.abs(e.clientX - pl.x) < carW * 0.85 && Math.abs(e.clientY - pl.y) < carH * 0.7) tapCar();
+    var p = state && state.player;
+    if (p && p.drag) {
+      p.drag = false;
+      p.lane = nearestLane(p.fx);
+    } else if (!touchStart.moved && !cancel) {
+      if (touchStart.grab && playing) tapCar();
       else moveLane(e.clientX < W / 2 ? -1 : 1);
     }
     touchStart = null;
-  });
-  canvas.addEventListener('pointercancel', function () { touchStart = null; });
+  }
+  canvas.addEventListener('pointerup', function (e) { endTouch(e, false); });
+  canvas.addEventListener('pointercancel', function (e) { endTouch(e, true); });
   window.addEventListener('keydown', function (e) {
     if (e.key === 'ArrowLeft' || e.key === 'a') moveLane(-1);
     if (e.key === 'ArrowRight' || e.key === 'd') moveLane(1);
@@ -612,9 +654,13 @@
     }
 
     // player
-    var tx = laneX(p.lane);
+    var tx = p.free ? p.fx : laneX(p.lane);
     var dx = tx - p.x;
-    p.x += dx * Math.min(1, dt * 12);
+    p.x += dx * Math.min(1, dt * (p.drag ? 20 : 12));
+    // forward / back: follows the finger while held, then drifts home
+    var ty = p.drag ? p.dragY : 0;
+    p.yOff += (ty - p.yOff) * Math.min(1, dt * (p.drag ? 16 : 1.5));
+    p.y = p.baseY + p.yOff;
     p.tilt += ((dx / laneW) * 0.5 - p.tilt) * Math.min(1, dt * 10);
     if (p.bump > 0) { p.bump -= dt; p.spin = Math.sin(p.bump * 22) * 0.35 * (p.bump / 1.0); } else p.spin = 0;
     if (p.air > 0) {
@@ -1480,6 +1526,7 @@
 
   function show(name) {
     screen = name;
+    touchStart = null;
     playing = name === 'race';
     titleEl.classList.toggle('hidden', name !== 'title');
     selectEl.classList.toggle('hidden', name !== 'cars');
