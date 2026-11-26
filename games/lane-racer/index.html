@@ -36,6 +36,7 @@
     <div class="title">
       <span class="t1">LANE</span><span class="t2">RACER</span>
     </div>
+    <div class="bank" aria-label="Coins saved"><div class="coin-icon"></div><span class="bank-count">0</span></div>
     <div id="cars" class="cars"></div>
     <button id="sound-sel" class="round-btn sound-btn" aria-label="Sound on or off"></button>
   </div>
@@ -48,6 +49,7 @@
     <div class="pick-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M5 2v20h2v-7h5l1 2h7V5h-6l-1-2H7V2z"/></svg>
     </div>
+    <div class="bank" aria-label="Coins saved"><div class="coin-icon"></div><span class="bank-count">0</span></div>
     <div id="tracks-grid" class="cars tracks"></div>
   </div>
 
@@ -72,11 +74,28 @@
   <!-- Finish -->
   <div id="finish" class="finish hidden">
     <svg class="finish-trophy" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffc21f" stroke="#e08a00" stroke-width="1" d="M6 3h12v3h3a4 4 0 0 1-4 5 6 6 0 0 1-4 3v3h3v3H8v-3h3v-3a6 6 0 0 1-4-3 4 4 0 0 1-4-5h3z"/><path fill="#fff6a8" d="m12 5 1 2.2 2.3.3-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.3z"/></svg>
-    <div class="finish-coins"><div class="coin-icon"></div><span id="finish-coins">0</span></div>
+    <div class="finish-coins"><div class="coin-icon"></div><span id="finish-coins">0</span><span class="bonus">+10</span></div>
+    <div class="bank big" aria-label="Coins saved"><svg class="chest" viewBox="0 0 24 24" aria-hidden="true"><path fill="#b8742f" d="M3 10h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path fill="#d9954a" d="M3 10a6 5 0 0 1 6-5h6a6 5 0 0 1 6 5z"/><path fill="#ffc21f" d="M3 10h18v2H3zM10 10h4v5h-4z"/><circle cx="12" cy="13" r="1" fill="#8a5a26"/></svg><span id="finish-bank">0</span></div>
     <div class="finish-btns">
       <button id="finish-home" class="round-btn big" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></button>
       <button id="again" class="round-btn big go" aria-label="Race again"><svg viewBox="0 0 24 24"><path d="M12 4V1L7 5l5 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg></button>
       <button id="places" class="round-btn big" aria-label="Pick a new place"><svg viewBox="0 0 24 24"><path d="M5 2v20h2v-7h5l1 2h7V5h-6l-1-2H7V2z"/></svg></button>
+    </div>
+  </div>
+
+  <!-- Buy a locked car or place -->
+  <div id="shop" class="shop hidden">
+    <div class="shop-card">
+      <button id="shop-close" class="round-btn close-btn" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      </button>
+      <div class="shop-view"><canvas id="shop-cv"></canvas><div class="shop-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></div></div>
+      <div class="shop-price"><div class="coin-icon"></div><span id="shop-price">0</span></div>
+      <div class="shop-need" aria-hidden="true"><div class="shop-bar"><div id="shop-fill"></div></div><span id="shop-have">0</span></div>
+      <button id="buy" class="round-btn big go buy-btn" aria-label="Unlock">
+        <svg class="yes" viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="no" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>
+      </button>
     </div>
   </div>
 
