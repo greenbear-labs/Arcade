@@ -575,7 +575,7 @@
   function dragTo(x, y) {
     var p = state.player, t = touchStart;
     p.fx = Math.max(road.x + carW * 0.5, Math.min(road.x + road.w - carW * 0.5, x - t.gx));
-    p.dragY = Math.max(H * 0.42 - p.baseY, Math.min(carH * 0.3, y - t.gy - p.baseY)); // anywhere in the lower half of the road
+    p.dragY = Math.max(carH * 0.5 + 96 - p.baseY, Math.min(carH * 0.3, y - t.gy - p.baseY)); // anywhere on the road, up to just under the top bar
   }
   canvas.addEventListener('pointerdown', function (e) {
     Audio.unlock();
