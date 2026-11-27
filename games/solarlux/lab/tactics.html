@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#05050d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="../icons/icon-192.png">
+  <title>Bridge Tactics</title>
+  <link rel="stylesheet" href="lab.css?v=1">
+  <style>
+    .app { display: flex; flex-direction: column; }
+    .topbar { position: relative; flex: none; }
+    .status { position: relative; z-index: 9; flex: none; margin: 0 8px; min-height: 40px; padding: 6px 10px; border-radius: 10px; background: rgba(10,10,25,.78); border: 1px solid var(--line); font-size: 13px; color: var(--dim); }
+    .status b { color: var(--text); }
+    .boardwrap { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; z-index: 8; padding: 6px 0; min-height: 0; }
+    .board { position: relative; background: rgba(8,8,20,.55); border: 1px solid var(--line); border-radius: 12px; }
+    .cell { position: absolute; border-radius: 6px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.05); }
+    .cell.move { background: rgba(108,199,255,.28); border-color: rgba(108,199,255,.7); }
+    .cell.aim { background: rgba(238,199,107,.32); border-color: var(--gold); }
+    .cell.danger { background: repeating-linear-gradient(45deg, rgba(255,93,108,.35) 0 6px, rgba(255,93,108,.15) 6px 12px); border-color: rgba(255,93,108,.8); }
+    .cell .dmg { position: absolute; right: 2px; bottom: 0; font-size: 11px; font-weight: 900; color: #ffd0d5; text-shadow: 0 1px 2px #000; }
+    .piece { position: absolute; transition: left .22s ease, top .22s ease, opacity .3s, transform .3s; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: none; }
+    .piece img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; border-radius: 50%; border: 3px solid; box-shadow: 0 3px 6px rgba(0,0,0,.7); background: #111; }
+    .piece.foe img { object-fit: contain; border-radius: 10px; border-color: rgba(255,93,108,.8); background: rgba(40,8,14,.6); }
+    .piece .bar { position: absolute; left: 6%; right: 6%; bottom: -4px; height: 5px; }
+    .piece.sel img { outline: 3px solid #fff; }
+    .piece.done img { filter: grayscale(.7) brightness(.7); }
+    .piece.dead { opacity: 0; transform: scale(.5); }
+    .piece.stun::after { content: "zz"; position: absolute; top: -4px; right: 0; font-size: 11px; font-weight: 900; color: var(--blue); text-shadow: 0 1px 2px #000; }
+    .piece.guest .emoji { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 150%; border-radius: 12px; background: rgba(238,199,107,.18); border: 2px dashed rgba(238,199,107,.6); }
+    .piece.shield img { box-shadow: 0 0 0 3px var(--blue), 0 3px 6px rgba(0,0,0,.7); }
+    .actions { position: relative; z-index: 9; flex: none; display: flex; gap: 6px; padding: 6px 8px; }
+    .actions button { flex: 1; padding: 10px 4px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); font-weight: 800; font-size: 13px; letter-spacing: .04em; }
+    .actions button.go { background: var(--gold); color: #1a1206; border-color: var(--gold); }
+    .actions button:disabled { opacity: .35; }
+    .cards { position: relative; flex: none; background: none; padding: 0 8px calc(env(safe-area-inset-bottom) + 8px); }
+    .card { aspect-ratio: 5 / 3; }
+    .card img.face { object-position: 50% 20%; }
+    .card.acted { filter: grayscale(.6) brightness(.7); }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="bg" id="bg"></div>
+    <div class="topbar">
+      <a class="pill btn" href="index.html" aria-label="Back to Battle Lab">✕</a>
+      <span class="pill" id="wave">W1/3</span>
+      <span class="pill" id="turn">TURN 1</span>
+      <span class="grow"></span>
+      <button class="pill btn" id="mute">♪</button>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="boardwrap" id="boardwrap"><div class="board" id="board"></div></div>
+    <div class="actions">
+      <button id="skill">SKILL</button>
+      <button id="wait">WAIT</button>
+      <button id="undo">UNDO MOVE</button>
+      <button id="end" class="go">END TURN</button>
+    </div>
+  </div>
+  <script src="shared.js?v=1"></script>
+  <script src="tactics.js?v=1"></script>
+</body>
+</html>

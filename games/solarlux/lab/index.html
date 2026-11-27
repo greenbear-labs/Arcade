@@ -46,9 +46,11 @@
 <body>
   <div class="app"><div class="wrap" id="wrap">
     <h1>BATTLE LAB</h1>
-    <p class="sub">Two prototype battle modes for playtesting. Progress here doesn't affect the main game.</p>
+    <p class="sub">Four prototype battle modes for playtesting. Progress here doesn't affect the main game.</p>
     <a class="mode" id="go-rush" href="rush.html"><img src="art/lyra.webp" alt=""><div><b>Spotlight Rush</b><p>Your crew fight on their own. Tap a glowing portrait to fire her skill. Fire three skills in a row for a Showstopper.</p></div></a>
     <a class="mode" id="go-match" href="match.html"><img src="art/juni.webp" alt=""><div><b>Deck Match</b><p>Swap tiles to match three or more. Each crew member's tiles power her attacks; hearts heal. Watch the enemy's countdown.</p></div></a>
+    <a class="mode" id="go-encore" href="encore.html"><img src="art/isolde.webp" alt=""><div><b>Encore <small style="color:var(--green)">NEW</small></b><p>A rhythm battle. Tap each crew member's lane on the beat to make her attack. Gold notes fire skills; red notes block the big hit.</p></div></a>
+    <a class="mode" id="go-tactics" href="tactics.html"><img src="art/sable.webp" alt=""><div><b>Bridge Tactics <small style="color:var(--green)">NEW</small></b><p>A grid battle. Every enemy shows the tiles it will hit next turn. Move out of danger, knock foes into each other, strike back.</p></div></a>
     <h3>Stage</h3>
     <div class="stages" id="stages"></div>
     <h3>Squad (pick 4)</h3>
@@ -69,8 +71,9 @@
           var b = el("button", "stage" + (i === stage ? " on" : ""), stagesEl);
           b.style.backgroundImage = "url(" + bgUrl(s.bg) + ")";
           el("span", "", b, (i + 1) + ". " + s.name);
-          var r = best["rush:" + i], m = best["match:" + i];
-          el("small", "", b, (r ? "Rush " + stars(r) + " " : "") + (m ? "Match " + stars(m) : ""));
+          var parts = [["rush", "Rush"], ["match", "Match"], ["encore", "Encore"], ["tactics", "Tactics"]]
+            .filter(function (k) { return best[k[0] + ":" + i]; }).map(function (k) { return k[1] + " " + stars(best[k[0] + ":" + i]); });
+          el("small", "", b, parts.join(" · "));
           b.onclick = function () { stage = i; store.set("stage", i); drawStages(); links(); };
         });
       }
@@ -96,10 +99,10 @@
       }
       function links() {
         var ok = squad.length === 4;
-        ["go-rush", "go-match"].forEach(function (k) {
-          var a = document.getElementById(k);
+        ["rush", "match", "encore", "tactics"].forEach(function (k) {
+          var a = document.getElementById("go-" + k);
           a.style.opacity = ok ? 1 : .4;
-          a.href = ok ? (k === "go-rush" ? "rush.html" : "match.html") + "?stage=" + stage : "javascript:void 0";
+          a.href = ok ? k + ".html?stage=" + stage : "javascript:void 0";
         });
       }
       drawStages(); drawSquad(); links();

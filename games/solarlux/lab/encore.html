@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#05050d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="../icons/icon-192.png">
+  <title>Encore</title>
+  <link rel="stylesheet" href="lab.css?v=1">
+  <style>
+    .app { display: flex; flex-direction: column; }
+    .topbar { position: relative; flex: none; }
+    .foes { position: relative; flex: 0 0 27%; display: flex; align-items: flex-end; justify-content: center; gap: 3%; padding: 26px 6% 2px; z-index: 5; }
+    .foes .enemy { position: relative; height: 100%; flex: 0 1 30%; justify-content: flex-end; cursor: pointer; }
+    .foes .enemy img { width: auto; max-width: 100%; max-height: calc(100% - 30px); object-fit: contain; }
+    .foes .enemy.boss { flex-basis: 58%; }
+    .stagearea { position: relative; flex: 1 1 auto; margin: 0 8px; z-index: 8; }
+    .lanes { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .lane { position: relative; border-radius: 12px 12px 0 0; background: linear-gradient(to bottom, rgba(10,10,25,0), rgba(10,10,25,.55) 40%, rgba(10,10,25,.75)); border: 1px solid rgba(255,255,255,.06); border-bottom: 0; overflow: hidden; }
+    .lane.flash { background: linear-gradient(to bottom, rgba(238,199,107,0), rgba(238,199,107,.28)); }
+    .lane.down { opacity: .25; }
+    .hitline { position: absolute; left: 0; right: 0; bottom: 18px; height: 6px; background: rgba(255,255,255,.18); border-radius: 3px; }
+    .lane .ring { position: absolute; left: 50%; bottom: 21px; width: 64%; aspect-ratio: 1; transform: translate(-50%, 50%); border-radius: 50%; border: 3px solid rgba(255,255,255,.35); pointer-events: none; }
+    .note { position: absolute; left: 50%; width: 58%; aspect-ratio: 1; transform: translate(-50%, 50%); border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,.6); background-size: cover; background-position: 50% 20%; pointer-events: none; will-change: bottom; }
+    .note.star { border-color: var(--gold); box-shadow: 0 0 16px var(--gold), 0 0 4px #000; }
+    .note.star::after { content: "★"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 150%; color: #fff6d0; text-shadow: 0 0 6px #000; background: rgba(238,199,107,.35); border-radius: 50%; }
+    .note.guard { border-color: var(--red); background: radial-gradient(circle, #ff8a95, #b8182a) !important; }
+    .note.guard::after { content: "⛨"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 130%; color: #fff; }
+    .judge { position: absolute; left: 0; right: 0; bottom: 64px; text-align: center; font-weight: 900; font-size: 15px; letter-spacing: .06em; pointer-events: none; text-shadow: 0 2px 0 #000; animation: judge .45s ease-out forwards; }
+    .judge.p { color: var(--gold); } .judge.g { color: var(--blue); } .judge.m { color: var(--red); }
+    @keyframes judge { 0% { transform: scale(1.5); opacity: 0; } 20% { transform: scale(1); opacity: 1; } 100% { transform: translateY(-16px); opacity: 0; } }
+    .combo { position: absolute; left: 0; right: 0; top: 28%; text-align: center; z-index: 9; pointer-events: none; font-weight: 900; font-style: italic; color: rgba(255,255,255,.85); text-shadow: 0 3px 0 #000; font-size: 34px; line-height: 1; }
+    .combo small { display: block; font-size: 11px; letter-spacing: .3em; font-style: normal; color: var(--gold); }
+    .cards { position: relative; flex: none; background: none; padding: 0 8px calc(env(safe-area-inset-bottom) + 8px); }
+    .card { aspect-ratio: 5 / 3; }
+    .card img.face { object-position: 50% 20%; }
+    .card .key { display: block !important; }
+    .tip { position: absolute; left: 12px; right: 12px; top: 6%; z-index: 9; text-align: center; color: var(--text); font-size: 13px; text-shadow: 0 1px 3px #000; pointer-events: none; transition: opacity .6s; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="bg" id="bg"></div>
+    <div class="topbar">
+      <a class="pill btn" href="index.html" aria-label="Back to Battle Lab">✕</a>
+      <span class="pill" id="wave">W1/3</span>
+      <span class="pill" id="acc">100%</span>
+      <span class="grow"></span>
+      <button class="pill btn" id="mute">♪</button>
+    </div>
+    <div class="foes" id="foes"></div>
+    <div class="stagearea" id="stagearea">
+      <div class="lanes" id="lanes"></div>
+      <div class="combo" id="combo"></div>
+      <div class="tip" id="tip">Tap a lane (or her portrait, or D F J K) as each note reaches the ring. Hits make her attack. Gold ★ notes fire her skill. Red ⛨ notes block the boss's big attack.</div>
+    </div>
+  </div>
+  <script src="shared.js?v=1"></script>
+  <script src="encore.js?v=1"></script>
+</body>
+</html>
