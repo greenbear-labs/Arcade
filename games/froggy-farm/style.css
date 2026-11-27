@@ -177,3 +177,32 @@ html, body {
 #robot .rb-gad.fixed .rb-glow { animation: flick 1.4s ease-in-out infinite; }
 #robot .flame { display: none; }
 #robot .rb-gad.zoom .flame { display: inline; animation: flick .15s linear infinite; }
+
+/* bunny garden */
+#bn-bunny .happy-eye, #bn-bunny .mouth-open, #bn-bunny .bn-shades { display: none; }
+#bn-bunny.giggle .happy-eye { display: inline; }
+#bn-bunny.giggle .bn-eyes { display: none; }
+#bn-bunny.open .mouth-open { display: inline; }
+#bn-bunny.open .mouth-closed { display: none; }
+#bn-bunny.cool .bn-shades { display: inline; }
+#bn-bunny.cool .bn-eyes, #bn-bunny.cool .happy-eye { display: none; }
+#bn-bunny .bn-belly { animation: breathe 3.4s ease-in-out infinite; transform-origin: 0 -20px; }
+#bn-bunny .bn-belly-glow { opacity: 0; }
+#bn-bunny .bn-nose { animation: sniff 2.8s ease-in-out infinite; transform-origin: 0 24px; }
+@keyframes sniff { 0%, 70%, 100% { transform: scale(1); } 75% { transform: scale(1.15, .9); } 80% { transform: scale(.95, 1.08); } 85% { transform: scale(1.12, .92); } }
+#bn-bunny .eye.blink { animation: blink .22s ease-in-out; }
+#bn-warm { opacity: 0; transition: opacity .8s; }
+#bunny.sunny #bn-warm { opacity: .16; }
+#bn-sun .bn-sunglow { opacity: 0; transition: opacity .6s; }
+#bunny.sunny #bn-sun .bn-sunglow { opacity: 1; }
+#bunny.sunny #bn-sun .rays { animation-duration: 4s; }
+#bn-rainbow { opacity: 0; transition: opacity 1.4s; }
+#bunny.rainbow #bn-rainbow { opacity: .85; }
+#bunny.raining #bn-cloud .anim > g:first-child { fill: #dfe9f3; }
+#bunny .veg .shades { display: none; }
+#bunny .veg.cool .shades { display: inline; }
+#bunny .veg.cool .veyes { display: none; }
+#bunny .bn-plant { transform-origin: 0 0; }
+#bunny .bn-thirsty { animation: gbob 1.2s ease-in-out infinite; }
+#bunny .bn-sprout-sway { animation: sway 3s ease-in-out infinite; }
+@keyframes sway { 50% { transform: rotate(4deg); } }
